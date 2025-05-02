@@ -1,1 +1,2 @@
-# internal-automations
+# E-Konsulta Clinic Daily Standup Meeting Bot
+
