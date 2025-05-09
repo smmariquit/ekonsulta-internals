@@ -1,0 +1,13 @@
+2025-05-09 16:25:00 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-09 16:25:06 | INFO     | services.firebase_service:__init__:21 - Firebase service initialized
+2025-05-09 16:25:06 | INFO     | cogs.dsm:__init__:24 - DSM cog initialized
+2025-05-09 16:25:06 | INFO     | __main__:setup_hook:40 - Cogs loaded
+2025-05-09 16:25:09 | INFO     | cogs.dsm:before_daily_standup:62 - Daily standup task started
+2025-05-09 16:25:09 | INFO     | __main__:on_ready:44 - Logged in as E-Konsulta Internals
+2025-05-09 16:25:10 | INFO     | services.firebase_service:get_config:29 - Creating default config for guild 998850525174972486
+2025-05-09 16:25:10 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 16:25:10 | INFO     | cogs.dsm:on_ready:68 - Tasks loaded from Firebase
+2025-05-09 16:25:10 | INFO     | services.firebase_service:get_config:29 - Creating default config for guild 1365369294623608882
+2025-05-09 16:26:07 | INFO     | services.firebase_service:update_config:111 - Updated config for guild 1365369294623608882
+2025-05-09 16:26:07 | INFO     | cogs.dsm:configure:203 - Updated config for guild 1365369294623608882: {'standup_hour': 9, 'standup_minute': 1}
+2025-05-09 16:33:21 | INFO     | cogs.dsm:cog_unload:29 - DSM cog unloaded

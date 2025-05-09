@@ -1,0 +1,24 @@
+2025-05-09 17:16:05 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-09 17:16:08 | INFO     | services.firebase_service:__init__:21 - Firebase service initialized
+2025-05-09 17:16:08 | INFO     | cogs.dsm:__init__:26 - DSM cog initialized
+2025-05-09 17:16:08 | INFO     | __main__:setup_hook:40 - Cogs loaded
+2025-05-09 17:16:11 | INFO     | cogs.dsm:before_daily_standup:230 - Daily standup task started
+2025-05-09 17:16:11 | INFO     | __main__:on_ready:44 - Logged in as E-Konsulta Internals
+2025-05-09 17:16:12 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 17:16:12 | INFO     | cogs.dsm:on_ready:236 - Tasks loaded from Firebase
+2025-05-09 17:16:15 | INFO     | cogs.dsm:simulate_dsm:461 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-09
+2025-05-09 17:16:15 | INFO     | cogs.dsm:simulate_dsm:489 - Sent opening message to thread
+2025-05-09 17:16:15 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 17:16:16 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:16:16 | INFO     | cogs.dsm:send_initial_task_embeds:87 - Sent initial task embeds in thread DAILY STANDUP MEETING - 2025-05-09
+2025-05-09 17:16:25 | DEBUG    | services.firebase_service:save_user:47 - Saved user data for pataponz
+2025-05-09 17:16:26 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:16:27 | INFO     | cogs.dsm:update_task_message:626 - Updated task message for pataponz
+2025-05-09 17:16:27 | INFO     | cogs.dsm:add_task:296 - Added task yhpjbj for pataponz: Test
+2025-05-09 17:17:11 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:17:12 | INFO     | cogs.dsm:update_task_message:626 - Updated task message for pataponz
+2025-05-09 17:17:12 | INFO     | cogs.dsm:mark_done:335 - Marked task acapbm as done for pataponz
+2025-05-09 17:17:24 | DEBUG    | services.firebase_service:save_user:47 - Saved user data for pataponz
+2025-05-09 17:17:24 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:17:25 | INFO     | cogs.dsm:update_task_message:626 - Updated task message for pataponz
+2025-05-09 17:17:25 | INFO     | cogs.dsm:add_task:296 - Added task cyzkwu for pataponz: Testttt
