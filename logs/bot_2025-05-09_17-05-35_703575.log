@@ -1,0 +1,9 @@
+2025-05-09 17:05:35 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-09 17:05:39 | INFO     | services.firebase_service:__init__:21 - Firebase service initialized
+2025-05-09 17:05:39 | INFO     | cogs.dsm:__init__:26 - DSM cog initialized
+2025-05-09 17:05:39 | INFO     | __main__:setup_hook:40 - Cogs loaded
+2025-05-09 17:05:42 | INFO     | cogs.dsm:before_daily_standup:222 - Daily standup task started
+2025-05-09 17:05:42 | INFO     | __main__:on_ready:44 - Logged in as E-Konsulta Internals
+2025-05-09 17:05:42 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 17:05:42 | INFO     | cogs.dsm:on_ready:228 - Tasks loaded from Firebase
+2025-05-09 17:06:06 | INFO     | cogs.dsm:cog_unload:43 - DSM cog unloaded

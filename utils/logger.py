@@ -1,17 +1,31 @@
-import logging
+"""Logging configuration for the bot."""
+import sys
+from loguru import logger
+import os
+from datetime import datetime
 
-def setup_logger(log_file="discord.log", log_level=logging.INFO):
-    """
-    Sets up the logger for the application.
+# Create logs directory if it doesn't exist
+os.makedirs("logs", exist_ok=True)
 
-    Args:
-        log_file (str): Path to the log file.
-        log_level (int): Logging level (e.g., logging.INFO, logging.DEBUG).
-    """
-    logging.basicConfig(
-        filename=log_file,
-        filemode="a",  # Append to the log file
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        level=log_level,
-    )
-    logging.getLogger().addHandler(logging.StreamHandler())  # Also log to console
+# Configure logger
+logger.remove()  # Remove default handler
+
+# Add console handler with color
+logger.add(
+    sys.stderr,
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+    level="INFO"
+)
+
+# Add file handler
+logger.add(
+    "logs/bot_{time}.log",
+    rotation="1 day",
+    retention="7 days",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+    level="DEBUG"
+)
+
+def get_logger(name: str):
+    """Get a logger instance with the specified name."""
+    return logger.bind(name=name)
