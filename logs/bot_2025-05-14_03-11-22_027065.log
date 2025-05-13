@@ -2,3 +2,15 @@
 2025-05-14 03:11:24 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
 2025-05-14 03:11:24 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
 2025-05-14 03:11:24 | INFO     | cogs.dsm:__init__:462 - DSM cog initialized
+2025-05-14 03:12:32 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 03:12:35 | INFO     | cogs.dsm:before_daily_standup:1024 - Daily standup task started
+2025-05-14 03:12:35 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-14 03:12:36 | INFO     | services.firebase_service:load_tasks:123 - Loaded tasks from Firebase
+2025-05-14 03:12:36 | INFO     | cogs.dsm:on_ready:2287 - Tasks loaded from Firebase
+2025-05-14 03:12:36 | INFO     | cogs.dsm:on_ready:2294 - Loaded DSM messages for guild 998850525174972486
+2025-05-14 03:12:36 | INFO     | cogs.dsm:on_ready:2294 - Loaded DSM messages for guild 1365369294623608882
+2025-05-14 03:12:36 | INFO     | cogs.dsm:on_ready:2303 - DSM messages loaded from config
+2025-05-14 03:13:01 | INFO     | cogs.dsm:simulate_dsm:2314 - Manual DSM triggered by pataponz in stimmie's server
+2025-05-14 03:13:03 | INFO     | cogs.dsm:simulate_dsm:2337 - Archived previous DSM thread: DAILY STANDUP MEETING - 2025-05-14
+2025-05-14 03:13:04 | ERROR    | cogs.dsm:simulate_dsm:2394 - Error in simulate_dsm: 'FirebaseService' object has no attribute 'get_tasks_for_date'
+2025-05-14 03:18:46 | INFO     | cogs.dsm:cog_unload:492 - DSM cog unloaded

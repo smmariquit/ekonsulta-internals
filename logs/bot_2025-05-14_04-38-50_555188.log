@@ -1,0 +1,34 @@
+2025-05-14 04:38:50 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 04:38:52 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 04:38:52 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 04:38:52 | INFO     | cogs.dsm:__init__:463 - DSM cog initialized
+2025-05-14 04:38:53 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 04:38:55 | INFO     | cogs.dsm:before_daily_standup:1026 - Daily standup task started
+2025-05-14 04:38:55 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals - Testing
+2025-05-14 04:38:56 | INFO     | services.firebase_service:load_tasks:123 - Loaded tasks from Firebase
+2025-05-14 04:38:56 | INFO     | cogs.dsm:on_ready:2436 - Tasks loaded from Firebase
+2025-05-14 04:38:56 | INFO     | cogs.dsm:on_ready:2443 - Loaded DSM messages for guild 1365369294623608882
+2025-05-14 04:38:56 | INFO     | cogs.dsm:on_ready:2452 - DSM messages loaded from config
+2025-05-14 04:40:13 | INFO     | cogs.dsm:simulate_dsm:2463 - Manual DSM triggered by pataponz in Testing Server
+2025-05-14 04:40:16 | INFO     | cogs.dsm:simulate_dsm:2486 - Archived previous DSM thread: DAILY STANDUP MEETING - 2025-05-14
+2025-05-14 04:40:18 | INFO     | services.firebase_service:update_config:140 - Updated config for guild 1365369294623608882
+2025-05-14 04:40:19 | INFO     | cogs.dsm:simulate_dsm:2570 - Manual DSM thread created: Daily Standup Meeting for May 14, 2025 (ID: 1371950202084266104)
+2025-05-14 04:42:06 | INFO     | cogs.dsm:dsm:2069 - [COMMAND] /dsm used by pataponz (1048212846720327681) in Testing Server (1365369294623608882)
+2025-05-14 04:42:07 | INFO     | cogs.dsm:create_task_embeds:694 - [DEBUG] Created 1 completed embeds and 1 pending embeds
+2025-05-14 04:42:07 | ERROR    | cogs.dsm:update_task_message:1720 - [DEBUG] Error in update_task_message: object tuple can't be used in 'await' expression
+2025-05-14 04:42:07 | ERROR    | cogs.dsm:dsm:2127 - [COMMAND] Error in dsm command: object tuple can't be used in 'await' expression
+2025-05-14 04:42:17 | INFO     | cogs.dsm:_add_task:1063 - [DEBUG] Starting task addition for user 1048212846720327681 (pataponz)
+2025-05-14 04:42:17 | INFO     | cogs.dsm:_add_task:1071 - [DEBUG] Generated task ID: 17zq
+2025-05-14 04:42:17 | INFO     | cogs.dsm:_add_task:1080 - [DEBUG] Added task to user's task list
+2025-05-14 04:42:17 | DEBUG    | services.firebase_service:save_user:66 - Saved user data for pataponz
+2025-05-14 04:42:17 | INFO     | cogs.dsm:_add_task:1093 - [DEBUG] Updated user data in Firebase
+2025-05-14 04:42:17 | INFO     | services.firebase_service:save_tasks:102 - Saved tasks to Firebase
+2025-05-14 04:42:17 | INFO     | cogs.dsm:_add_task:1097 - [DEBUG] Saved tasks to Firebase
+2025-05-14 04:42:18 | INFO     | services.firebase_service:update_config:140 - Updated config for guild 1365369294623608882
+2025-05-14 04:42:18 | INFO     | cogs.dsm:get_current_dsm_thread:1559 - [DEBUG] Looking for thread: DAILY STANDUP MEETING - 2025-05-14
+2025-05-14 04:42:18 | INFO     | cogs.dsm:get_current_dsm_thread:1571 - [DEBUG] Found latest thread from config: 1371950202084266104 (Daily Standup Meeting for May 14, 2025)
+2025-05-14 04:42:18 | INFO     | cogs.dsm:_add_task:1111 - [DEBUG] Using DSM thread: 1371950202084266104 (Daily Standup Meeting for May 14, 2025)
+2025-05-14 04:42:18 | INFO     | cogs.dsm:create_task_embeds:694 - [DEBUG] Created 1 completed embeds and 1 pending embeds
+2025-05-14 04:42:18 | ERROR    | cogs.dsm:update_task_message:1720 - [DEBUG] Error in update_task_message: object tuple can't be used in 'await' expression
+2025-05-14 04:42:18 | ERROR    | cogs.dsm:_add_task:1125 - [DEBUG] Error in _add_task: object tuple can't be used in 'await' expression
+2025-05-14 04:45:57 | INFO     | cogs.dsm:cog_unload:493 - DSM cog unloaded
