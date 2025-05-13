@@ -1,0 +1,24 @@
+2025-05-09 17:20:30 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-09 17:20:34 | INFO     | services.firebase_service:__init__:21 - Firebase service initialized
+2025-05-09 17:20:34 | INFO     | cogs.dsm:__init__:26 - DSM cog initialized
+2025-05-09 17:20:34 | INFO     | __main__:setup_hook:40 - Cogs loaded
+2025-05-09 17:20:37 | INFO     | cogs.dsm:before_daily_standup:260 - Daily standup task started
+2025-05-09 17:20:37 | INFO     | __main__:on_ready:44 - Logged in as E-Konsulta Internals
+2025-05-09 17:20:38 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 17:20:38 | INFO     | cogs.dsm:on_ready:266 - Tasks loaded from Firebase
+2025-05-09 17:20:42 | INFO     | cogs.dsm:simulate_dsm:492 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-09
+2025-05-09 17:20:43 | INFO     | cogs.dsm:simulate_dsm:520 - Sent opening message to thread
+2025-05-09 17:20:43 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 17:20:44 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:20:44 | INFO     | cogs.dsm:send_initial_task_embeds:117 - Sent initial task embeds in thread DAILY STANDUP MEETING - 2025-05-09
+2025-05-09 17:20:59 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:21:00 | WARNING  | cogs.dsm:update_task_message:689 - Could not update message for stimmie: 404 Not Found (error code: 10008): Unknown Message
+2025-05-09 17:21:00 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:21:00 | INFO     | cogs.dsm:update_task_message:694 - Created new task message for stimmie
+2025-05-09 17:21:00 | INFO     | cogs.dsm:mark_done:366 - Marked task yhpjbj as done for stimmie
+2025-05-09 17:21:21 | INFO     | cogs.dsm:simulate_dsm:492 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-09
+2025-05-09 17:21:21 | INFO     | cogs.dsm:simulate_dsm:520 - Sent opening message to thread
+2025-05-09 17:21:22 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 17:21:22 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:21:22 | INFO     | cogs.dsm:send_initial_task_embeds:117 - Sent initial task embeds in thread DAILY STANDUP MEETING - 2025-05-09
+2025-05-09 17:23:04 | INFO     | cogs.dsm:cog_unload:51 - DSM cog unloaded

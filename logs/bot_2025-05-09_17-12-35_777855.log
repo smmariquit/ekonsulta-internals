@@ -1,0 +1,22 @@
+2025-05-09 17:12:35 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-09 17:12:38 | INFO     | services.firebase_service:__init__:21 - Firebase service initialized
+2025-05-09 17:12:38 | INFO     | cogs.dsm:__init__:26 - DSM cog initialized
+2025-05-09 17:12:38 | INFO     | __main__:setup_hook:40 - Cogs loaded
+2025-05-09 17:12:42 | INFO     | cogs.dsm:before_daily_standup:230 - Daily standup task started
+2025-05-09 17:12:42 | INFO     | __main__:on_ready:44 - Logged in as E-Konsulta Internals
+2025-05-09 17:12:43 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 17:12:43 | INFO     | cogs.dsm:on_ready:236 - Tasks loaded from Firebase
+2025-05-09 17:12:58 | INFO     | cogs.dsm:simulate_dsm:461 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-09
+2025-05-09 17:12:59 | INFO     | cogs.dsm:simulate_dsm:489 - Sent opening message to thread
+2025-05-09 17:12:59 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 17:13:00 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:13:00 | INFO     | cogs.dsm:send_initial_task_embeds:87 - Sent initial task embeds in thread DAILY STANDUP MEETING - 2025-05-09
+2025-05-09 17:13:48 | DEBUG    | services.firebase_service:save_user:47 - Saved user data for pataponz
+2025-05-09 17:13:48 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:13:50 | INFO     | cogs.dsm:add_task:296 - Added task acapbm for pataponz: Test
+2025-05-09 17:14:00 | INFO     | cogs.dsm:simulate_dsm:461 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-09
+2025-05-09 17:14:01 | INFO     | cogs.dsm:simulate_dsm:489 - Sent opening message to thread
+2025-05-09 17:14:01 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 17:14:01 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:14:01 | INFO     | cogs.dsm:send_initial_task_embeds:87 - Sent initial task embeds in thread DAILY STANDUP MEETING - 2025-05-09
+2025-05-09 17:14:10 | INFO     | cogs.dsm:cog_unload:51 - DSM cog unloaded

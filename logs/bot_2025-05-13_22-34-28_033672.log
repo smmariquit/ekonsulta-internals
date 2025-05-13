@@ -1,0 +1,11 @@
+2025-05-13 22:34:28 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-13 22:34:30 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-13 22:34:30 | INFO     | cogs.dsm:__init__:144 - DSM cog initialized
+2025-05-13 22:34:30 | INFO     | __main__:setup_hook:40 - Cogs loaded
+2025-05-13 22:34:33 | INFO     | cogs.dsm:before_daily_standup:430 - Daily standup task started
+2025-05-13 22:34:33 | INFO     | __main__:on_ready:44 - Logged in as E-Konsulta Internals
+2025-05-13 22:34:34 | INFO     | services.firebase_service:load_tasks:105 - Loaded tasks from Firebase
+2025-05-13 22:34:34 | INFO     | cogs.dsm:on_ready:436 - Tasks loaded from Firebase
+2025-05-13 22:34:58 | INFO     | cogs.dsm:simulate_dsm:666 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-13
+2025-05-13 22:34:58 | ERROR    | cogs.dsm:simulate_dsm:702 - Error in simulate_dsm: 400 The query requires an index. That index is currently building and cannot be used yet. See its status here: https://console.firebase.google.com/v1/r/project/internals-bot/firestore/indexes?create_composite=Cl1wcm9qZWN0cy9pbnRlcm5hbHMtYm90L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9kc21fc2Vzc2lvbnMvaW5kZXhlcy9DSUNBZ09qWGg0RUsQARoMCghndWlsZF9pZBABGg4KCmNyZWF0ZWRfYXQQAhoMCghfX25hbWVfXxAC
+2025-05-13 22:35:45 | INFO     | cogs.dsm:cog_unload:169 - DSM cog unloaded

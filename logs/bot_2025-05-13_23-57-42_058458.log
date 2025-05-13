@@ -1,0 +1,18 @@
+2025-05-13 23:57:42 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-13 23:57:44 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-13 23:57:44 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-13 23:57:44 | INFO     | cogs.dsm:__init__:270 - DSM cog initialized
+2025-05-13 23:57:45 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-13 23:57:49 | INFO     | cogs.dsm:before_daily_standup:676 - Daily standup task started
+2025-05-13 23:57:49 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-13 23:57:49 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-13 23:57:49 | INFO     | services.firebase_service:load_dsm_messages:202 - Loaded DSM messages from Firebase
+2025-05-13 23:57:49 | INFO     | cogs.dsm:on_ready:302 - Tasks and DSM messages loaded from Firebase
+2025-05-13 23:58:03 | INFO     | cogs.dsm:simulate_dsm:904 - [COMMAND] /simulate_dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-13 23:58:05 | INFO     | cogs.dsm:simulate_dsm:942 - [COMMAND] Created DSM thread: DAILY STANDUP MEETING - 2025-05-13 (1371879180169511045)
+2025-05-13 23:58:05 | INFO     | services.firebase_service:save_dsm_session:130 - Saved DSM session for guild 1365369294623608882
+2025-05-13 23:58:06 | INFO     | cogs.dsm:simulate_dsm:970 - [COMMAND] Sent opening message to thread 1371879180169511045
+2025-05-13 23:58:06 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-13 23:58:06 | ERROR    | cogs.dsm:send_initial_task_embeds:487 - Error sending initial task embeds: 'NoneType' object has no attribute 'strftime'
+2025-05-13 23:58:06 | ERROR    | cogs.dsm:simulate_dsm:982 - [COMMAND] Error in simulate_dsm: 'NoneType' object has no attribute 'strftime'
+2025-05-13 23:59:08 | INFO     | cogs.dsm:cog_unload:295 - DSM cog unloaded

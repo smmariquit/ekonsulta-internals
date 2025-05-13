@@ -1,0 +1,12 @@
+2025-05-09 16:43:30 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-09 16:43:34 | INFO     | services.firebase_service:__init__:21 - Firebase service initialized
+2025-05-09 16:43:34 | INFO     | cogs.dsm:__init__:24 - DSM cog initialized
+2025-05-09 16:43:34 | INFO     | __main__:setup_hook:40 - Cogs loaded
+2025-05-09 16:43:37 | INFO     | cogs.dsm:before_daily_standup:154 - Daily standup task started
+2025-05-09 16:43:37 | INFO     | __main__:on_ready:44 - Logged in as E-Konsulta Internals
+2025-05-09 16:43:38 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 16:43:38 | INFO     | cogs.dsm:on_ready:160 - Tasks loaded from Firebase
+2025-05-09 16:43:50 | DEBUG    | services.firebase_service:save_user:47 - Saved user data for pataponz
+2025-05-09 16:43:51 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 16:43:51 | DEBUG    | cogs.dsm:update_task_message:462 - Updated existing task message
+2025-05-09 16:43:51 | INFO     | cogs.dsm:add_task:212 - Added task for pataponz: Test

@@ -1,0 +1,30 @@
+2025-05-14 00:59:32 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 00:59:35 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 00:59:35 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 00:59:35 | INFO     | cogs.dsm:__init__:287 - DSM cog initialized
+2025-05-14 00:59:35 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 00:59:38 | INFO     | cogs.dsm:before_daily_standup:692 - Daily standup task started
+2025-05-14 00:59:38 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-14 00:59:39 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-14 00:59:39 | INFO     | services.firebase_service:load_dsm_messages:195 - Loaded DSM messages from Firebase
+2025-05-14 00:59:39 | INFO     | cogs.dsm:on_ready:324 - Tasks and DSM messages loaded from Firebase
+2025-05-14 00:59:47 | INFO     | cogs.dsm:simulate_dsm:924 - [COMMAND] /simulate_dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 00:59:48 | INFO     | cogs.dsm:simulate_dsm:962 - [COMMAND] Created DSM thread: DAILY STANDUP MEETING - 2025-05-14 (1371894712885317712)
+2025-05-14 00:59:48 | INFO     | services.firebase_service:save_dsm_session:130 - Saved DSM session for guild 1365369294623608882
+2025-05-14 00:59:48 | INFO     | cogs.dsm:simulate_dsm:990 - [COMMAND] Sent opening message to thread 1371894712885317712
+2025-05-14 00:59:48 | INFO     | cogs.dsm:simulate_dsm:995 - [DEBUG] Sending initial task embeds for user 1048212846720327681
+2025-05-14 00:59:48 | INFO     | cogs.dsm:send_initial_task_embeds:428 - [DEBUG] Created embeds with 10 completed and 36 pending tasks
+2025-05-14 00:59:48 | INFO     | cogs.dsm:send_initial_task_embeds:432 - [DEBUG] Target channel: 1371894712885317712
+2025-05-14 00:59:48 | INFO     | cogs.dsm:send_initial_task_embeds:436 - [DEBUG] Found stored message IDs: {'pending_msg_id': 1371891598530576444, 'completed_msg_id': 1371891596265521275}
+2025-05-14 00:59:48 | INFO     | cogs.dsm:send_initial_task_embeds:444 - [DEBUG] Fetching messages from channel/thread: 1371894712885317712
+2025-05-14 00:59:49 | INFO     | cogs.dsm:send_initial_task_embeds:450 - [DEBUG] Completed message 1371891596265521275 not found
+2025-05-14 00:59:49 | INFO     | cogs.dsm:send_initial_task_embeds:456 - [DEBUG] Pending message 1371891598530576444 not found
+2025-05-14 00:59:49 | INFO     | cogs.dsm:send_initial_task_embeds:463 - [DEBUG] Messages not found in target channel/thread
+2025-05-14 00:59:49 | INFO     | cogs.dsm:send_initial_task_embeds:464 - [DEBUG] Searching target channel history for messages
+2025-05-14 00:59:49 | INFO     | cogs.dsm:send_initial_task_embeds:465 - [DEBUG] Searching in channel/thread: 1371894712885317712
+2025-05-14 00:59:50 | INFO     | cogs.dsm:send_initial_task_embeds:489 - [DEBUG] Sent new completed tasks message: 1371894724138373121
+2025-05-14 00:59:50 | ERROR    | cogs.dsm:send_initial_task_embeds:503 - [DEBUG] Error sending initial task embeds: 400 Bad Request (error code: 50035): Invalid Form Body
+In embeds.0.fields.0.value: Must be 1024 or fewer in length.
+2025-05-14 00:59:50 | ERROR    | cogs.dsm:simulate_dsm:1005 - [COMMAND] Error in simulate_dsm: 400 Bad Request (error code: 50035): Invalid Form Body
+In embeds.0.fields.0.value: Must be 1024 or fewer in length.
+2025-05-14 01:07:06 | INFO     | cogs.dsm:cog_unload:317 - DSM cog unloaded

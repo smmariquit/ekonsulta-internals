@@ -1,0 +1,16 @@
+2025-05-14 00:57:44 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 00:57:47 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 00:57:47 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 00:57:47 | INFO     | cogs.dsm:__init__:287 - DSM cog initialized
+2025-05-14 00:57:48 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 00:57:50 | INFO     | cogs.dsm:before_daily_standup:692 - Daily standup task started
+2025-05-14 00:57:50 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-14 00:57:51 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-14 00:57:51 | INFO     | services.firebase_service:load_dsm_messages:195 - Loaded DSM messages from Firebase
+2025-05-14 00:57:51 | INFO     | cogs.dsm:on_ready:324 - Tasks and DSM messages loaded from Firebase
+2025-05-14 00:57:53 | INFO     | cogs.dsm:simulate_dsm:924 - [COMMAND] /simulate_dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 00:57:54 | INFO     | cogs.dsm:simulate_dsm:962 - [COMMAND] Created DSM thread: DAILY STANDUP MEETING - 2025-05-14 (1371894237762945245)
+2025-05-14 00:57:55 | INFO     | services.firebase_service:save_dsm_session:130 - Saved DSM session for guild 1365369294623608882
+2025-05-14 00:57:55 | INFO     | cogs.dsm:simulate_dsm:990 - [COMMAND] Sent opening message to thread 1371894237762945245
+2025-05-14 00:57:55 | INFO     | cogs.dsm:send_initial_task_embeds:418 - [DEBUG] No tasks found for user None
+2025-05-14 00:59:22 | INFO     | cogs.dsm:cog_unload:317 - DSM cog unloaded

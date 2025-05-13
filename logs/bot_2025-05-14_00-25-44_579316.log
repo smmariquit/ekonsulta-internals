@@ -1,0 +1,21 @@
+2025-05-14 00:25:44 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 00:25:46 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 00:25:46 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 00:25:46 | INFO     | cogs.dsm:__init__:287 - DSM cog initialized
+2025-05-14 00:26:28 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 00:26:31 | INFO     | cogs.dsm:before_daily_standup:781 - Daily standup task started
+2025-05-14 00:26:31 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-14 00:26:32 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-14 00:26:32 | INFO     | services.firebase_service:load_dsm_messages:202 - Loaded DSM messages from Firebase
+2025-05-14 00:26:32 | INFO     | cogs.dsm:on_ready:324 - Tasks and DSM messages loaded from Firebase
+2025-05-14 00:26:45 | INFO     | cogs.dsm:simulate_dsm:1013 - [COMMAND] /simulate_dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 00:26:46 | INFO     | cogs.dsm:simulate_dsm:1051 - [COMMAND] Created DSM thread: DAILY STANDUP MEETING - 2025-05-14 (1371886401368625182)
+2025-05-14 00:26:47 | INFO     | services.firebase_service:save_dsm_session:130 - Saved DSM session for guild 1365369294623608882
+2025-05-14 00:26:47 | INFO     | cogs.dsm:simulate_dsm:1079 - [COMMAND] Sent opening message to thread 1371886401368625182
+2025-05-14 00:26:47 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-14 00:26:47 | INFO     | cogs.dsm:send_initial_task_embeds:527 - [DEBUG] Created embeds with 10 completed and 26 pending tasks
+2025-05-14 00:26:47 | INFO     | cogs.dsm:send_initial_task_embeds:531 - [DEBUG] Target channel: 1371886401368625182
+2025-05-14 00:26:47 | INFO     | cogs.dsm:send_initial_task_embeds:538 - [DEBUG] Found stored message IDs: 1371885324367827146
+2025-05-14 00:26:47 | ERROR    | cogs.dsm:send_initial_task_embeds:592 - Error sending initial task embeds: 'int' object is not subscriptable
+2025-05-14 00:26:47 | ERROR    | cogs.dsm:simulate_dsm:1091 - [COMMAND] Error in simulate_dsm: 'int' object is not subscriptable
+2025-05-14 00:27:59 | INFO     | cogs.dsm:cog_unload:317 - DSM cog unloaded

@@ -1,0 +1,57 @@
+2025-05-13 23:46:32 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-13 23:46:34 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-13 23:46:34 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-13 23:46:34 | INFO     | cogs.dsm:__init__:243 - DSM cog initialized
+2025-05-13 23:46:34 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-13 23:46:37 | INFO     | cogs.dsm:before_daily_standup:614 - Daily standup task started
+2025-05-13 23:46:37 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-13 23:46:38 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-13 23:46:38 | INFO     | services.firebase_service:load_dsm_messages:202 - Loaded DSM messages from Firebase
+2025-05-13 23:46:38 | INFO     | cogs.dsm:on_ready:275 - Tasks and DSM messages loaded from Firebase
+2025-05-13 23:46:41 | INFO     | cogs.dsm:simulate_dsm:842 - [COMMAND] /simulate_dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-13 23:46:42 | INFO     | cogs.dsm:simulate_dsm:880 - [COMMAND] Created DSM thread: DAILY STANDUP MEETING - 2025-05-13 (1371876317653635203)
+2025-05-13 23:46:42 | INFO     | services.firebase_service:save_dsm_session:130 - Saved DSM session for guild 1365369294623608882
+2025-05-13 23:46:43 | INFO     | cogs.dsm:simulate_dsm:908 - [COMMAND] Sent opening message to thread 1371876317653635203
+2025-05-13 23:46:43 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-13 23:46:43 | INFO     | services.firebase_service:save_dsm_messages:177 - Saved DSM messages to Firebase
+2025-05-13 23:46:43 | INFO     | cogs.dsm:send_initial_task_embeds:422 - Sent initial task embeds in thread DAILY STANDUP MEETING - 2025-05-13
+2025-05-13 23:47:04 | INFO     | cogs.dsm:dsm:1433 - [COMMAND] /dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-13 23:47:05 | INFO     | cogs.dsm:update_task_message:996 - [DEBUG] Starting update_task_message for channel 1371850944140017698
+2025-05-13 23:47:05 | INFO     | cogs.dsm:update_task_message:1019 - [DEBUG] Updating for specific user 1048212846720327681
+2025-05-13 23:47:05 | INFO     | cogs.dsm:update_task_message:1031 - [DEBUG] Found 30 tasks for user
+2025-05-13 23:47:05 | INFO     | cogs.dsm:update_task_message:1052 - [DEBUG] Generated control number: PWKY86
+2025-05-13 23:47:05 | INFO     | cogs.dsm:update_task_message:1095 - [DEBUG] Created embed with 7 completed and 23 pending tasks
+2025-05-13 23:47:05 | INFO     | cogs.dsm:update_task_message:1096 - [DEBUG] Embed footer: Total Tasks: 30 | Completed: 7 | Pending: 23 | Control: PWKY86
+2025-05-13 23:47:05 | INFO     | cogs.dsm:update_task_message:1100 - [DEBUG] Target channel: 1371850944140017698
+2025-05-13 23:47:05 | INFO     | cogs.dsm:update_task_message:1107 - [DEBUG] Found stored message ID: 1371876325018570854
+2025-05-13 23:47:06 | WARNING  | cogs.dsm:update_task_message:1121 - [DEBUG] Could not find message 1371876325018570854: 404 Not Found (error code: 10008): Unknown Message
+2025-05-13 23:47:06 | INFO     | cogs.dsm:update_task_message:1125 - [DEBUG] Searching channel history for message
+2025-05-13 23:47:06 | INFO     | cogs.dsm:update_task_message:1129 - [DEBUG] Found message in history: 1371875670854078484
+2025-05-13 23:47:06 | INFO     | services.firebase_service:save_dsm_messages:177 - Saved DSM messages to Firebase
+2025-05-13 23:47:07 | INFO     | cogs.dsm:update_task_message:1137 - [DEBUG] Deleted old message 1371875670854078484
+2025-05-13 23:47:07 | INFO     | services.firebase_service:save_dsm_messages:177 - Saved DSM messages to Firebase
+2025-05-13 23:47:07 | INFO     | cogs.dsm:update_task_message:1144 - [DEBUG] Created new message 1371876424830554213
+2025-05-13 23:47:13 | INFO     | cogs.dsm:_add_task:651 - [DEBUG] Starting task addition for user 1048212846720327681 (pataponz)
+2025-05-13 23:47:13 | INFO     | cogs.dsm:_add_task:659 - [DEBUG] Generated task ID: ispyyv
+2025-05-13 23:47:13 | INFO     | cogs.dsm:_add_task:664 - [DEBUG] Added task to user's task list
+2025-05-13 23:47:13 | DEBUG    | services.firebase_service:save_user:59 - Saved user data for pataponz
+2025-05-13 23:47:13 | INFO     | cogs.dsm:_add_task:677 - [DEBUG] Updated user data in Firebase
+2025-05-13 23:47:13 | INFO     | services.firebase_service:save_tasks:95 - Saved tasks to Firebase
+2025-05-13 23:47:13 | INFO     | cogs.dsm:_add_task:681 - [DEBUG] Saved tasks to Firebase
+2025-05-13 23:47:13 | INFO     | cogs.dsm:_add_task:687 - [DEBUG] Searching for DSM thread for date 2025-05-13
+2025-05-13 23:47:13 | INFO     | cogs.dsm:_add_task:699 - [DEBUG] Found active thread: 1371850944140017698
+2025-05-13 23:47:13 | INFO     | cogs.dsm:_add_task:704 - [DEBUG] Updating message in thread 1371850944140017698
+2025-05-13 23:47:13 | INFO     | cogs.dsm:update_task_message:996 - [DEBUG] Starting update_task_message for channel 1371850944140017698
+2025-05-13 23:47:13 | INFO     | cogs.dsm:update_task_message:1019 - [DEBUG] Updating for specific user 1048212846720327681
+2025-05-13 23:47:13 | INFO     | cogs.dsm:update_task_message:1031 - [DEBUG] Found 31 tasks for user
+2025-05-13 23:47:13 | INFO     | cogs.dsm:update_task_message:1052 - [DEBUG] Generated control number: 97PKGU
+2025-05-13 23:47:13 | INFO     | cogs.dsm:update_task_message:1095 - [DEBUG] Created embed with 7 completed and 24 pending tasks
+2025-05-13 23:47:13 | INFO     | cogs.dsm:update_task_message:1096 - [DEBUG] Embed footer: Total Tasks: 31 | Completed: 7 | Pending: 24 | Control: 97PKGU
+2025-05-13 23:47:13 | INFO     | cogs.dsm:update_task_message:1100 - [DEBUG] Target channel: 1371850944140017698
+2025-05-13 23:47:13 | INFO     | cogs.dsm:update_task_message:1107 - [DEBUG] Found stored message ID: 1371876424830554213
+2025-05-13 23:47:14 | INFO     | cogs.dsm:update_task_message:1119 - [DEBUG] Successfully fetched message 1371876424830554213 from channel
+2025-05-13 23:47:14 | INFO     | cogs.dsm:update_task_message:1137 - [DEBUG] Deleted old message 1371876424830554213
+2025-05-13 23:47:14 | INFO     | services.firebase_service:save_dsm_messages:177 - Saved DSM messages to Firebase
+2025-05-13 23:47:14 | INFO     | cogs.dsm:update_task_message:1144 - [DEBUG] Created new message 1371876455243452558
+2025-05-13 23:47:14 | INFO     | cogs.dsm:_add_task:710 - [DEBUG] Task addition completed for pataponz
+2025-05-13 23:48:31 | INFO     | cogs.dsm:cog_unload:268 - DSM cog unloaded

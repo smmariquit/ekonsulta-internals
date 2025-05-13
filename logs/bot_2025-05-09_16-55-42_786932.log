@@ -1,0 +1,10 @@
+2025-05-09 16:55:42 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-09 16:55:46 | INFO     | services.firebase_service:__init__:21 - Firebase service initialized
+2025-05-09 16:55:46 | INFO     | cogs.dsm:__init__:24 - DSM cog initialized
+2025-05-09 16:55:46 | INFO     | __main__:setup_hook:40 - Cogs loaded
+2025-05-09 16:55:49 | INFO     | cogs.dsm:before_daily_standup:167 - Daily standup task started
+2025-05-09 16:55:49 | INFO     | __main__:on_ready:44 - Logged in as E-Konsulta Internals
+2025-05-09 16:55:50 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 16:55:50 | INFO     | cogs.dsm:on_ready:173 - Tasks loaded from Firebase
+2025-05-09 16:55:58 | ERROR    | cogs.dsm:simulate_dsm:385 - Error in simulate_dsm: PartialMessage.create_thread() got an unexpected keyword argument 'type'
+2025-05-09 16:56:58 | INFO     | cogs.dsm:cog_unload:29 - DSM cog unloaded
