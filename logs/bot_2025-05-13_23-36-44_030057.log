@@ -1,0 +1,25 @@
+2025-05-13 23:36:44 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-13 23:36:46 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-13 23:36:46 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-13 23:36:46 | INFO     | cogs.dsm:__init__:226 - DSM cog initialized
+2025-05-13 23:36:46 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-13 23:36:49 | INFO     | cogs.dsm:before_daily_standup:597 - Daily standup task started
+2025-05-13 23:36:49 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-13 23:36:49 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-13 23:36:49 | INFO     | services.firebase_service:load_dsm_messages:202 - Loaded DSM messages from Firebase
+2025-05-13 23:36:49 | INFO     | cogs.dsm:on_ready:258 - Tasks and DSM messages loaded from Firebase
+2025-05-13 23:36:56 | INFO     | cogs.dsm:dsm:1451 - [COMMAND] /dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-13 23:36:57 | INFO     | cogs.dsm:update_task_message:979 - [DEBUG] Starting update_task_message for channel 1371850944140017698
+2025-05-13 23:36:57 | INFO     | cogs.dsm:update_task_message:1002 - [DEBUG] Updating for specific user 1048212846720327681
+2025-05-13 23:36:57 | INFO     | cogs.dsm:update_task_message:1014 - [DEBUG] Found 28 tasks for user
+2025-05-13 23:36:57 | INFO     | cogs.dsm:update_task_message:1035 - [DEBUG] Generated control number: W2SM3I
+2025-05-13 23:36:57 | INFO     | cogs.dsm:update_task_message:1078 - [DEBUG] Created embed with 3 completed and 25 pending tasks
+2025-05-13 23:36:57 | INFO     | cogs.dsm:update_task_message:1079 - [DEBUG] Embed footer: Total Tasks: 28 | Completed: 3 | Pending: 25 | Control: W2SM3I
+2025-05-13 23:36:57 | INFO     | cogs.dsm:update_task_message:1083 - [DEBUG] Target channel: 1371850944140017698
+2025-05-13 23:36:57 | INFO     | cogs.dsm:update_task_message:1090 - [DEBUG] Found stored message ID: 1371869056105185363
+2025-05-13 23:36:58 | INFO     | cogs.dsm:update_task_message:1102 - [DEBUG] Successfully fetched message 1371869056105185363 from channel
+2025-05-13 23:36:58 | INFO     | cogs.dsm:update_task_message:1120 - [DEBUG] Current message embed footer: Total Tasks: 28 | Completed: 3 | Pending: 25 | Control: XCGPN0
+2025-05-13 23:36:58 | INFO     | cogs.dsm:update_task_message:1125 - [DEBUG] Attempted to edit message 1371869056105185363
+2025-05-13 23:36:58 | INFO     | cogs.dsm:update_task_message:1130 - [DEBUG] Updated message embed footer: Total Tasks: 28 | Completed: 3 | Pending: 25 | Control: W2SM3I
+2025-05-13 23:36:58 | INFO     | cogs.dsm:update_task_message:1140 - [DEBUG] Successfully verified message update for 1371869056105185363
+2025-05-13 23:38:00 | INFO     | cogs.dsm:cog_unload:251 - DSM cog unloaded

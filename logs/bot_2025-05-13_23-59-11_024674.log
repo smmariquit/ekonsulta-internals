@@ -1,0 +1,20 @@
+2025-05-13 23:59:11 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-13 23:59:13 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-13 23:59:13 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-13 23:59:13 | INFO     | cogs.dsm:__init__:270 - DSM cog initialized
+2025-05-13 23:59:13 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-13 23:59:16 | INFO     | cogs.dsm:before_daily_standup:740 - Daily standup task started
+2025-05-13 23:59:16 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-13 23:59:17 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-13 23:59:17 | INFO     | services.firebase_service:load_dsm_messages:202 - Loaded DSM messages from Firebase
+2025-05-13 23:59:17 | INFO     | cogs.dsm:on_ready:302 - Tasks and DSM messages loaded from Firebase
+2025-05-13 23:59:27 | INFO     | cogs.dsm:simulate_dsm:968 - [COMMAND] /simulate_dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-13 23:59:29 | INFO     | cogs.dsm:simulate_dsm:1006 - [COMMAND] Created DSM thread: DAILY STANDUP MEETING - 2025-05-13 (1371879533204082740)
+2025-05-13 23:59:29 | INFO     | services.firebase_service:save_dsm_session:130 - Saved DSM session for guild 1365369294623608882
+2025-05-13 23:59:30 | INFO     | cogs.dsm:simulate_dsm:1034 - [COMMAND] Sent opening message to thread 1371879533204082740
+2025-05-13 23:59:30 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-13 23:59:30 | INFO     | cogs.dsm:send_initial_task_embeds:491 - [DEBUG] Created embed with 0 completed and 0 pending tasks
+2025-05-13 23:59:30 | INFO     | cogs.dsm:send_initial_task_embeds:492 - [DEBUG] Embed footer: Total Tasks: 31
+2025-05-13 23:59:30 | ERROR    | cogs.dsm:send_initial_task_embeds:551 - Error sending initial task embeds: name 'current_thread' is not defined
+2025-05-13 23:59:30 | ERROR    | cogs.dsm:simulate_dsm:1046 - [COMMAND] Error in simulate_dsm: name 'current_thread' is not defined
+2025-05-14 00:00:38 | INFO     | cogs.dsm:cog_unload:295 - DSM cog unloaded

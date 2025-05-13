@@ -1,0 +1,21 @@
+2025-05-09 17:06:09 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-09 17:06:11 | INFO     | services.firebase_service:__init__:21 - Firebase service initialized
+2025-05-09 17:06:11 | INFO     | cogs.dsm:__init__:26 - DSM cog initialized
+2025-05-09 17:06:11 | INFO     | __main__:setup_hook:40 - Cogs loaded
+2025-05-09 17:06:14 | INFO     | cogs.dsm:before_daily_standup:222 - Daily standup task started
+2025-05-09 17:06:14 | INFO     | __main__:on_ready:44 - Logged in as E-Konsulta Internals
+2025-05-09 17:06:14 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 17:06:14 | INFO     | cogs.dsm:on_ready:228 - Tasks loaded from Firebase
+2025-05-09 17:06:20 | INFO     | cogs.dsm:simulate_dsm:418 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-09
+2025-05-09 17:06:21 | INFO     | cogs.dsm:simulate_dsm:446 - Sent opening message to thread
+2025-05-09 17:06:21 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 17:06:22 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:06:22 | INFO     | cogs.dsm:send_initial_task_embeds:79 - Sent initial task embeds in thread DAILY STANDUP MEETING - 2025-05-09
+2025-05-09 17:09:04 | DEBUG    | services.firebase_service:save_user:47 - Saved user data for pataponz
+2025-05-09 17:09:05 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:09:07 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:09:07 | INFO     | cogs.dsm:add_task:284 - Added task m for pataponz: Go to doctor
+2025-05-09 17:09:10 | DEBUG    | services.firebase_service:save_user:47 - Saved user data for pataponz
+2025-05-09 17:09:11 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:09:12 | INFO     | cogs.dsm:add_task:284 - Added task s for pataponz: Go to doctor
+2025-05-09 17:10:19 | INFO     | cogs.dsm:cog_unload:43 - DSM cog unloaded

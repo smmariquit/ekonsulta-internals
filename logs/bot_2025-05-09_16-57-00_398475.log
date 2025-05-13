@@ -1,0 +1,14 @@
+2025-05-09 16:57:00 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-09 16:57:04 | INFO     | services.firebase_service:__init__:21 - Firebase service initialized
+2025-05-09 16:57:04 | INFO     | cogs.dsm:__init__:24 - DSM cog initialized
+2025-05-09 16:57:04 | INFO     | __main__:setup_hook:40 - Cogs loaded
+2025-05-09 16:57:07 | INFO     | cogs.dsm:before_daily_standup:166 - Daily standup task started
+2025-05-09 16:57:07 | INFO     | __main__:on_ready:44 - Logged in as E-Konsulta Internals
+2025-05-09 16:57:07 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 16:57:07 | INFO     | cogs.dsm:on_ready:172 - Tasks loaded from Firebase
+2025-05-09 16:57:11 | INFO     | cogs.dsm:simulate_dsm:346 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-09
+2025-05-09 16:57:12 | INFO     | cogs.dsm:simulate_dsm:374 - Sent opening message to thread
+2025-05-09 16:57:21 | DEBUG    | services.firebase_service:save_user:47 - Saved user data for pataponz
+2025-05-09 16:57:21 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 16:57:22 | ERROR    | cogs.dsm:update_task_message:522 - Error updating task message: 'TextChannel' object has no attribute 'active_threads'
+2025-05-09 16:57:22 | INFO     | cogs.dsm:add_task:224 - Added task for pataponz: Talk to doctor

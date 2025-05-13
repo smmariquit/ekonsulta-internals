@@ -1,0 +1,12 @@
+2025-05-09 17:02:13 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-09 17:02:18 | INFO     | services.firebase_service:__init__:21 - Firebase service initialized
+2025-05-09 17:02:18 | INFO     | cogs.dsm:__init__:24 - DSM cog initialized
+2025-05-09 17:02:18 | INFO     | __main__:setup_hook:40 - Cogs loaded
+2025-05-09 17:02:20 | INFO     | cogs.dsm:before_daily_standup:208 - Daily standup task started
+2025-05-09 17:02:20 | INFO     | __main__:on_ready:44 - Logged in as E-Konsulta Internals
+2025-05-09 17:02:21 | INFO     | services.firebase_service:load_tasks:104 - Loaded tasks from Firebase
+2025-05-09 17:02:21 | INFO     | cogs.dsm:on_ready:214 - Tasks loaded from Firebase
+2025-05-09 17:02:38 | INFO     | services.firebase_service:save_tasks:83 - Saved tasks to Firebase
+2025-05-09 17:02:38 | ERROR    | cogs.dsm:update_task_message:573 - Error updating task message: 'TextChannel' object has no attribute 'active_threads'
+2025-05-09 17:02:38 | INFO     | cogs.dsm:mark_done:289 - Marked task 5 as done for pataponz
+2025-05-09 17:05:28 | INFO     | cogs.dsm:cog_unload:29 - DSM cog unloaded

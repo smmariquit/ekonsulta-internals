@@ -1,0 +1,6 @@
+2025-05-14 00:12:32 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 00:12:34 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 00:12:34 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 00:12:34 | INFO     | cogs.dsm:__init__:270 - DSM cog initialized
+2025-05-14 00:12:35 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 00:12:37 | INFO     | cogs.dsm:cog_unload:300 - DSM cog unloaded

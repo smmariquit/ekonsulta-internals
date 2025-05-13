@@ -1,0 +1,31 @@
+2025-05-13 23:05:51 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-13 23:05:53 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-13 23:05:53 | INFO     | cogs.dsm:__init__:144 - DSM cog initialized
+2025-05-13 23:05:54 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-13 23:05:57 | INFO     | cogs.dsm:before_daily_standup:439 - Daily standup task started
+2025-05-13 23:05:57 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-13 23:05:57 | INFO     | services.firebase_service:load_tasks:105 - Loaded tasks from Firebase
+2025-05-13 23:05:57 | INFO     | cogs.dsm:on_ready:445 - Tasks loaded from Firebase
+2025-05-13 23:06:00 | WARNING  | cogs.dsm:update_task_message:908 - Could not update message for stimmie: 404 Not Found (error code: 10008): Unknown Message
+2025-05-13 23:06:01 | INFO     | services.firebase_service:save_tasks:84 - Saved tasks to Firebase
+2025-05-13 23:06:01 | INFO     | cogs.dsm:update_task_message:913 - Created new task message for stimmie
+2025-05-13 23:06:05 | DEBUG    | services.firebase_service:save_user:48 - Saved user data for pataponz
+2025-05-13 23:06:06 | INFO     | services.firebase_service:save_tasks:84 - Saved tasks to Firebase
+2025-05-13 23:06:07 | INFO     | cogs.dsm:update_task_message:906 - Updated task message for stimmie
+2025-05-13 23:06:07 | INFO     | cogs.dsm:_add_task:529 - Added task xkgvai for pataponz: Add
+2025-05-13 23:06:15 | INFO     | cogs.dsm:simulate_dsm:699 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-13
+2025-05-13 23:06:15 | INFO     | services.firebase_service:save_dsm_session:119 - Saved DSM session for guild 1365369294623608882
+2025-05-13 23:06:16 | INFO     | cogs.dsm:simulate_dsm:727 - Sent opening message to thread
+2025-05-13 23:06:16 | INFO     | services.firebase_service:load_tasks:105 - Loaded tasks from Firebase
+2025-05-13 23:06:16 | INFO     | services.firebase_service:save_tasks:84 - Saved tasks to Firebase
+2025-05-13 23:06:16 | INFO     | cogs.dsm:send_initial_task_embeds:248 - Sent initial task embeds in thread DAILY STANDUP MEETING - 2025-05-13
+2025-05-13 23:06:27 | DEBUG    | services.firebase_service:save_user:48 - Saved user data for pataponz
+2025-05-13 23:06:27 | INFO     | services.firebase_service:save_tasks:84 - Saved tasks to Firebase
+2025-05-13 23:06:30 | INFO     | cogs.dsm:update_task_message:906 - Updated task message for stimmie
+2025-05-13 23:06:30 | INFO     | cogs.dsm:_add_task:529 - Added task yphjsu for pataponz: Watw
+2025-05-13 23:06:40 | INFO     | cogs.dsm:update_task_message:906 - Updated task message for stimmie
+2025-05-13 23:06:44 | DEBUG    | services.firebase_service:save_user:48 - Saved user data for pataponz
+2025-05-13 23:06:44 | INFO     | services.firebase_service:save_tasks:84 - Saved tasks to Firebase
+2025-05-13 23:06:45 | INFO     | cogs.dsm:update_task_message:906 - Updated task message for stimmie
+2025-05-13 23:06:45 | INFO     | cogs.dsm:_add_task:529 - Added task podadh for pataponz: Waw
+2025-05-13 23:09:53 | INFO     | cogs.dsm:cog_unload:169 - DSM cog unloaded

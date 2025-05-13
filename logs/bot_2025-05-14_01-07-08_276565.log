@@ -1,0 +1,75 @@
+2025-05-14 01:07:08 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 01:07:11 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 01:07:11 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 01:07:11 | INFO     | cogs.dsm:__init__:287 - DSM cog initialized
+2025-05-14 01:07:12 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 01:07:15 | INFO     | cogs.dsm:before_daily_standup:899 - Daily standup task started
+2025-05-14 01:07:15 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-14 01:07:15 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-14 01:07:15 | INFO     | services.firebase_service:load_dsm_messages:198 - Loaded DSM messages from Firebase
+2025-05-14 01:07:15 | INFO     | cogs.dsm:on_ready:324 - Tasks and DSM messages loaded from Firebase
+2025-05-14 01:07:27 | INFO     | cogs.dsm:simulate_dsm:1131 - [COMMAND] /simulate_dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 01:07:28 | INFO     | cogs.dsm:simulate_dsm:1169 - [COMMAND] Created DSM thread: DAILY STANDUP MEETING - 2025-05-14 (1371896642349039657)
+2025-05-14 01:07:28 | INFO     | services.firebase_service:save_dsm_session:130 - Saved DSM session for guild 1365369294623608882
+2025-05-14 01:07:29 | INFO     | cogs.dsm:simulate_dsm:1197 - [COMMAND] Sent opening message to thread 1371896642349039657
+2025-05-14 01:07:29 | INFO     | cogs.dsm:simulate_dsm:1202 - [DEBUG] Sending initial task embeds for user 1048212846720327681
+2025-05-14 01:07:29 | INFO     | cogs.dsm:create_task_embeds:599 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 01:07:29 | INFO     | cogs.dsm:send_initial_task_embeds:622 - [DEBUG] Created embeds with 10 completed and 36 pending tasks
+2025-05-14 01:07:29 | INFO     | cogs.dsm:send_initial_task_embeds:626 - [DEBUG] Target channel: 1371896642349039657
+2025-05-14 01:07:29 | INFO     | cogs.dsm:send_initial_task_embeds:630 - [DEBUG] Found stored message data: {'pending_msg_id': 1371891598530576444, 'completed_msg_id': 1371891596265521275}
+2025-05-14 01:07:29 | INFO     | cogs.dsm:send_initial_task_embeds:638 - [DEBUG] Fetching messages from channel/thread: 1371896642349039657
+2025-05-14 01:07:29 | INFO     | cogs.dsm:send_initial_task_embeds:662 - [DEBUG] Messages not found in target channel/thread
+2025-05-14 01:07:29 | INFO     | cogs.dsm:send_initial_task_embeds:663 - [DEBUG] Searching target channel history for messages
+2025-05-14 01:07:29 | INFO     | cogs.dsm:send_initial_task_embeds:664 - [DEBUG] Searching in channel/thread: 1371896642349039657
+2025-05-14 01:07:30 | INFO     | cogs.dsm:send_initial_task_embeds:687 - [DEBUG] Sent new completed message: 1371896652369100901
+2025-05-14 01:07:30 | INFO     | cogs.dsm:send_initial_task_embeds:699 - [DEBUG] Sent new pending message: 1371896653950484640
+2025-05-14 01:07:31 | INFO     | cogs.dsm:send_initial_task_embeds:699 - [DEBUG] Sent new pending message: 1371896655795978280
+2025-05-14 01:07:31 | ERROR    | cogs.dsm:send_initial_task_embeds:710 - [DEBUG] Error sending initial task embeds: DSM.save_dsm_message() missing 1 required positional argument: 'pending_msg_id'
+2025-05-14 01:07:31 | ERROR    | cogs.dsm:simulate_dsm:1212 - [COMMAND] Error in simulate_dsm: DSM.save_dsm_message() missing 1 required positional argument: 'pending_msg_id'
+2025-05-14 01:07:44 | INFO     | cogs.dsm:dsm:1809 - [COMMAND] /dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 01:07:45 | INFO     | cogs.dsm:update_task_message:1330 - [DEBUG] Starting update_task_message for channel 1371882451709857843
+2025-05-14 01:07:45 | INFO     | cogs.dsm:update_task_message:1345 - [DEBUG] Updating for specific user 1048212846720327681
+2025-05-14 01:07:45 | INFO     | cogs.dsm:update_task_message:1357 - [DEBUG] Found 46 tasks for user
+2025-05-14 01:07:45 | INFO     | cogs.dsm:create_task_embeds:599 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 01:07:45 | INFO     | cogs.dsm:update_task_message:1361 - [DEBUG] Created embeds with 10 completed and 36 pending tasks
+2025-05-14 01:07:45 | INFO     | cogs.dsm:update_task_message:1365 - [DEBUG] Target channel: 1371882451709857843
+2025-05-14 01:07:45 | INFO     | cogs.dsm:update_task_message:1372 - [DEBUG] Found stored message IDs: {'pending_msg_id': 1371891598530576444, 'completed_msg_id': 1371891596265521275}
+2025-05-14 01:07:45 | INFO     | cogs.dsm:update_task_message:1376 - [DEBUG] Fetching messages from channel/thread: 1371882451709857843
+2025-05-14 01:07:46 | INFO     | cogs.dsm:update_task_message:1381 - [DEBUG] Completed message 1371891596265521275 not found
+2025-05-14 01:07:46 | INFO     | cogs.dsm:update_task_message:1400 - [DEBUG] Messages not found in target channel/thread
+2025-05-14 01:07:46 | INFO     | cogs.dsm:update_task_message:1408 - [DEBUG] Searching target channel history for messages
+2025-05-14 01:07:46 | INFO     | cogs.dsm:update_task_message:1409 - [DEBUG] Searching in channel/thread: 1371882451709857843
+2025-05-14 01:07:46 | INFO     | cogs.dsm:update_task_message:1412 - [DEBUG] Found message with embeds: 1371882465886732359
+2025-05-14 01:07:46 | INFO     | cogs.dsm:update_task_message:1412 - [DEBUG] Found message with embeds: 1371882463869014158
+2025-05-14 01:07:46 | INFO     | cogs.dsm:update_task_message:1414 - [DEBUG] Found completed tasks message: 1371882463869014158
+2025-05-14 01:07:47 | ERROR    | cogs.dsm:update_task_message:1425 - [DEBUG] Error fetching next message: 404 Not Found (error code: 10008): Unknown Message
+2025-05-14 01:07:47 | INFO     | cogs.dsm:update_task_message:1412 - [DEBUG] Found message with embeds: 1371882456541696023
+2025-05-14 01:07:55 | INFO     | cogs.dsm:_add_task:936 - [DEBUG] Starting task addition for user 1048212846720327681 (pataponz)
+2025-05-14 01:07:55 | INFO     | cogs.dsm:_add_task:944 - [DEBUG] Generated task ID: b8zg
+2025-05-14 01:07:55 | INFO     | cogs.dsm:_add_task:953 - [DEBUG] Added task to user's task list
+2025-05-14 01:07:55 | DEBUG    | services.firebase_service:save_user:59 - Saved user data for pataponz
+2025-05-14 01:07:55 | INFO     | cogs.dsm:_add_task:966 - [DEBUG] Updated user data in Firebase
+2025-05-14 01:07:55 | INFO     | services.firebase_service:save_tasks:95 - Saved tasks to Firebase
+2025-05-14 01:07:55 | INFO     | cogs.dsm:_add_task:970 - [DEBUG] Saved tasks to Firebase
+2025-05-14 01:07:55 | INFO     | cogs.dsm:_add_task:976 - [DEBUG] Searching for DSM thread for date 2025-05-14
+2025-05-14 01:07:56 | INFO     | cogs.dsm:_add_task:988 - [DEBUG] Found active thread: 1371882451709857843
+2025-05-14 01:07:56 | INFO     | cogs.dsm:_add_task:993 - [DEBUG] Updating messages in thread 1371882451709857843
+2025-05-14 01:07:56 | INFO     | cogs.dsm:update_task_message:1330 - [DEBUG] Starting update_task_message for channel 1371882451709857843
+2025-05-14 01:07:56 | INFO     | cogs.dsm:update_task_message:1345 - [DEBUG] Updating for specific user 1048212846720327681
+2025-05-14 01:07:56 | INFO     | cogs.dsm:update_task_message:1357 - [DEBUG] Found 47 tasks for user
+2025-05-14 01:07:56 | INFO     | cogs.dsm:create_task_embeds:599 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 01:07:56 | INFO     | cogs.dsm:update_task_message:1361 - [DEBUG] Created embeds with 10 completed and 37 pending tasks
+2025-05-14 01:07:56 | INFO     | cogs.dsm:update_task_message:1365 - [DEBUG] Target channel: 1371882451709857843
+2025-05-14 01:07:56 | INFO     | cogs.dsm:update_task_message:1372 - [DEBUG] Found stored message IDs: {'pending_msg_id': 1371891598530576444, 'completed_msg_id': 1371891596265521275}
+2025-05-14 01:07:56 | INFO     | cogs.dsm:update_task_message:1376 - [DEBUG] Fetching messages from channel/thread: 1371882451709857843
+2025-05-14 01:07:56 | INFO     | cogs.dsm:update_task_message:1381 - [DEBUG] Completed message 1371891596265521275 not found
+2025-05-14 01:07:56 | INFO     | cogs.dsm:update_task_message:1400 - [DEBUG] Messages not found in target channel/thread
+2025-05-14 01:07:56 | INFO     | cogs.dsm:update_task_message:1408 - [DEBUG] Searching target channel history for messages
+2025-05-14 01:07:56 | INFO     | cogs.dsm:update_task_message:1409 - [DEBUG] Searching in channel/thread: 1371882451709857843
+2025-05-14 01:07:57 | INFO     | cogs.dsm:update_task_message:1412 - [DEBUG] Found message with embeds: 1371882465886732359
+2025-05-14 01:07:57 | INFO     | cogs.dsm:update_task_message:1412 - [DEBUG] Found message with embeds: 1371882463869014158
+2025-05-14 01:07:57 | INFO     | cogs.dsm:update_task_message:1414 - [DEBUG] Found completed tasks message: 1371882463869014158
+2025-05-14 01:07:57 | ERROR    | cogs.dsm:update_task_message:1425 - [DEBUG] Error fetching next message: 404 Not Found (error code: 10008): Unknown Message
+2025-05-14 01:07:57 | INFO     | cogs.dsm:update_task_message:1412 - [DEBUG] Found message with embeds: 1371882456541696023
+2025-05-14 01:07:57 | INFO     | cogs.dsm:_add_task:999 - [DEBUG] Task addition completed for pataponz
+2025-05-14 01:11:20 | INFO     | cogs.dsm:cog_unload:317 - DSM cog unloaded

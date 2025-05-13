@@ -1,0 +1,29 @@
+2025-05-14 02:35:51 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 02:35:54 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 02:35:54 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 02:35:54 | INFO     | cogs.dsm:__init__:462 - DSM cog initialized
+2025-05-14 02:35:54 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 02:35:57 | INFO     | cogs.dsm:before_daily_standup:1039 - Daily standup task started
+2025-05-14 02:35:57 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-14 02:35:58 | ERROR    | cogs.dsm:on_ready:2347 - Error loading data: 'description'
+2025-05-14 02:36:15 | INFO     | cogs.dsm:simulate_dsm:2353 - [COMMAND] /simulate_dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 02:36:16 | INFO     | cogs.dsm:simulate_dsm:2391 - [COMMAND] Created DSM thread: DAILY STANDUP MEETING - 2025-05-14 (1371918990296748094)
+2025-05-14 02:36:16 | INFO     | services.firebase_service:save_dsm_session:147 - Saved DSM session for guild 1365369294623608882
+2025-05-14 02:36:17 | INFO     | cogs.dsm:simulate_dsm:2419 - [COMMAND] Sent opening message to thread 1371918990296748094
+2025-05-14 02:36:17 | INFO     | services.firebase_service:update_config:140 - Updated config for guild 1365369294623608882
+2025-05-14 02:36:17 | INFO     | cogs.dsm:simulate_dsm:2434 - [COMMAND] Updated config with new thread ID and cleared old message IDs
+2025-05-14 02:36:17 | INFO     | cogs.dsm:get_current_dsm_thread:1432 - [DEBUG] Looking for thread: DAILY STANDUP MEETING - 2025-05-14
+2025-05-14 02:36:17 | INFO     | cogs.dsm:get_current_dsm_thread:1444 - [DEBUG] Found latest thread from config: 1371918990296748094 (DAILY STANDUP MEETING - 2025-05-14)
+2025-05-14 02:36:17 | INFO     | cogs.dsm:verify_message_ids:2231 - [DEBUG] Verifying messages in thread 1371918990296748094 (DAILY STANDUP MEETING - 2025-05-14)
+2025-05-14 02:36:17 | INFO     | services.firebase_service:update_config:140 - Updated config for guild 1365369294623608882
+2025-05-14 02:36:17 | INFO     | cogs.dsm:verify_message_ids:2317 - [DEBUG] Verified and updated message IDs for guild 1365369294623608882
+2025-05-14 02:36:26 | INFO     | cogs.dsm:dsm:1961 - [COMMAND] /dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 02:36:27 | INFO     | cogs.dsm:update_task_message:1517 - [DEBUG] No tasks found for user 1048212846720327681
+2025-05-14 02:36:35 | INFO     | cogs.dsm:_add_task:1076 - [DEBUG] Starting task addition for user 1048212846720327681 (pataponz)
+2025-05-14 02:36:35 | INFO     | cogs.dsm:_add_task:1080 - [DEBUG] Created new task list for user 1048212846720327681
+2025-05-14 02:36:35 | INFO     | cogs.dsm:_add_task:1084 - [DEBUG] Generated task ID: wz5m
+2025-05-14 02:36:35 | INFO     | cogs.dsm:_add_task:1093 - [DEBUG] Added task to user's task list
+2025-05-14 02:36:35 | DEBUG    | services.firebase_service:save_user:66 - Saved user data for pataponz
+2025-05-14 02:36:35 | INFO     | cogs.dsm:_add_task:1106 - [DEBUG] Updated user data in Firebase
+2025-05-14 02:36:35 | ERROR    | cogs.dsm:_add_task:1128 - [DEBUG] Error in _add_task: 'message_id'
+2025-05-14 02:37:29 | INFO     | cogs.dsm:cog_unload:492 - DSM cog unloaded
