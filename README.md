@@ -1,280 +1,159 @@
-# 🤖 Ekonsulta DSM Bot
+# Ekonsulta Internal Automations
 
-> *"Because your daily standups deserve to be as smooth as your morning coffee"* ☕
+A Discord bot for managing internal operations, task tracking, and daily standup meetings.
 
-## ✨ Features
+## Features
 
-### 🎯 Task Management
-- **Add Tasks** ➕ - Create new tasks with unique IDs
-- **Mark Tasks Done** ✅ - Track your progress
-- **Add Remarks** 📝 - Add context and notes to your tasks
-- **Task History** 📊 - View your task completion history
+### Task Management
+- Create, update, and track tasks with deadlines
+- Task status tracking (pending, in progress, completed)
+- Task categorization and priority levels
+- Task history and statistics
+- Task reminders and notifications
 
-### 🌅 Daily Standup Meetings
-- **Automated DSMs** 🤖 - Scheduled daily standup meetings
-- **Manual DSMs** 🎮 - Trigger standups whenever needed
-- **Task Tracking** 📈 - Monitor completed vs. pending tasks
-- **Deadline Management** ⏰ - Set and track DSM deadlines
-- **Thread Mode** 🧵 - Currently only thread mode is fully implemented (no-thread mode coming soon)
-- **Timezone Support** 🌍 - Future plans to implement Unix timestamps for better timezone handling
+### Daily Standup Meeting (DSM)
+- Automated daily standup threads
+- Task statistics and progress tracking
+- Participant tracking (updated/pending)
+- Configurable standup times and deadlines
+- Timezone support for all DSM operations
+- Manual DSM triggering with previous session finalization
 
-### 👥 User Management
-- **User Profiles** 👤 - Track user activity and participation
-- **Admin Controls** 👑 - Manage bot administrators
-- **Activity Tracking** 📱 - Monitor user engagement
+### Configuration
+- Guild-specific settings
+- Configurable channels and roles
+- Timezone settings
+- Thread management options
+- Task tracking preferences
 
-### 🔧 Configuration
-- **Customizable Settings** ⚙️ - Configure DSM timing and behavior
-- **Skip Dates** 🏖️ - Schedule DSM-free days
-- **Thread Management** 🧵 - Control thread archiving and naming
+### Task Tracking
+- Real-time task updates
+- Task completion tracking
+- Task statistics and analytics
+- Task history and audit logs
+- Task reminders and notifications
 
-## 🚀 Getting Started
+### Thread Management
+- Automated thread creation and archiving
+- Thread-based task discussions
+- Thread statistics and analytics
+- Thread cleanup and maintenance
 
-### Prerequisites
-- Python 3.8+
-- Discord Bot Token
-- Firebase Project with credentials
+## Commands
 
-### Installation
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/ekonsulta-internals.git
-cd ekonsulta-internals
-```
+### Task Management
+- `/task create` - Create a new task
+- `/task update` - Update an existing task
+- `/task complete` - Mark a task as complete
+- `/task list` - List all tasks
+- `/task stats` - View task statistics
 
-2. Install dependencies:
+### DSM Commands
+- `/dsm` - Trigger a manual DSM
+- `/config` - Configure DSM settings
+  - `channel` - Set DSM channel
+  - `time` - Set standup time
+  - `timezone` - Set timezone (e.g., 'Asia/Manila')
+  - `deadline` - Set task deadline
+  - `thread_duration` - Set thread archive duration
+  - `use_threads` - Toggle thread mode
+
+### Configuration
+- `/config` - View current configuration
+- `/config update` - Update configuration
+- `/config reset` - Reset configuration to defaults
+
+## Setup
+
+1. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Set up your environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your configuration
+2. Set up environment variables:
+```env
+DISCORD_TOKEN=your_discord_token
+FIREBASE_CREDENTIALS=path_to_firebase_credentials
 ```
 
-4. Add your Firebase credentials:
-```bash
-# Place your firebase-credentials.json in the project root
-```
-
-### Running the Bot
-```bash
-python bot.py
-```
-
-## 🎮 Commands
-
-### User Commands
-- `/dsm` - Open the DSM task management interface
-- `/add <task>` - Add a new task
-- `/done <task_id>` - Mark a task as complete
-- `/remark <task_id> <remark>` - Add a remark to a task
-- `/refresh_tasks` - Refresh your task view
-
-### Admin Commands
-- `/config` - Configure DSM settings
-- `/simulate_dsm` - Manually trigger a DSM
-- `/resend_dsm` - Resend the opening message
-- `/skip_dsm <date>` - Skip DSM on a specific date
-- `/unskip_dsm <date>` - Remove a date from skip list
-- `/list_skipped_dsm` - View skipped DSM dates
-- `/generate_report <days>` - Generate task report
-- `/add_admin <user>` - Add a bot administrator
-- `/remove_admin <user>` - Remove a bot administrator
-- `/list_admins` - View bot administrators
-
-## 📊 DSM Features
-
-### Automatic DSMs
-- Scheduled daily at configured time
-- Creates dedicated threads with full date format (e.g., "Daily Standup Meeting for March 21, 2024")
-- Tracks task completion and participant status
-- Monitors participation with real-time updates
-- Stores message IDs in Firebase for reliable updates
-- Maintains lists of updated and pending participants
-
-### Manual DSMs
-- Triggered by administrators
-- Same features as automatic DSMs
-- Flexible timing
-
-### Task Management
-- Unique task IDs
-- Status tracking
-- Remark system
-- Completion timestamps
-
-## 🔒 Security
-
-- Role-based access control
-- Admin-only commands
-- Secure Firebase integration
-- Environment variable protection
-
-## 🤝 Contributing
-
-We welcome contributions! Please feel free to submit a Pull Request.
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Built with ❤️ for the Ekonsulta team
-- Powered by Discord.py and Firebase
-- Inspired by agile methodologies
-
----
-
-*Made with ☕ and 🎵 by the Ekonsulta team*
-
-## Task ID System
-
-- 4-character alphanumeric codes (lowercase letters + numbers)
-- Total possible combinations: 1,679,616 (36^4)
-- Format examples: `a1b2`, `x7y9`, `1234`, `abcd`
-- Automatic fallback system if ID collision occurs
-
-## Discord Embed Limitations
-
-Discord embeds have the following limitations:
-1. Title: 256 characters
-2. Description: 4096 characters
-3. Field name: 256 characters
-4. Field value: 1024 characters
-5. Footer text: 2048 characters
-6. Total embed size: 6000 characters
-7. Maximum 25 fields per embed
-8. Maximum 10 embeds per message
-
-Due to these limitations, the bot:
-- Separates completed and pending tasks into different embeds
-- Groups tasks by date to stay within field limits
-- Truncates long task descriptions if necessary
-- Uses pagination for task selection menus (max 25 options)
-
-## Task Display Format
-
-Tasks are displayed in the following format:
-```
-HH:MM [`task_id`] Task description
-   📝 **Remark:** Remark text (if any)
-```
-
-Completed tasks show completion time:
-```
-HH:MM [`task_id`] Task description (HH:MM)
-```
-
-Tasks are grouped by date and sorted by time within each group.
-
-## Configuration
-
-The bot can be configured using the `/config` command (Admin only):
-- Standup hour and minute
-- Thread name template
-- Auto-archive duration
-- Thread/Channel mode
-
-# Internal Automations
-
-This repository contains various automation tools and bots for internal use.
-
-## Projects
-
-### 1. DSM Bot (Daily Standup Meeting Bot)
-A Discord bot that helps manage daily standup meetings by tracking tasks and their status.
-
-#### Features
-- Creates daily standup meeting threads
-- Tracks pending and completed tasks
-- Allows adding remarks to tasks
-- Supports task completion marking
-- Maintains task history
-
-#### Implementation Notes
-- Uses Firebase for data storage
-- Implements Discord.py for bot functionality
-- Handles both thread and message management
-- Supports multiple users and their tasks
-
-#### Important Considerations
-- Discord message IDs are not sequential (see `docs/dsm_bot.md` for details)
-- Each user has two messages in the DSM thread (completed and pending tasks)
-- Thread context must be maintained for proper message updates
-- Task IDs are unique and generated using alphanumeric characters
-
-#### Recent Updates
-- Fixed message finding logic to not rely on sequential IDs
-- Improved thread context handling
-- Enhanced error handling and logging
-- Added support for task remarks
-- Implemented proper message storage format
-
-### 2. [Other Projects]
-[Add other projects as they are developed]
-
-## Setup Instructions
-
-### Prerequisites
-- Python 3.8 or higher
-- Firebase account and credentials
-- Discord bot token
-
-### Installation
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Set up environment variables:
-   - `DISCORD_TOKEN`: Your Discord bot token
-   - `FIREBASE_CREDENTIALS`: Path to your Firebase credentials file
-
-### Running the Bot
+3. Run the bot:
 ```bash
 python main.py
 ```
 
-## Documentation
-- See `docs/dsm_bot.md` for detailed implementation notes
-- Check individual project directories for specific documentation
+## Dependencies
+- discord.py==2.3.2
+- python-dotenv==1.0.0
+- firebase_admin==6.2.0
+- apscheduler==3.10.4
+- PyPDF2==3.0.1
+- pytesseract==0.3.10
+- Pillow==10.1.0
+- pdf2image==1.16.3
+- loguru==0.7.2
+- pytz==2024.1
 
-## Contributing
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+## Best Practices
 
-## License
-[Add appropriate license information]
+### Task Management
+- Use clear and descriptive task names
+- Set realistic deadlines
+- Update task status regularly
+- Use task categories for better organization
+- Review task statistics periodically
 
-## ✨ Recent Updates
+### DSM Participation
+- Update tasks before the deadline
+- Use the ✅ reaction to mark completion
+- Check task statistics regularly
+- Participate in task discussions
+- Follow the configured timezone
 
-### 🎯 Task Management Improvements
-- Enhanced task tracking with real-time statistics
-- Improved task ID generation system
-- Better task display formatting
-- Added support for task remarks
+### Thread Management
+- Keep discussions relevant to tasks
+- Use threads for task-specific discussions
+- Archive old threads when no longer needed
+- Monitor thread activity and engagement
 
-### 🔄 Thread Management
-- Consolidated thread finding logic
-- Improved thread tracking in Firebase
-- Added message verification on startup
-- Enhanced thread selection system
+## Recent Updates
+- Added timezone support for DSM operations
+- Improved task statistics visualization
+- Enhanced participant tracking
+- Added manual DSM triggering with previous session finalization
+- Improved thread management and archiving
 
-### 📊 Message Handling
-- Improved message ID storage
-- Added support for multiple embeds
-- Enhanced error handling
-- Better message verification
+## Future Plans
+- Enhanced task analytics and reporting
+- Improved thread management features
+- Advanced participant tracking
+- Better statistics visualization
+- Integration with external task management tools
 
-### ⚙️ Configuration
-- Moved to guild-specific subcollections
-- Added DSM skip date support
-- Enhanced admin management
-- Improved configuration validation
+## Configuration
 
+### Timezone Configuration
+The bot uses the IANA Time Zone Database format for timezone configuration. This ensures accurate time handling across different regions and daylight saving time changes.
+
+To set your server's timezone, use the `/set_config timezone` command with a valid timezone name. For example:
+```
+/set_config timezone:Asia/Manila
+```
+
+Common timezone formats:
+- `Asia/Manila` (Philippines)
+- `UTC` (Universal Coordinated Time)
+- `America/New_York`
+- `Europe/London`
+- `Asia/Tokyo`
+- `Australia/Sydney`
+
+For a complete list of valid timezone names, visit: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
+Common mistakes to avoid:
+- Don't use abbreviations like "PHT" or "GMT+8"
+- Don't use offsets like "UTC+8"
+- Don't use spaces in the timezone name
+- Use forward slashes (/) not backslashes
+
+### Other Configuration Options
+// ... existing code ...
