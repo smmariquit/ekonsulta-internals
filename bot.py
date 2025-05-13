@@ -37,6 +37,8 @@ class StandupBot(commands.Bot):
         """Set up the bot."""
         # Load cogs
         await self.load_extension('cogs.dsm')
+        # Sync commands
+        await self.tree.sync()
         logger.info("Cogs loaded")
 
     async def on_ready(self):

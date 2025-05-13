@@ -2,11 +2,12 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
 import asyncio
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from models.task import Task
 from config.default_config import DEFAULT_CONFIG
 from utils.logger import get_logger
 import datetime
+from models.dsm_session import DSMSession
 
 logger = get_logger("firebase_service")
 
@@ -15,20 +16,38 @@ class FirebaseService:
     
     def __init__(self, credentials_path: str):
         """Initialize Firebase service."""
-        cred = credentials.Certificate(credentials_path)
-        firebase_admin.initialize_app(cred)
-        self.db = firestore.client()
+        self.credentials_path = credentials_path
+        self.db = None
+        self.initialize()
         logger.info("Firebase service initialized")
 
+    def initialize(self):
+        """Initialize Firebase connection."""
+        try:
+            cred = credentials.Certificate(self.credentials_path)
+            firebase_admin.initialize_app(cred)
+            self.db = firestore.client()
+            logger.info("Firebase connection established")
+        except Exception as e:
+            logger.error(f"Error initializing Firebase: {str(e)}")
+            raise
+
     async def get_config(self, guild_id: int) -> Dict[str, Any]:
-        """Get guild configuration."""
-        config_ref = self.db.collection('config').document(str(guild_id))
+        """Get guild configuration from the guild's config subcollection."""
+        guild_ref = self.db.collection('guilds').document(str(guild_id))
+        config_ref = guild_ref.collection('config').document('settings')
         config_doc = await asyncio.to_thread(config_ref.get)
         
         if not config_doc.exists:
             logger.info(f"Creating default config for guild {guild_id}")
-            await asyncio.to_thread(config_ref.set, DEFAULT_CONFIG)
-            return DEFAULT_CONFIG
+            default_config = DEFAULT_CONFIG.copy()
+            default_config.update({
+                'dsm_messages': {},  # Store DSM message IDs here
+                'latest_dsm_thread': None,  # Store latest DSM thread info here
+                'last_updated': datetime.datetime.now().isoformat()
+            })
+            await asyncio.to_thread(config_ref.set, default_config)
+            return default_config
         
         return config_doc.to_dict()
 
@@ -105,8 +124,128 @@ class FirebaseService:
         return user_tasks
 
     async def update_config(self, guild_id: int, updates: Dict[str, Any]) -> Dict[str, Any]:
-        """Update guild configuration."""
-        config_ref = self.db.collection('config').document(str(guild_id))
-        await asyncio.to_thread(config_ref.update, updates)
+        """Update guild configuration in the guild's config subcollection."""
+        guild_ref = self.db.collection('guilds').document(str(guild_id))
+        config_ref = guild_ref.collection('config').document('settings')
+        
+        # Get current config
+        current_config = await self.get_config(guild_id)
+        
+        # Update the config
+        current_config.update(updates)
+        current_config['last_updated'] = datetime.datetime.now().isoformat()
+        
+        # Save the updated config
+        await asyncio.to_thread(config_ref.set, current_config)
         logger.info(f"Updated config for guild {guild_id}")
-        return await self.get_config(guild_id) 
+        return current_config
+
+    async def save_dsm_session(self, session: DSMSession) -> None:
+        """Save a DSM session to Firebase."""
+        session_ref = self.db.collection('dsm_sessions').document()
+        await asyncio.to_thread(session_ref.set, session.to_dict())
+        logger.info(f"Saved DSM session for guild {session.guild_id}")
+
+    async def get_last_dsm_session(self, guild_id: int) -> Optional[DSMSession]:
+        """Get the last DSM session for a guild."""
+        sessions_ref = self.db.collection('dsm_sessions')
+        query = sessions_ref.where('guild_id', '==', guild_id).order_by('created_at', direction=firestore.Query.DESCENDING).limit(1)
+        sessions = await asyncio.to_thread(query.get)
+        
+        if not sessions:
+            return None
+            
+        return DSMSession.from_dict(sessions[0].to_dict())
+
+    async def get_dsm_sessions(self, guild_id: int, limit: int = 10) -> List[DSMSession]:
+        """Get recent DSM sessions for a guild."""
+        sessions_ref = self.db.collection('dsm_sessions')
+        query = sessions_ref.where('guild_id', '==', guild_id).order_by('created_at', direction=firestore.Query.DESCENDING).limit(limit)
+        sessions = await asyncio.to_thread(query.get)
+        
+        return [DSMSession.from_dict(session.to_dict()) for session in sessions]
+
+    async def update_dsm_session(self, thread_id: int, updates: Dict[str, Any]) -> None:
+        """Update a DSM session."""
+        sessions_ref = self.db.collection('dsm_sessions')
+        query = sessions_ref.where('thread_id', '==', thread_id).limit(1)
+        sessions = await asyncio.to_thread(query.get)
+        
+        if sessions:
+            await asyncio.to_thread(sessions[0].reference.update, updates)
+            logger.info(f"Updated DSM session for thread {thread_id}")
+
+    async def save_dsm_message(self, guild_id: int, user_id: str, message_data: dict):
+        """Save DSM message IDs to guild's config."""
+        try:
+            # Get current config
+            config = await self.get_config(guild_id)
+            
+            # Initialize dsm_messages if it doesn't exist
+            if 'dsm_messages' not in config:
+                config['dsm_messages'] = {}
+            
+            # Update the message data with timestamp
+            message_data['last_updated'] = datetime.datetime.now().isoformat()
+            
+            # Update the message data in config
+            config['dsm_messages'][str(user_id)] = message_data
+            
+            # Save updated config
+            await self.update_config(guild_id, {
+                'dsm_messages': config['dsm_messages']
+            })
+            
+            logger.info(f"[DEBUG] Saved DSM message IDs for user {user_id} in guild {guild_id}: {message_data}")
+            
+        except Exception as e:
+            logger.error(f"[DEBUG] Error saving DSM message IDs to Firebase: {str(e)}")
+            raise
+
+    async def get_latest_dsm_message(self, guild_id: int, user_id: str) -> dict:
+        """Get the latest DSM message IDs for a user from guild's config."""
+        try:
+            # Get the config
+            config = await self.get_config(guild_id)
+            
+            # Get the message data from config
+            dsm_messages = config.get('dsm_messages', {})
+            user_messages = dsm_messages.get(str(user_id))
+            
+            if user_messages:
+                logger.info(f"[DEBUG] Retrieved DSM message IDs for user {user_id}: {user_messages}")
+                return user_messages
+            else:
+                logger.info(f"[DEBUG] No DSM message IDs found for user {user_id}")
+                return None
+            
+        except Exception as e:
+            logger.error(f"[DEBUG] Error retrieving DSM message IDs from Firebase: {str(e)}")
+            return None
+
+    async def load_dsm_messages(self) -> Dict[int, Dict[int, int]]:
+        """Load DSM message IDs from guild configs."""
+        try:
+            # Get all guild documents
+            guilds = await asyncio.to_thread(self.db.collection('guilds').get)
+            
+            messages = {}
+            for guild_doc in guilds:
+                guild_id = int(guild_doc.id)
+                config_ref = guild_doc.reference.collection('config').document('settings')
+                config_doc = await asyncio.to_thread(config_ref.get)
+                
+                if config_doc.exists:
+                    config_data = config_doc.to_dict()
+                    # Get DSM messages from config
+                    dsm_messages = config_data.get('dsm_messages', {})
+                    messages[guild_id] = {
+                        int(user_id): message_data 
+                        for user_id, message_data in dsm_messages.items()
+                    }
+            
+            logger.info("Loaded DSM messages from guild configs")
+            return messages
+        except Exception as e:
+            logger.error(f"Error loading DSM messages: {str(e)}")
+            return {} 

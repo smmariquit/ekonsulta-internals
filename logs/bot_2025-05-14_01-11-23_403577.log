@@ -1,0 +1,29 @@
+2025-05-14 01:11:23 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 01:11:27 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 01:11:27 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 01:11:27 | INFO     | cogs.dsm:__init__:287 - DSM cog initialized
+2025-05-14 01:11:28 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 01:11:31 | INFO     | cogs.dsm:before_daily_standup:899 - Daily standup task started
+2025-05-14 01:11:31 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-14 01:11:32 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-14 01:11:32 | INFO     | services.firebase_service:load_dsm_messages:198 - Loaded DSM messages from Firebase
+2025-05-14 01:11:32 | INFO     | cogs.dsm:on_ready:324 - Tasks and DSM messages loaded from Firebase
+2025-05-14 01:11:36 | INFO     | cogs.dsm:simulate_dsm:1131 - [COMMAND] /simulate_dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 01:11:37 | INFO     | cogs.dsm:simulate_dsm:1169 - [COMMAND] Created DSM thread: DAILY STANDUP MEETING - 2025-05-14 (1371897686793519144)
+2025-05-14 01:11:37 | INFO     | services.firebase_service:save_dsm_session:130 - Saved DSM session for guild 1365369294623608882
+2025-05-14 01:11:37 | INFO     | cogs.dsm:simulate_dsm:1197 - [COMMAND] Sent opening message to thread 1371897686793519144
+2025-05-14 01:11:37 | INFO     | cogs.dsm:simulate_dsm:1202 - [DEBUG] Sending initial task embeds for user 1048212846720327681
+2025-05-14 01:11:37 | INFO     | cogs.dsm:create_task_embeds:599 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 01:11:37 | INFO     | cogs.dsm:send_initial_task_embeds:622 - [DEBUG] Created embeds with 10 completed and 37 pending tasks
+2025-05-14 01:11:37 | INFO     | cogs.dsm:send_initial_task_embeds:626 - [DEBUG] Target channel: 1371897686793519144
+2025-05-14 01:11:37 | INFO     | cogs.dsm:send_initial_task_embeds:630 - [DEBUG] Found stored message data: {'pending_msg_id': 1371891598530576444, 'completed_msg_id': 1371891596265521275}
+2025-05-14 01:11:37 | INFO     | cogs.dsm:send_initial_task_embeds:638 - [DEBUG] Fetching messages from channel/thread: 1371897686793519144
+2025-05-14 01:11:37 | INFO     | cogs.dsm:send_initial_task_embeds:662 - [DEBUG] Messages not found in target channel/thread
+2025-05-14 01:11:37 | INFO     | cogs.dsm:send_initial_task_embeds:663 - [DEBUG] Searching target channel history for messages
+2025-05-14 01:11:37 | INFO     | cogs.dsm:send_initial_task_embeds:664 - [DEBUG] Searching in channel/thread: 1371897686793519144
+2025-05-14 01:11:38 | INFO     | cogs.dsm:send_initial_task_embeds:687 - [DEBUG] Sent new completed message: 1371897694758502400
+2025-05-14 01:11:39 | INFO     | cogs.dsm:send_initial_task_embeds:699 - [DEBUG] Sent new pending message: 1371897696260194304
+2025-05-14 01:11:39 | INFO     | cogs.dsm:send_initial_task_embeds:699 - [DEBUG] Sent new pending message: 1371897697962950756
+2025-05-14 01:11:39 | ERROR    | cogs.dsm:send_initial_task_embeds:710 - [DEBUG] Error sending initial task embeds: DSM.save_dsm_message() missing 1 required positional argument: 'pending_msg_id'
+2025-05-14 01:11:39 | ERROR    | cogs.dsm:simulate_dsm:1212 - [COMMAND] Error in simulate_dsm: DSM.save_dsm_message() missing 1 required positional argument: 'pending_msg_id'
+2025-05-14 01:13:37 | INFO     | cogs.dsm:cog_unload:317 - DSM cog unloaded

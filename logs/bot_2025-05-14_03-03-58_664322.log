@@ -1,0 +1,15 @@
+2025-05-14 03:03:58 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 03:04:03 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 03:04:03 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 03:04:03 | INFO     | cogs.dsm:__init__:462 - DSM cog initialized
+2025-05-14 03:04:04 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 03:04:07 | INFO     | cogs.dsm:before_daily_standup:1024 - Daily standup task started
+2025-05-14 03:04:07 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-14 03:04:07 | INFO     | services.firebase_service:load_tasks:123 - Loaded tasks from Firebase
+2025-05-14 03:04:07 | INFO     | cogs.dsm:on_ready:2273 - Tasks loaded from Firebase
+2025-05-14 03:04:08 | INFO     | cogs.dsm:on_ready:2280 - Loaded DSM messages for guild 998850525174972486
+2025-05-14 03:04:08 | INFO     | cogs.dsm:on_ready:2280 - Loaded DSM messages for guild 1365369294623608882
+2025-05-14 03:04:08 | INFO     | cogs.dsm:on_ready:2289 - DSM messages loaded from config
+2025-05-14 03:04:21 | INFO     | cogs.dsm:simulate_dsm:2300 - Manual DSM triggered by pataponz in stimmie's server
+2025-05-14 03:04:22 | ERROR    | cogs.dsm:simulate_dsm:2367 - Error in simulate_dsm: 'TextChannel' object has no attribute 'fetch_thread'
+2025-05-14 03:07:58 | INFO     | cogs.dsm:cog_unload:492 - DSM cog unloaded

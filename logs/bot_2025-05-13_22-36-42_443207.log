@@ -1,0 +1,18 @@
+2025-05-13 22:36:42 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-13 22:36:44 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-13 22:36:44 | INFO     | cogs.dsm:__init__:144 - DSM cog initialized
+2025-05-13 22:36:45 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-13 22:36:47 | INFO     | cogs.dsm:before_daily_standup:430 - Daily standup task started
+2025-05-13 22:36:47 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-13 22:36:48 | INFO     | services.firebase_service:load_tasks:105 - Loaded tasks from Firebase
+2025-05-13 22:36:48 | INFO     | cogs.dsm:on_ready:436 - Tasks loaded from Firebase
+2025-05-13 22:42:34 | INFO     | cogs.dsm:simulate_dsm:666 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-13
+2025-05-13 22:42:34 | INFO     | services.firebase_service:save_dsm_session:119 - Saved DSM session for guild 1365369294623608882
+2025-05-13 22:42:35 | INFO     | cogs.dsm:simulate_dsm:690 - Sent opening message to thread
+2025-05-13 22:42:35 | INFO     | services.firebase_service:load_tasks:105 - Loaded tasks from Firebase
+2025-05-13 22:42:36 | INFO     | services.firebase_service:save_tasks:84 - Saved tasks to Firebase
+2025-05-13 22:42:36 | INFO     | cogs.dsm:send_initial_task_embeds:235 - Sent initial task embeds in thread DAILY STANDUP MEETING - 2025-05-13
+2025-05-13 22:42:55 | WARNING  | cogs.dsm:update_task_message:859 - Could not update message for stimmie: 404 Not Found (error code: 10008): Unknown Message
+2025-05-13 22:42:56 | INFO     | services.firebase_service:save_tasks:84 - Saved tasks to Firebase
+2025-05-13 22:42:56 | INFO     | cogs.dsm:update_task_message:864 - Created new task message for stimmie
+2025-05-13 22:45:26 | INFO     | cogs.dsm:cog_unload:169 - DSM cog unloaded
