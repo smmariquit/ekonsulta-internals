@@ -1,0 +1,74 @@
+2025-05-14 02:29:44 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 02:29:46 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 02:29:46 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 02:29:46 | INFO     | cogs.dsm:__init__:462 - DSM cog initialized
+2025-05-14 02:29:47 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 02:29:50 | INFO     | cogs.dsm:before_daily_standup:1039 - Daily standup task started
+2025-05-14 02:29:50 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-14 02:29:50 | INFO     | services.firebase_service:load_tasks:123 - Loaded tasks from Firebase
+2025-05-14 02:29:50 | INFO     | cogs.dsm:on_ready:2343 - Tasks loaded from Firebase
+2025-05-14 02:29:50 | INFO     | cogs.dsm:on_ready:2350 - Loaded DSM messages for guild 998850525174972486
+2025-05-14 02:29:51 | INFO     | cogs.dsm:on_ready:2350 - Loaded DSM messages for guild 1365369294623608882
+2025-05-14 02:29:51 | INFO     | cogs.dsm:on_ready:2359 - DSM messages loaded from config
+2025-05-14 02:30:09 | INFO     | cogs.dsm:simulate_dsm:2368 - [COMMAND] /simulate_dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 02:30:11 | INFO     | cogs.dsm:simulate_dsm:2406 - [COMMAND] Created DSM thread: DAILY STANDUP MEETING - 2025-05-14 (1371917458901958708)
+2025-05-14 02:30:11 | INFO     | services.firebase_service:save_dsm_session:147 - Saved DSM session for guild 1365369294623608882
+2025-05-14 02:30:11 | INFO     | cogs.dsm:simulate_dsm:2434 - [COMMAND] Sent opening message to thread 1371917458901958708
+2025-05-14 02:30:12 | INFO     | services.firebase_service:update_config:140 - Updated config for guild 1365369294623608882
+2025-05-14 02:30:12 | INFO     | cogs.dsm:simulate_dsm:2449 - [COMMAND] Updated config with new thread ID and cleared old message IDs
+2025-05-14 02:30:12 | INFO     | cogs.dsm:simulate_dsm:2454 - [DEBUG] Sending initial task embeds for user 1048212846720327681
+2025-05-14 02:30:12 | INFO     | cogs.dsm:create_task_embeds:783 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 02:30:12 | INFO     | cogs.dsm:send_initial_task_embeds:822 - [DEBUG] Sent completed tasks message: 1371917466061639811
+2025-05-14 02:30:12 | INFO     | cogs.dsm:dsm:1976 - [COMMAND] /dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 02:30:13 | INFO     | cogs.dsm:send_initial_task_embeds:829 - [DEBUG] Sent pending tasks message: 1371917468523565118
+2025-05-14 02:30:13 | INFO     | cogs.dsm:send_initial_task_embeds:829 - [DEBUG] Sent pending tasks message: 1371917470138503359
+2025-05-14 02:30:13 | INFO     | services.firebase_service:update_config:140 - Updated config for guild 1365369294623608882
+2025-05-14 02:30:13 | INFO     | cogs.dsm:send_initial_task_embeds:847 - [DEBUG] Saved message IDs to config for user 1048212846720327681
+2025-05-14 02:30:13 | INFO     | cogs.dsm:get_current_dsm_thread:1447 - [DEBUG] Looking for thread: DAILY STANDUP MEETING - 2025-05-14
+2025-05-14 02:30:14 | INFO     | cogs.dsm:get_current_dsm_thread:1459 - [DEBUG] Found latest thread from config: 1371917458901958708 (DAILY STANDUP MEETING - 2025-05-14)
+2025-05-14 02:30:14 | INFO     | cogs.dsm:verify_message_ids:2246 - [DEBUG] Verifying messages in thread 1371917458901958708 (DAILY STANDUP MEETING - 2025-05-14)
+2025-05-14 02:30:14 | INFO     | cogs.dsm:create_task_embeds:783 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 02:30:14 | INFO     | cogs.dsm:create_task_embeds:783 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 02:30:14 | INFO     | cogs.dsm:verify_message_ids:2272 - [DEBUG] Found existing message 1371917470138503359 in thread 1371917458901958708
+2025-05-14 02:30:14 | INFO     | cogs.dsm:verify_message_ids:2272 - [DEBUG] Found existing message 1371917468523565118 in thread 1371917458901958708
+2025-05-14 02:30:14 | INFO     | cogs.dsm:verify_message_ids:2272 - [DEBUG] Found existing message 1371917466061639811 in thread 1371917458901958708
+2025-05-14 02:30:14 | INFO     | cogs.dsm:verify_message_ids:2272 - [DEBUG] Found existing message 1371917463578480652 in thread 1371917458901958708
+2025-05-14 02:30:14 | INFO     | cogs.dsm:verify_message_ids:2280 - [DEBUG] Filtered to 3 latest messages for user 1048212846720327681
+2025-05-14 02:30:14 | INFO     | cogs.dsm:verify_message_ids:2292 - [DEBUG] Found pending message 1371917470138503359
+2025-05-14 02:30:14 | INFO     | cogs.dsm:verify_message_ids:2292 - [DEBUG] Found pending message 1371917468523565118
+2025-05-14 02:30:14 | INFO     | cogs.dsm:verify_message_ids:2289 - [DEBUG] Found completed message 1371917466061639811
+2025-05-14 02:30:14 | INFO     | services.firebase_service:get_latest_dsm_message:216 - [DEBUG] Retrieved DSM message IDs for user 1048212846720327681: {'pending_messages': ['1371917468523565118', '1371917470138503359'], 'completed_messages': ['1371917466061639811'], 'last_updated': '2025-05-14T02:30:13.500449'}
+2025-05-14 02:30:14 | INFO     | cogs.dsm:update_task_message:1559 - [DEBUG] Found latest message IDs in config: {'pending_messages': ['1371917468523565118', '1371917470138503359'], 'completed_messages': ['1371917466061639811'], 'last_updated': '2025-05-14T02:30:13.500449'}
+2025-05-14 02:30:14 | INFO     | cogs.dsm:verify_message_ids:2300 - [DEBUG] Updated completed message 1371917466061639811
+2025-05-14 02:30:15 | INFO     | cogs.dsm:verify_message_ids:2312 - [DEBUG] Updated pending message 1371917470138503359
+2025-05-14 02:30:15 | INFO     | cogs.dsm:update_task_message:1605 - [DEBUG] Sent new completed message: 1371917476883075104
+2025-05-14 02:30:15 | INFO     | cogs.dsm:verify_message_ids:2312 - [DEBUG] Updated pending message 1371917468523565118
+2025-05-14 02:30:15 | INFO     | cogs.dsm:verify_message_ids:2324 - [DEBUG] Updated message IDs for user 1048212846720327681 in thread 1371917458901958708
+2025-05-14 02:30:15 | INFO     | services.firebase_service:update_config:140 - Updated config for guild 1365369294623608882
+2025-05-14 02:30:15 | INFO     | cogs.dsm:verify_message_ids:2332 - [DEBUG] Verified and updated message IDs for guild 1365369294623608882
+2025-05-14 02:30:16 | INFO     | cogs.dsm:update_task_message:1617 - [DEBUG] Sent new pending message: 1371917479890124923
+2025-05-14 02:30:16 | INFO     | cogs.dsm:update_task_message:1617 - [DEBUG] Sent new pending message: 1371917482314432735
+2025-05-14 02:30:16 | INFO     | services.firebase_service:update_config:140 - Updated config for guild 1365369294623608882
+2025-05-14 02:30:16 | INFO     | services.firebase_service:save_dsm_message:199 - [DEBUG] Saved DSM message IDs for user 1048212846720327681 in guild 1365369294623608882: {'completed_messages': ['1371917476883075104'], 'pending_messages': ['1371917479890124923', '1371917482314432735'], 'last_updated': '2025-05-14T02:30:16.527596'}
+2025-05-14 02:30:16 | INFO     | cogs.dsm:update_task_message:1624 - [DEBUG] Saved new message IDs to config for user 1048212846720327681
+2025-05-14 02:30:18 | INFO     | cogs.dsm:_add_task:1076 - [DEBUG] Starting task addition for user 1048212846720327681 (pataponz)
+2025-05-14 02:30:18 | INFO     | cogs.dsm:_add_task:1084 - [DEBUG] Generated task ID: s141
+2025-05-14 02:30:18 | INFO     | cogs.dsm:_add_task:1093 - [DEBUG] Added task to user's task list
+2025-05-14 02:30:18 | DEBUG    | services.firebase_service:save_user:66 - Saved user data for pataponz
+2025-05-14 02:30:18 | INFO     | cogs.dsm:_add_task:1106 - [DEBUG] Updated user data in Firebase
+2025-05-14 02:30:19 | INFO     | services.firebase_service:save_tasks:102 - Saved tasks to Firebase
+2025-05-14 02:30:19 | INFO     | cogs.dsm:_add_task:1110 - [DEBUG] Saved tasks to Firebase
+2025-05-14 02:30:19 | INFO     | cogs.dsm:_add_task:1116 - [DEBUG] Searching for DSM thread for date 2025-05-14
+2025-05-14 02:30:19 | INFO     | cogs.dsm:_add_task:1128 - [DEBUG] Found active thread: 1371894237762945245
+2025-05-14 02:30:19 | INFO     | cogs.dsm:_add_task:1133 - [DEBUG] Updating messages in thread 1371894237762945245
+2025-05-14 02:30:19 | INFO     | cogs.dsm:create_task_embeds:783 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 02:30:20 | INFO     | services.firebase_service:get_latest_dsm_message:216 - [DEBUG] Retrieved DSM message IDs for user 1048212846720327681: {'pending_messages': ['1371917479890124923', '1371917482314432735'], 'completed_messages': ['1371917476883075104'], 'last_updated': '2025-05-14T02:30:16.527596'}
+2025-05-14 02:30:20 | INFO     | cogs.dsm:update_task_message:1559 - [DEBUG] Found latest message IDs in config: {'pending_messages': ['1371917479890124923', '1371917482314432735'], 'completed_messages': ['1371917476883075104'], 'last_updated': '2025-05-14T02:30:16.527596'}
+2025-05-14 02:30:20 | INFO     | cogs.dsm:update_task_message:1601 - [DEBUG] Updated completed message 1371917476883075104
+2025-05-14 02:30:21 | INFO     | cogs.dsm:update_task_message:1613 - [DEBUG] Updated pending message 1371917479890124923
+2025-05-14 02:30:21 | INFO     | cogs.dsm:update_task_message:1613 - [DEBUG] Updated pending message 1371917482314432735
+2025-05-14 02:30:21 | INFO     | services.firebase_service:update_config:140 - Updated config for guild 1365369294623608882
+2025-05-14 02:30:21 | INFO     | services.firebase_service:save_dsm_message:199 - [DEBUG] Saved DSM message IDs for user 1048212846720327681 in guild 1365369294623608882: {'completed_messages': ['1371917476883075104'], 'pending_messages': ['1371917479890124923', '1371917482314432735'], 'last_updated': '2025-05-14T02:30:21.881232'}
+2025-05-14 02:30:21 | INFO     | cogs.dsm:update_task_message:1624 - [DEBUG] Saved new message IDs to config for user 1048212846720327681
+2025-05-14 02:30:21 | INFO     | cogs.dsm:_add_task:1139 - [DEBUG] Task addition completed for pataponz
+2025-05-14 02:32:49 | INFO     | cogs.dsm:cog_unload:492 - DSM cog unloaded

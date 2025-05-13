@@ -1,0 +1,11 @@
+2025-05-13 22:48:38 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-13 22:48:41 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-13 22:48:41 | INFO     | cogs.dsm:__init__:144 - DSM cog initialized
+2025-05-13 22:48:42 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-13 22:48:45 | INFO     | cogs.dsm:before_daily_standup:431 - Daily standup task started
+2025-05-13 22:48:45 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-13 22:48:45 | INFO     | services.firebase_service:load_tasks:105 - Loaded tasks from Firebase
+2025-05-13 22:48:45 | INFO     | cogs.dsm:on_ready:437 - Tasks loaded from Firebase
+2025-05-13 22:48:49 | INFO     | cogs.dsm:simulate_dsm:667 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-13
+2025-05-13 22:48:49 | ERROR    | cogs.dsm:simulate_dsm:703 - Error in simulate_dsm: 'Task' object has no attribute 'completed_at'
+2025-05-13 22:50:22 | INFO     | cogs.dsm:cog_unload:169 - DSM cog unloaded

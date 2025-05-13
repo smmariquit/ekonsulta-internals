@@ -19,6 +19,7 @@ class Task:
         self.remarks = remarks
         self.task_id = task_id
         self.created_at = datetime.now().isoformat()
+        self.completed_at = None  # Initialize completed_at as None
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert the task to a dictionary for storage.
@@ -31,7 +32,8 @@ class Task:
             'status': self.status,
             'remarks': self.remarks,
             'task_id': self.task_id,
-            'created_at': self.created_at
+            'created_at': self.created_at,
+            'completed_at': self.completed_at
         }
 
     @classmethod
@@ -51,4 +53,5 @@ class Task:
             task_id=data.get('task_id')
         )
         task.created_at = data.get('created_at', datetime.now().isoformat())
+        task.completed_at = data.get('completed_at')  # Load completed_at from data
         return task 

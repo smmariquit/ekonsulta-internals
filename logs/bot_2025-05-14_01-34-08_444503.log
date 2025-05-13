@@ -1,0 +1,281 @@
+2025-05-14 01:34:08 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 01:34:11 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 01:34:11 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 01:34:11 | INFO     | cogs.dsm:__init__:311 - DSM cog initialized
+2025-05-14 01:34:11 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 01:34:14 | INFO     | cogs.dsm:before_daily_standup:952 - Daily standup task started
+2025-05-14 01:34:14 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-14 01:34:15 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-14 01:34:15 | INFO     | cogs.dsm:on_ready:349 - Tasks loaded from Firebase
+2025-05-14 01:34:15 | INFO     | cogs.dsm:on_ready:356 - Loaded DSM messages for guild 1365369294623608882
+2025-05-14 01:34:15 | INFO     | cogs.dsm:on_ready:358 - DSM messages loaded from config
+2025-05-14 01:34:26 | INFO     | cogs.dsm:simulate_dsm:1184 - [COMMAND] /simulate_dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 01:34:27 | INFO     | cogs.dsm:simulate_dsm:1222 - [COMMAND] Created DSM thread: DAILY STANDUP MEETING - 2025-05-14 (1371903435464642714)
+2025-05-14 01:34:28 | INFO     | services.firebase_service:save_dsm_session:130 - Saved DSM session for guild 1365369294623608882
+2025-05-14 01:34:28 | INFO     | cogs.dsm:simulate_dsm:1250 - [COMMAND] Sent opening message to thread 1371903435464642714
+2025-05-14 01:34:28 | INFO     | cogs.dsm:simulate_dsm:1255 - [DEBUG] Sending initial task embeds for user 1048212846720327681
+2025-05-14 01:34:28 | INFO     | cogs.dsm:create_task_embeds:652 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 01:34:28 | INFO     | cogs.dsm:send_initial_task_embeds:675 - [DEBUG] Created embeds with 11 completed and 46 pending tasks
+2025-05-14 01:34:28 | INFO     | cogs.dsm:send_initial_task_embeds:679 - [DEBUG] Target channel: 1371903435464642714
+2025-05-14 01:34:28 | INFO     | cogs.dsm:send_initial_task_embeds:683 - [DEBUG] Found stored message data: {'pending_messages': [1371899282990436463, 1371882465886732359], 'completed_messages': [1371882463869014158]}
+2025-05-14 01:34:28 | INFO     | cogs.dsm:send_initial_task_embeds:691 - [DEBUG] Fetching messages from channel/thread: 1371903435464642714
+2025-05-14 01:34:28 | INFO     | cogs.dsm:send_initial_task_embeds:699 - [DEBUG] Completed message 1371882463869014158 not found
+2025-05-14 01:34:29 | INFO     | cogs.dsm:send_initial_task_embeds:708 - [DEBUG] Pending message 1371899282990436463 not found
+2025-05-14 01:34:29 | INFO     | cogs.dsm:send_initial_task_embeds:708 - [DEBUG] Pending message 1371882465886732359 not found
+2025-05-14 01:34:29 | INFO     | cogs.dsm:send_initial_task_embeds:715 - [DEBUG] Messages not found in target channel/thread
+2025-05-14 01:34:29 | INFO     | cogs.dsm:send_initial_task_embeds:716 - [DEBUG] Searching target channel history for messages
+2025-05-14 01:34:29 | INFO     | cogs.dsm:send_initial_task_embeds:717 - [DEBUG] Searching in channel/thread: 1371903435464642714
+2025-05-14 01:34:30 | INFO     | cogs.dsm:send_initial_task_embeds:740 - [DEBUG] Sent new completed message: 1371903448403935252
+2025-05-14 01:34:30 | INFO     | cogs.dsm:send_initial_task_embeds:752 - [DEBUG] Sent new pending message: 1371903450119667805
+2025-05-14 01:34:31 | INFO     | cogs.dsm:send_initial_task_embeds:752 - [DEBUG] Sent new pending message: 1371903452036206688
+2025-05-14 01:34:31 | INFO     | services.firebase_service:update_config:123 - Updated config for guild 1365369294623608882
+2025-05-14 01:34:31 | INFO     | cogs.dsm:save_dsm_message:402 - [DEBUG] Saved DSM message data to config: {'completed_messages': [1371903448403935252], 'pending_messages': [1371903450119667805, 1371903452036206688]}
+2025-05-14 01:34:31 | INFO     | cogs.dsm:send_initial_task_embeds:760 - [DEBUG] Saved message IDs: {'completed_messages': [1371903448403935252], 'pending_messages': [1371903450119667805, 1371903452036206688]}
+2025-05-14 01:34:37 | INFO     | cogs.dsm:dsm:1891 - [COMMAND] /dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 01:34:38 | INFO     | cogs.dsm:update_task_message:1383 - [DEBUG] Starting update_task_message for channel 1371882451709857843
+2025-05-14 01:34:38 | INFO     | cogs.dsm:update_task_message:1398 - [DEBUG] Updating for specific user 1048212846720327681
+2025-05-14 01:34:38 | INFO     | cogs.dsm:update_task_message:1414 - [DEBUG] Found 57 tasks for user
+2025-05-14 01:34:38 | INFO     | cogs.dsm:create_task_embeds:652 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 01:34:38 | INFO     | cogs.dsm:update_task_message:1418 - [DEBUG] Created embeds with 11 completed and 46 pending tasks
+2025-05-14 01:34:38 | INFO     | cogs.dsm:update_task_message:1422 - [DEBUG] Target channel: 1371882451709857843
+2025-05-14 01:34:38 | INFO     | cogs.dsm:update_task_message:1429 - [DEBUG] Found stored message IDs: {'pending_messages': [1371903450119667805, 1371903452036206688], 'completed_messages': [1371903448403935252]}
+2025-05-14 01:34:38 | INFO     | cogs.dsm:update_task_message:1433 - [DEBUG] Fetching messages from channel/thread: 1371882451709857843
+2025-05-14 01:34:38 | INFO     | cogs.dsm:update_task_message:1441 - [DEBUG] Completed message 1371903448403935252 not found
+2025-05-14 01:34:39 | INFO     | cogs.dsm:update_task_message:1450 - [DEBUG] Pending message 1371903450119667805 not found
+2025-05-14 01:34:39 | INFO     | cogs.dsm:update_task_message:1450 - [DEBUG] Pending message 1371903452036206688 not found
+2025-05-14 01:34:39 | INFO     | cogs.dsm:update_task_message:1461 - [DEBUG] Searching target channel history for messages
+2025-05-14 01:34:39 | INFO     | cogs.dsm:update_task_message:1462 - [DEBUG] Searching in channel/thread: 1371882451709857843
+2025-05-14 01:34:39 | INFO     | cogs.dsm:update_task_message:1465 - [DEBUG] Found message with embeds: 1371899282990436463
+2025-05-14 01:34:39 | INFO     | cogs.dsm:update_task_message:1470 - [DEBUG] Found pending tasks message: 1371899282990436463
+2025-05-14 01:34:39 | INFO     | cogs.dsm:update_task_message:1465 - [DEBUG] Found message with embeds: 1371882465886732359
+2025-05-14 01:34:39 | INFO     | cogs.dsm:update_task_message:1470 - [DEBUG] Found pending tasks message: 1371882465886732359
+2025-05-14 01:34:40 | INFO     | cogs.dsm:update_task_message:1465 - [DEBUG] Found message with embeds: 1371882463869014158
+2025-05-14 01:34:40 | INFO     | cogs.dsm:update_task_message:1467 - [DEBUG] Found completed tasks message: 1371882463869014158
+2025-05-14 01:34:40 | INFO     | cogs.dsm:update_task_message:1465 - [DEBUG] Found message with embeds: 1371882456541696023
+2025-05-14 01:34:40 | INFO     | cogs.dsm:update_task_message:1511 - [DEBUG] Updated completed message 1371882463869014158
+2025-05-14 01:34:40 | INFO     | cogs.dsm:update_task_message:1523 - [DEBUG] Updated pending message 1371899282990436463
+2025-05-14 01:34:41 | INFO     | cogs.dsm:update_task_message:1523 - [DEBUG] Updated pending message 1371882465886732359
+2025-05-14 01:34:41 | INFO     | services.firebase_service:update_config:123 - Updated config for guild 1365369294623608882
+2025-05-14 01:34:41 | INFO     | cogs.dsm:save_dsm_message:402 - [DEBUG] Saved DSM message data to config: {'completed_messages': [1371882463869014158], 'pending_messages': [1371899282990436463, 1371882465886732359]}
+2025-05-14 01:34:41 | INFO     | cogs.dsm:update_task_message:1535 - [DEBUG] Saved message IDs: {'completed_messages': [1371882463869014158], 'pending_messages': [1371899282990436463, 1371882465886732359]}
+2025-05-14 01:34:44 | INFO     | cogs.dsm:_add_task:989 - [DEBUG] Starting task addition for user 1048212846720327681 (pataponz)
+2025-05-14 01:34:44 | INFO     | cogs.dsm:_add_task:997 - [DEBUG] Generated task ID: 0226
+2025-05-14 01:34:44 | INFO     | cogs.dsm:_add_task:1006 - [DEBUG] Added task to user's task list
+2025-05-14 01:34:44 | DEBUG    | services.firebase_service:save_user:59 - Saved user data for pataponz
+2025-05-14 01:34:44 | INFO     | cogs.dsm:_add_task:1019 - [DEBUG] Updated user data in Firebase
+2025-05-14 01:34:44 | INFO     | services.firebase_service:save_tasks:95 - Saved tasks to Firebase
+2025-05-14 01:34:44 | INFO     | cogs.dsm:_add_task:1023 - [DEBUG] Saved tasks to Firebase
+2025-05-14 01:34:44 | INFO     | cogs.dsm:_add_task:1029 - [DEBUG] Searching for DSM thread for date 2025-05-14
+2025-05-14 01:34:45 | INFO     | cogs.dsm:_add_task:1041 - [DEBUG] Found active thread: 1371882451709857843
+2025-05-14 01:34:45 | INFO     | cogs.dsm:_add_task:1046 - [DEBUG] Updating messages in thread 1371882451709857843
+2025-05-14 01:34:45 | INFO     | cogs.dsm:update_task_message:1383 - [DEBUG] Starting update_task_message for channel 1371882451709857843
+2025-05-14 01:34:45 | INFO     | cogs.dsm:update_task_message:1398 - [DEBUG] Updating for specific user 1048212846720327681
+2025-05-14 01:34:45 | INFO     | cogs.dsm:update_task_message:1414 - [DEBUG] Found 58 tasks for user
+2025-05-14 01:34:45 | INFO     | cogs.dsm:create_task_embeds:652 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 01:34:45 | INFO     | cogs.dsm:update_task_message:1418 - [DEBUG] Created embeds with 11 completed and 47 pending tasks
+2025-05-14 01:34:45 | INFO     | cogs.dsm:update_task_message:1422 - [DEBUG] Target channel: 1371882451709857843
+2025-05-14 01:34:45 | INFO     | cogs.dsm:update_task_message:1429 - [DEBUG] Found stored message IDs: {'pending_messages': [1371899282990436463, 1371882465886732359], 'completed_messages': [1371882463869014158]}
+2025-05-14 01:34:45 | INFO     | cogs.dsm:update_task_message:1433 - [DEBUG] Fetching messages from channel/thread: 1371882451709857843
+2025-05-14 01:34:45 | INFO     | cogs.dsm:update_task_message:1439 - [DEBUG] Found completed message: 1371882463869014158
+2025-05-14 01:34:46 | INFO     | cogs.dsm:update_task_message:1448 - [DEBUG] Found pending message: 1371899282990436463
+2025-05-14 01:34:46 | INFO     | cogs.dsm:update_task_message:1448 - [DEBUG] Found pending message: 1371882465886732359
+2025-05-14 01:34:46 | INFO     | cogs.dsm:update_task_message:1511 - [DEBUG] Updated completed message 1371882463869014158
+2025-05-14 01:34:47 | INFO     | cogs.dsm:update_task_message:1523 - [DEBUG] Updated pending message 1371899282990436463
+2025-05-14 01:34:47 | INFO     | cogs.dsm:update_task_message:1523 - [DEBUG] Updated pending message 1371882465886732359
+2025-05-14 01:34:47 | INFO     | services.firebase_service:update_config:123 - Updated config for guild 1365369294623608882
+2025-05-14 01:34:48 | INFO     | cogs.dsm:save_dsm_message:402 - [DEBUG] Saved DSM message data to config: {'completed_messages': [1371882463869014158], 'pending_messages': [1371899282990436463, 1371882465886732359]}
+2025-05-14 01:34:48 | INFO     | cogs.dsm:update_task_message:1535 - [DEBUG] Saved message IDs: {'completed_messages': [1371882463869014158], 'pending_messages': [1371899282990436463, 1371882465886732359]}
+2025-05-14 01:34:48 | INFO     | cogs.dsm:_add_task:1052 - [DEBUG] Task addition completed for pataponz
+2025-05-14 01:35:06 | INFO     | services.firebase_service:save_tasks:95 - Saved tasks to Firebase
+2025-05-14 01:35:06 | INFO     | cogs.dsm:update_task_message:1383 - [DEBUG] Starting update_task_message for channel 1371882391974707372
+2025-05-14 01:35:06 | INFO     | cogs.dsm:get_current_dsm_thread:1342 - [DEBUG] Looking for thread: DAILY STANDUP MEETING - 2025-05-14
+2025-05-14 01:35:06 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371882451709857843)
+2025-05-14 01:35:07 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371882451709857843 created at 2025-05-13 16:11:05.362000
+2025-05-14 01:35:07 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371883449266208828)
+2025-05-14 01:35:07 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371883449266208828 created at 2025-05-13 16:15:02.982000
+2025-05-14 01:35:07 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371884174839123980)
+2025-05-14 01:35:07 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371884174839123980 created at 2025-05-13 16:17:56.589000
+2025-05-14 01:35:07 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371885314167013521)
+2025-05-14 01:35:08 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371885314167013521 created at 2025-05-13 16:22:27.629000
+2025-05-14 01:35:08 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371886401368625182)
+2025-05-14 01:35:08 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371886401368625182 created at 2025-05-13 16:26:46.899000
+2025-05-14 01:35:08 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371886816608653343)
+2025-05-14 01:35:09 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371886816608653343 created at 2025-05-13 16:28:26.128000
+2025-05-14 01:35:09 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371887314607017994)
+2025-05-14 01:35:09 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371887314607017994 created at 2025-05-13 16:30:24.626000
+2025-05-14 01:35:09 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371887788332548136)
+2025-05-14 01:35:09 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371887788332548136 created at 2025-05-13 16:32:17.573000
+2025-05-14 01:35:09 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371888674991636590)
+2025-05-14 01:35:10 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371888674991636590 created at 2025-05-13 16:35:48.968000
+2025-05-14 01:35:10 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371889203188600994)
+2025-05-14 01:35:10 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371889203188600994 created at 2025-05-13 16:37:54.972000
+2025-05-14 01:35:10 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371889683658703029)
+2025-05-14 01:35:11 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371889683658703029 created at 2025-05-13 16:39:49.413000
+2025-05-14 01:35:11 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371890388323008633)
+2025-05-14 01:35:11 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371890388323008633 created at 2025-05-13 16:42:37.476000
+2025-05-14 01:35:11 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371890848941211829)
+2025-05-14 01:35:11 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371890848941211829 created at 2025-05-13 16:44:27.317000
+2025-05-14 01:35:11 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371891583913558240)
+2025-05-14 01:35:12 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371891583913558240 created at 2025-05-13 16:47:22.907000
+2025-05-14 01:35:12 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371892307506495682)
+2025-05-14 01:35:12 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371892307506495682 created at 2025-05-13 16:50:15.069000
+2025-05-14 01:35:12 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371893659439730719)
+2025-05-14 01:35:13 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371893659439730719 created at 2025-05-13 16:55:37.496000
+2025-05-14 01:35:13 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371894237762945245)
+2025-05-14 01:35:13 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371894237762945245 created at 2025-05-13 16:57:55.241000
+2025-05-14 01:35:13 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371894712885317712)
+2025-05-14 01:35:13 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371894712885317712 created at 2025-05-13 16:59:48.534000
+2025-05-14 01:35:13 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371896642349039657)
+2025-05-14 01:35:14 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371896642349039657 created at 2025-05-13 17:07:28.544000
+2025-05-14 01:35:14 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371897686793519144)
+2025-05-14 01:35:14 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371897686793519144 created at 2025-05-13 17:11:37.544000
+2025-05-14 01:35:14 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371898257130786816)
+2025-05-14 01:35:15 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371898257130786816 created at 2025-05-13 17:13:53.468000
+2025-05-14 01:35:15 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371899233468153937)
+2025-05-14 01:35:15 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371899233468153937 created at 2025-05-13 17:17:46.322000
+2025-05-14 01:35:15 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371899470622625872)
+2025-05-14 01:35:16 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371899470622625872 created at 2025-05-13 17:18:42.872000
+2025-05-14 01:35:16 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371900593936924826)
+2025-05-14 01:35:16 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371900593936924826 created at 2025-05-13 17:23:10.684000
+2025-05-14 01:35:16 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371901309971857583)
+2025-05-14 01:35:16 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371901309971857583 created at 2025-05-13 17:26:01.407000
+2025-05-14 01:35:16 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371902595798663249)
+2025-05-14 01:35:17 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371902595798663249 created at 2025-05-13 17:31:07.942000
+2025-05-14 01:35:17 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371903435464642714)
+2025-05-14 01:35:18 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371903435464642714 created at 2025-05-13 17:34:28.205000
+2025-05-14 01:35:18 | INFO     | cogs.dsm:get_current_dsm_thread:1374 - [DEBUG] Using most recent DSM thread: 1371903435464642714
+2025-05-14 01:35:18 | INFO     | cogs.dsm:update_task_message:1390 - [DEBUG] Using current DSM thread: 1371903435464642714
+2025-05-14 01:35:18 | INFO     | cogs.dsm:update_task_message:1398 - [DEBUG] Updating for specific user 1048212846720327681
+2025-05-14 01:35:18 | INFO     | cogs.dsm:update_task_message:1414 - [DEBUG] Found 58 tasks for user
+2025-05-14 01:35:18 | INFO     | cogs.dsm:create_task_embeds:652 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 01:35:18 | INFO     | cogs.dsm:update_task_message:1418 - [DEBUG] Created embeds with 12 completed and 46 pending tasks
+2025-05-14 01:35:18 | INFO     | cogs.dsm:update_task_message:1422 - [DEBUG] Target channel: 1371903435464642714
+2025-05-14 01:35:18 | INFO     | cogs.dsm:update_task_message:1429 - [DEBUG] Found stored message IDs: {'pending_messages': [1371899282990436463, 1371882465886732359], 'completed_messages': [1371882463869014158]}
+2025-05-14 01:35:18 | INFO     | cogs.dsm:update_task_message:1433 - [DEBUG] Fetching messages from channel/thread: 1371903435464642714
+2025-05-14 01:35:18 | INFO     | cogs.dsm:update_task_message:1441 - [DEBUG] Completed message 1371882463869014158 not found
+2025-05-14 01:35:19 | INFO     | cogs.dsm:update_task_message:1450 - [DEBUG] Pending message 1371899282990436463 not found
+2025-05-14 01:35:19 | INFO     | cogs.dsm:update_task_message:1450 - [DEBUG] Pending message 1371882465886732359 not found
+2025-05-14 01:35:19 | INFO     | cogs.dsm:update_task_message:1461 - [DEBUG] Searching target channel history for messages
+2025-05-14 01:35:19 | INFO     | cogs.dsm:update_task_message:1462 - [DEBUG] Searching in channel/thread: 1371903435464642714
+2025-05-14 01:35:20 | INFO     | cogs.dsm:update_task_message:1465 - [DEBUG] Found message with embeds: 1371903452036206688
+2025-05-14 01:35:20 | INFO     | cogs.dsm:update_task_message:1470 - [DEBUG] Found pending tasks message: 1371903452036206688
+2025-05-14 01:35:20 | INFO     | cogs.dsm:update_task_message:1465 - [DEBUG] Found message with embeds: 1371903450119667805
+2025-05-14 01:35:20 | INFO     | cogs.dsm:update_task_message:1470 - [DEBUG] Found pending tasks message: 1371903450119667805
+2025-05-14 01:35:20 | INFO     | cogs.dsm:update_task_message:1465 - [DEBUG] Found message with embeds: 1371903448403935252
+2025-05-14 01:35:20 | INFO     | cogs.dsm:update_task_message:1467 - [DEBUG] Found completed tasks message: 1371903448403935252
+2025-05-14 01:35:20 | INFO     | cogs.dsm:update_task_message:1465 - [DEBUG] Found message with embeds: 1371903440225177631
+2025-05-14 01:35:20 | INFO     | cogs.dsm:update_task_message:1511 - [DEBUG] Updated completed message 1371903448403935252
+2025-05-14 01:35:21 | INFO     | cogs.dsm:update_task_message:1523 - [DEBUG] Updated pending message 1371903450119667805
+2025-05-14 01:35:21 | INFO     | cogs.dsm:update_task_message:1523 - [DEBUG] Updated pending message 1371903452036206688
+2025-05-14 01:35:21 | INFO     | services.firebase_service:update_config:123 - Updated config for guild 1365369294623608882
+2025-05-14 01:35:21 | INFO     | cogs.dsm:save_dsm_message:402 - [DEBUG] Saved DSM message data to config: {'completed_messages': [1371903448403935252], 'pending_messages': [1371903450119667805, 1371903452036206688]}
+2025-05-14 01:35:21 | INFO     | cogs.dsm:update_task_message:1535 - [DEBUG] Saved message IDs: {'completed_messages': [1371903448403935252], 'pending_messages': [1371903450119667805, 1371903452036206688]}
+2025-05-14 01:35:21 | INFO     | cogs.dsm:mark_done_callback:245 - [COMMAND] Task 47b9 marked as done for stimmie
+2025-05-14 01:35:41 | INFO     | services.firebase_service:save_tasks:95 - Saved tasks to Firebase
+2025-05-14 01:35:41 | INFO     | cogs.dsm:update_task_message:1383 - [DEBUG] Starting update_task_message for channel 1371882391974707372
+2025-05-14 01:35:41 | INFO     | cogs.dsm:get_current_dsm_thread:1342 - [DEBUG] Looking for thread: DAILY STANDUP MEETING - 2025-05-14
+2025-05-14 01:35:41 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371882451709857843)
+2025-05-14 01:35:41 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371882451709857843 created at 2025-05-13 16:11:05.362000
+2025-05-14 01:35:41 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371883449266208828)
+2025-05-14 01:35:42 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371883449266208828 created at 2025-05-13 16:15:02.982000
+2025-05-14 01:35:42 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371884174839123980)
+2025-05-14 01:35:42 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371884174839123980 created at 2025-05-13 16:17:56.589000
+2025-05-14 01:35:42 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371885314167013521)
+2025-05-14 01:35:42 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371885314167013521 created at 2025-05-13 16:22:27.629000
+2025-05-14 01:35:42 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371886401368625182)
+2025-05-14 01:35:43 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371886401368625182 created at 2025-05-13 16:26:46.899000
+2025-05-14 01:35:43 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371886816608653343)
+2025-05-14 01:35:43 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371886816608653343 created at 2025-05-13 16:28:26.128000
+2025-05-14 01:35:43 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371887314607017994)
+2025-05-14 01:35:44 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371887314607017994 created at 2025-05-13 16:30:24.626000
+2025-05-14 01:35:44 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371887788332548136)
+2025-05-14 01:35:44 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371887788332548136 created at 2025-05-13 16:32:17.573000
+2025-05-14 01:35:44 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371888674991636590)
+2025-05-14 01:35:44 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371888674991636590 created at 2025-05-13 16:35:48.968000
+2025-05-14 01:35:44 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371889203188600994)
+2025-05-14 01:35:45 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371889203188600994 created at 2025-05-13 16:37:54.972000
+2025-05-14 01:35:45 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371889683658703029)
+2025-05-14 01:35:45 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371889683658703029 created at 2025-05-13 16:39:49.413000
+2025-05-14 01:35:45 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371890388323008633)
+2025-05-14 01:35:46 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371890388323008633 created at 2025-05-13 16:42:37.476000
+2025-05-14 01:35:46 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371890848941211829)
+2025-05-14 01:35:46 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371890848941211829 created at 2025-05-13 16:44:27.317000
+2025-05-14 01:35:46 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371891583913558240)
+2025-05-14 01:35:46 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371891583913558240 created at 2025-05-13 16:47:22.907000
+2025-05-14 01:35:46 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371892307506495682)
+2025-05-14 01:35:47 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371892307506495682 created at 2025-05-13 16:50:15.069000
+2025-05-14 01:35:47 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371893659439730719)
+2025-05-14 01:35:47 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371893659439730719 created at 2025-05-13 16:55:37.496000
+2025-05-14 01:35:47 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371894237762945245)
+2025-05-14 01:35:48 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371894237762945245 created at 2025-05-13 16:57:55.241000
+2025-05-14 01:35:48 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371894712885317712)
+2025-05-14 01:35:48 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371894712885317712 created at 2025-05-13 16:59:48.534000
+2025-05-14 01:35:48 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371896642349039657)
+2025-05-14 01:35:49 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371896642349039657 created at 2025-05-13 17:07:28.544000
+2025-05-14 01:35:49 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371897686793519144)
+2025-05-14 01:35:49 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371897686793519144 created at 2025-05-13 17:11:37.544000
+2025-05-14 01:35:49 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371898257130786816)
+2025-05-14 01:35:49 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371898257130786816 created at 2025-05-13 17:13:53.468000
+2025-05-14 01:35:49 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371899233468153937)
+2025-05-14 01:35:50 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371899233468153937 created at 2025-05-13 17:17:46.322000
+2025-05-14 01:35:50 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371899470622625872)
+2025-05-14 01:35:50 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371899470622625872 created at 2025-05-13 17:18:42.872000
+2025-05-14 01:35:50 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371900593936924826)
+2025-05-14 01:35:51 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371900593936924826 created at 2025-05-13 17:23:10.684000
+2025-05-14 01:35:51 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371901309971857583)
+2025-05-14 01:35:51 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371901309971857583 created at 2025-05-13 17:26:01.407000
+2025-05-14 01:35:51 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371902595798663249)
+2025-05-14 01:35:51 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371902595798663249 created at 2025-05-13 17:31:07.942000
+2025-05-14 01:35:51 | INFO     | cogs.dsm:get_current_dsm_thread:1349 - [DEBUG] Found active thread: DAILY STANDUP MEETING - 2025-05-14 (1371903435464642714)
+2025-05-14 01:35:52 | INFO     | cogs.dsm:get_current_dsm_thread:1358 - [DEBUG] Found newer thread: 1371903435464642714 created at 2025-05-13 17:34:28.205000
+2025-05-14 01:35:52 | INFO     | cogs.dsm:get_current_dsm_thread:1374 - [DEBUG] Using most recent DSM thread: 1371903435464642714
+2025-05-14 01:35:52 | INFO     | cogs.dsm:update_task_message:1390 - [DEBUG] Using current DSM thread: 1371903435464642714
+2025-05-14 01:35:52 | INFO     | cogs.dsm:update_task_message:1398 - [DEBUG] Updating for specific user 1048212846720327681
+2025-05-14 01:35:52 | INFO     | cogs.dsm:update_task_message:1414 - [DEBUG] Found 58 tasks for user
+2025-05-14 01:35:52 | INFO     | cogs.dsm:create_task_embeds:652 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 01:35:52 | INFO     | cogs.dsm:update_task_message:1418 - [DEBUG] Created embeds with 12 completed and 46 pending tasks
+2025-05-14 01:35:52 | INFO     | cogs.dsm:update_task_message:1422 - [DEBUG] Target channel: 1371903435464642714
+2025-05-14 01:35:52 | INFO     | cogs.dsm:update_task_message:1429 - [DEBUG] Found stored message IDs: {'pending_messages': [1371903450119667805, 1371903452036206688], 'completed_messages': [1371903448403935252]}
+2025-05-14 01:35:52 | INFO     | cogs.dsm:update_task_message:1433 - [DEBUG] Fetching messages from channel/thread: 1371903435464642714
+2025-05-14 01:35:53 | INFO     | cogs.dsm:update_task_message:1439 - [DEBUG] Found completed message: 1371903448403935252
+2025-05-14 01:35:53 | INFO     | cogs.dsm:update_task_message:1448 - [DEBUG] Found pending message: 1371903450119667805
+2025-05-14 01:35:53 | INFO     | cogs.dsm:update_task_message:1448 - [DEBUG] Found pending message: 1371903452036206688
+2025-05-14 01:35:54 | INFO     | cogs.dsm:update_task_message:1511 - [DEBUG] Updated completed message 1371903448403935252
+2025-05-14 01:35:54 | INFO     | cogs.dsm:update_task_message:1523 - [DEBUG] Updated pending message 1371903450119667805
+2025-05-14 01:35:54 | INFO     | cogs.dsm:update_task_message:1523 - [DEBUG] Updated pending message 1371903452036206688
+2025-05-14 01:35:55 | INFO     | services.firebase_service:update_config:123 - Updated config for guild 1365369294623608882
+2025-05-14 01:35:55 | INFO     | cogs.dsm:save_dsm_message:402 - [DEBUG] Saved DSM message data to config: {'completed_messages': [1371903448403935252], 'pending_messages': [1371903450119667805, 1371903452036206688]}
+2025-05-14 01:35:55 | INFO     | cogs.dsm:update_task_message:1535 - [DEBUG] Saved message IDs: {'completed_messages': [1371903448403935252], 'pending_messages': [1371903450119667805, 1371903452036206688]}
+2025-05-14 01:35:55 | INFO     | cogs.dsm:on_submit:70 - [COMMAND] Added remark to task hcuhgr for pataponz
+2025-05-14 01:36:05 | INFO     | cogs.dsm:_refresh_tasks:421 - [DEBUG] Starting refresh for user 1048212846720327681 (pataponz)
+2025-05-14 01:36:05 | INFO     | cogs.dsm:_refresh_tasks:432 - [DEBUG] Searching for DSM thread for date 2025-05-14
+2025-05-14 01:36:06 | INFO     | cogs.dsm:_refresh_tasks:444 - [DEBUG] Found active thread: 1371882451709857843
+2025-05-14 01:36:06 | INFO     | cogs.dsm:_refresh_tasks:449 - [DEBUG] Updating message in thread 1371882451709857843
+2025-05-14 01:36:06 | INFO     | cogs.dsm:update_task_message:1383 - [DEBUG] Starting update_task_message for channel 1371882451709857843
+2025-05-14 01:36:06 | INFO     | cogs.dsm:update_task_message:1398 - [DEBUG] Updating for specific user 1048212846720327681
+2025-05-14 01:36:06 | INFO     | cogs.dsm:update_task_message:1414 - [DEBUG] Found 58 tasks for user
+2025-05-14 01:36:06 | INFO     | cogs.dsm:create_task_embeds:652 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 01:36:06 | INFO     | cogs.dsm:update_task_message:1418 - [DEBUG] Created embeds with 12 completed and 46 pending tasks
+2025-05-14 01:36:06 | INFO     | cogs.dsm:update_task_message:1422 - [DEBUG] Target channel: 1371882451709857843
+2025-05-14 01:36:06 | INFO     | cogs.dsm:update_task_message:1429 - [DEBUG] Found stored message IDs: {'pending_messages': [1371903450119667805, 1371903452036206688], 'completed_messages': [1371903448403935252]}
+2025-05-14 01:36:06 | INFO     | cogs.dsm:update_task_message:1433 - [DEBUG] Fetching messages from channel/thread: 1371882451709857843
+2025-05-14 01:36:06 | INFO     | cogs.dsm:update_task_message:1441 - [DEBUG] Completed message 1371903448403935252 not found
+2025-05-14 01:36:07 | INFO     | cogs.dsm:update_task_message:1450 - [DEBUG] Pending message 1371903450119667805 not found
+2025-05-14 01:36:07 | INFO     | cogs.dsm:update_task_message:1450 - [DEBUG] Pending message 1371903452036206688 not found
+2025-05-14 01:36:07 | INFO     | cogs.dsm:update_task_message:1461 - [DEBUG] Searching target channel history for messages
+2025-05-14 01:36:07 | INFO     | cogs.dsm:update_task_message:1462 - [DEBUG] Searching in channel/thread: 1371882451709857843
+2025-05-14 01:36:08 | INFO     | cogs.dsm:update_task_message:1465 - [DEBUG] Found message with embeds: 1371899282990436463
+2025-05-14 01:36:08 | INFO     | cogs.dsm:update_task_message:1470 - [DEBUG] Found pending tasks message: 1371899282990436463
+2025-05-14 01:36:08 | INFO     | cogs.dsm:update_task_message:1465 - [DEBUG] Found message with embeds: 1371882465886732359
+2025-05-14 01:36:08 | INFO     | cogs.dsm:update_task_message:1470 - [DEBUG] Found pending tasks message: 1371882465886732359
+2025-05-14 01:36:08 | INFO     | cogs.dsm:update_task_message:1465 - [DEBUG] Found message with embeds: 1371882463869014158
+2025-05-14 01:36:08 | INFO     | cogs.dsm:update_task_message:1467 - [DEBUG] Found completed tasks message: 1371882463869014158
+2025-05-14 01:36:08 | INFO     | cogs.dsm:update_task_message:1465 - [DEBUG] Found message with embeds: 1371882456541696023
+2025-05-14 01:36:08 | INFO     | cogs.dsm:update_task_message:1511 - [DEBUG] Updated completed message 1371882463869014158
+2025-05-14 01:36:08 | INFO     | cogs.dsm:update_task_message:1523 - [DEBUG] Updated pending message 1371899282990436463
+2025-05-14 01:36:09 | INFO     | cogs.dsm:update_task_message:1523 - [DEBUG] Updated pending message 1371882465886732359
+2025-05-14 01:36:09 | INFO     | services.firebase_service:update_config:123 - Updated config for guild 1365369294623608882
+2025-05-14 01:36:09 | INFO     | cogs.dsm:save_dsm_message:402 - [DEBUG] Saved DSM message data to config: {'completed_messages': [1371882463869014158], 'pending_messages': [1371899282990436463, 1371882465886732359]}
+2025-05-14 01:36:09 | INFO     | cogs.dsm:update_task_message:1535 - [DEBUG] Saved message IDs: {'completed_messages': [1371882463869014158], 'pending_messages': [1371899282990436463, 1371882465886732359]}
+2025-05-14 01:36:09 | INFO     | cogs.dsm:_refresh_tasks:455 - [DEBUG] Refresh completed for pataponz
+2025-05-14 01:40:25 | INFO     | cogs.dsm:cog_unload:341 - DSM cog unloaded

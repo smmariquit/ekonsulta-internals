@@ -1,0 +1,15 @@
+2025-05-13 22:51:27 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-13 22:51:29 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-13 22:51:29 | INFO     | cogs.dsm:__init__:144 - DSM cog initialized
+2025-05-13 22:51:30 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-13 22:51:33 | INFO     | cogs.dsm:before_daily_standup:431 - Daily standup task started
+2025-05-13 22:51:33 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-13 22:51:33 | INFO     | services.firebase_service:load_tasks:105 - Loaded tasks from Firebase
+2025-05-13 22:51:33 | INFO     | cogs.dsm:on_ready:437 - Tasks loaded from Firebase
+2025-05-13 22:51:38 | INFO     | cogs.dsm:simulate_dsm:667 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-13
+2025-05-13 22:51:38 | INFO     | services.firebase_service:save_dsm_session:119 - Saved DSM session for guild 1365369294623608882
+2025-05-13 22:51:39 | INFO     | cogs.dsm:simulate_dsm:691 - Sent opening message to thread
+2025-05-13 22:51:39 | INFO     | services.firebase_service:load_tasks:105 - Loaded tasks from Firebase
+2025-05-13 22:51:39 | INFO     | services.firebase_service:save_tasks:84 - Saved tasks to Firebase
+2025-05-13 22:51:39 | INFO     | cogs.dsm:send_initial_task_embeds:236 - Sent initial task embeds in thread DAILY STANDUP MEETING - 2025-05-13
+2025-05-13 22:54:42 | INFO     | cogs.dsm:cog_unload:169 - DSM cog unloaded

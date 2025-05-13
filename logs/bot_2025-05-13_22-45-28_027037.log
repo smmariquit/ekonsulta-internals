@@ -1,0 +1,14 @@
+2025-05-13 22:45:28 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-13 22:45:30 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-13 22:45:30 | INFO     | cogs.dsm:__init__:144 - DSM cog initialized
+2025-05-13 22:45:30 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-13 22:45:33 | INFO     | cogs.dsm:before_daily_standup:430 - Daily standup task started
+2025-05-13 22:45:33 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-13 22:45:34 | INFO     | services.firebase_service:load_tasks:105 - Loaded tasks from Firebase
+2025-05-13 22:45:34 | INFO     | cogs.dsm:on_ready:436 - Tasks loaded from Firebase
+2025-05-13 22:46:16 | WARNING  | cogs.dsm:update_task_message:859 - Could not update message for stimmie: 404 Not Found (error code: 10008): Unknown Message
+2025-05-13 22:46:17 | INFO     | services.firebase_service:save_tasks:84 - Saved tasks to Firebase
+2025-05-13 22:46:17 | INFO     | cogs.dsm:update_task_message:864 - Created new task message for stimmie
+2025-05-13 22:46:25 | INFO     | cogs.dsm:simulate_dsm:666 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-13
+2025-05-13 22:46:25 | ERROR    | cogs.dsm:simulate_dsm:702 - Error in simulate_dsm: 'Task' object has no attribute 'completed_at'
+2025-05-13 22:48:36 | INFO     | cogs.dsm:cog_unload:169 - DSM cog unloaded

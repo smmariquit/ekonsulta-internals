@@ -1,0 +1,22 @@
+2025-05-13 23:01:36 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-13 23:01:39 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-13 23:01:39 | INFO     | cogs.dsm:__init__:144 - DSM cog initialized
+2025-05-13 23:01:39 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-13 23:01:42 | INFO     | cogs.dsm:before_daily_standup:439 - Daily standup task started
+2025-05-13 23:01:42 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-13 23:01:43 | INFO     | services.firebase_service:load_tasks:105 - Loaded tasks from Firebase
+2025-05-13 23:01:43 | INFO     | cogs.dsm:on_ready:445 - Tasks loaded from Firebase
+2025-05-13 23:02:04 | INFO     | cogs.dsm:update_task_message:906 - Updated task message for stimmie
+2025-05-13 23:02:11 | DEBUG    | services.firebase_service:save_user:48 - Saved user data for pataponz
+2025-05-13 23:02:12 | INFO     | services.firebase_service:save_tasks:84 - Saved tasks to Firebase
+2025-05-13 23:02:13 | INFO     | cogs.dsm:update_task_message:906 - Updated task message for stimmie
+2025-05-13 23:02:13 | INFO     | cogs.dsm:_add_task:529 - Added task seiwnt for pataponz: Test
+2025-05-13 23:02:39 | INFO     | cogs.dsm:simulate_dsm:699 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-13
+2025-05-13 23:02:39 | INFO     | services.firebase_service:save_dsm_session:119 - Saved DSM session for guild 1365369294623608882
+2025-05-13 23:02:39 | INFO     | cogs.dsm:simulate_dsm:727 - Sent opening message to thread
+2025-05-13 23:02:39 | INFO     | services.firebase_service:load_tasks:105 - Loaded tasks from Firebase
+2025-05-13 23:02:40 | INFO     | services.firebase_service:save_tasks:84 - Saved tasks to Firebase
+2025-05-13 23:02:40 | INFO     | cogs.dsm:send_initial_task_embeds:248 - Sent initial task embeds in thread DAILY STANDUP MEETING - 2025-05-13
+2025-05-13 23:02:59 | INFO     | cogs.dsm:update_task_message:906 - Updated task message for stimmie
+2025-05-13 23:04:24 | INFO     | cogs.dsm:update_task_message:906 - Updated task message for stimmie
+2025-05-13 23:05:49 | INFO     | cogs.dsm:cog_unload:169 - DSM cog unloaded

@@ -1,0 +1,26 @@
+2025-05-13 23:09:55 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-13 23:09:58 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-13 23:09:58 | INFO     | cogs.dsm:__init__:145 - DSM cog initialized
+2025-05-13 23:09:58 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-13 23:10:01 | INFO     | cogs.dsm:before_daily_standup:496 - Daily standup task started
+2025-05-13 23:10:01 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-13 23:10:02 | INFO     | services.firebase_service:load_tasks:105 - Loaded tasks from Firebase
+2025-05-13 23:10:02 | INFO     | cogs.dsm:on_ready:502 - Tasks loaded from Firebase
+2025-05-13 23:10:17 | INFO     | cogs.dsm:simulate_dsm:756 - Manually created standup thread: DAILY STANDUP MEETING - 2025-05-13
+2025-05-13 23:10:18 | INFO     | services.firebase_service:save_dsm_session:119 - Saved DSM session for guild 1365369294623608882
+2025-05-13 23:10:18 | INFO     | cogs.dsm:simulate_dsm:784 - Sent opening message to thread
+2025-05-13 23:10:18 | INFO     | services.firebase_service:load_tasks:105 - Loaded tasks from Firebase
+2025-05-13 23:10:18 | ERROR    | cogs.dsm:send_initial_task_embeds:308 - Error sending initial task embeds: 'FirebaseService' object has no attribute 'save_dsm_messages'
+2025-05-13 23:10:36 | WARNING  | cogs.dsm:update_task_message:967 - Could not update message for stimmie: 404 Not Found (error code: 10008): Unknown Message
+2025-05-13 23:10:37 | ERROR    | cogs.dsm:update_task_message:983 - Error updating task message: 'FirebaseService' object has no attribute 'save_dsm_messages'
+2025-05-13 23:10:43 | DEBUG    | services.firebase_service:save_user:48 - Saved user data for pataponz
+2025-05-13 23:10:43 | INFO     | services.firebase_service:save_tasks:84 - Saved tasks to Firebase
+2025-05-13 23:10:44 | INFO     | cogs.dsm:update_task_message:965 - Updated task message for stimmie
+2025-05-13 23:10:44 | INFO     | cogs.dsm:_add_task:586 - Added task ulhmuu for pataponz: Walking
+2025-05-13 23:10:50 | INFO     | cogs.dsm:update_task_message:965 - Updated task message for stimmie
+2025-05-13 23:10:50 | INFO     | cogs.dsm:_refresh_tasks:206 - Manually refreshed task message for pataponz
+2025-05-13 23:11:16 | DEBUG    | services.firebase_service:save_user:48 - Saved user data for pataponz
+2025-05-13 23:11:16 | INFO     | services.firebase_service:save_tasks:84 - Saved tasks to Firebase
+2025-05-13 23:11:18 | INFO     | cogs.dsm:update_task_message:965 - Updated task message for stimmie
+2025-05-13 23:11:18 | INFO     | cogs.dsm:_add_task:586 - Added task sjvxmi for pataponz: Walkingg
+2025-05-13 23:13:37 | INFO     | cogs.dsm:cog_unload:170 - DSM cog unloaded

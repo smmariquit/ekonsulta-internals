@@ -1,0 +1,79 @@
+2025-05-14 01:22:53 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 01:22:56 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 01:22:56 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 01:22:56 | INFO     | cogs.dsm:__init__:297 - DSM cog initialized
+2025-05-14 01:22:56 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 01:22:59 | INFO     | cogs.dsm:before_daily_standup:905 - Daily standup task started
+2025-05-14 01:22:59 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-14 01:23:00 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-14 01:23:00 | INFO     | services.firebase_service:load_dsm_messages:198 - Loaded DSM messages from Firebase
+2025-05-14 01:23:00 | INFO     | cogs.dsm:on_ready:334 - Tasks and DSM messages loaded from Firebase
+2025-05-14 01:23:09 | INFO     | cogs.dsm:simulate_dsm:1137 - [COMMAND] /simulate_dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 01:23:10 | INFO     | cogs.dsm:simulate_dsm:1175 - [COMMAND] Created DSM thread: DAILY STANDUP MEETING - 2025-05-14 (1371900593936924826)
+2025-05-14 01:23:10 | INFO     | services.firebase_service:save_dsm_session:130 - Saved DSM session for guild 1365369294623608882
+2025-05-14 01:23:11 | INFO     | cogs.dsm:simulate_dsm:1203 - [COMMAND] Sent opening message to thread 1371900593936924826
+2025-05-14 01:23:11 | INFO     | cogs.dsm:simulate_dsm:1208 - [DEBUG] Sending initial task embeds for user 1048212846720327681
+2025-05-14 01:23:11 | INFO     | cogs.dsm:create_task_embeds:605 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 01:23:11 | INFO     | cogs.dsm:send_initial_task_embeds:628 - [DEBUG] Created embeds with 11 completed and 42 pending tasks
+2025-05-14 01:23:11 | INFO     | cogs.dsm:send_initial_task_embeds:632 - [DEBUG] Target channel: 1371900593936924826
+2025-05-14 01:23:11 | INFO     | cogs.dsm:send_initial_task_embeds:636 - [DEBUG] Found stored message data: {'pending_msg_id': 1371891598530576444, 'completed_msg_id': 1371891596265521275}
+2025-05-14 01:23:11 | INFO     | cogs.dsm:send_initial_task_embeds:644 - [DEBUG] Fetching messages from channel/thread: 1371900593936924826
+2025-05-14 01:23:11 | INFO     | cogs.dsm:send_initial_task_embeds:668 - [DEBUG] Messages not found in target channel/thread
+2025-05-14 01:23:11 | INFO     | cogs.dsm:send_initial_task_embeds:669 - [DEBUG] Searching target channel history for messages
+2025-05-14 01:23:11 | INFO     | cogs.dsm:send_initial_task_embeds:670 - [DEBUG] Searching in channel/thread: 1371900593936924826
+2025-05-14 01:23:12 | INFO     | cogs.dsm:send_initial_task_embeds:693 - [DEBUG] Sent new completed message: 1371900602522800211
+2025-05-14 01:23:12 | INFO     | cogs.dsm:send_initial_task_embeds:705 - [DEBUG] Sent new pending message: 1371900604628074687
+2025-05-14 01:23:12 | INFO     | cogs.dsm:send_initial_task_embeds:705 - [DEBUG] Sent new pending message: 1371900606348001291
+2025-05-14 01:23:13 | INFO     | services.firebase_service:save_dsm_message:172 - [DEBUG] Saved DSM message IDs for user 1048212846720327681 in guild 1365369294623608882: {'completed_messages': [1371900602522800211], 'pending_messages': [1371900604628074687, 1371900606348001291], 'last_updated': '2025-05-14T01:23:12.992353'}
+2025-05-14 01:23:13 | INFO     | cogs.dsm:save_dsm_message:356 - [DEBUG] Saved DSM message data: {'completed_messages': [1371900602522800211], 'pending_messages': [1371900604628074687, 1371900606348001291], 'last_updated': '2025-05-14T01:23:12.992353'}
+2025-05-14 01:23:13 | INFO     | cogs.dsm:send_initial_task_embeds:713 - [DEBUG] Saved message IDs: {'completed_messages': [1371900602522800211], 'pending_messages': [1371900604628074687, 1371900606348001291], 'last_updated': '2025-05-14T01:23:12.992353'}
+2025-05-14 01:23:21 | INFO     | cogs.dsm:dsm:1832 - [COMMAND] /dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 01:23:22 | INFO     | cogs.dsm:update_task_message:1336 - [DEBUG] Starting update_task_message for channel 1371882451709857843
+2025-05-14 01:23:22 | INFO     | cogs.dsm:update_task_message:1351 - [DEBUG] Updating for specific user 1048212846720327681
+2025-05-14 01:23:22 | INFO     | cogs.dsm:update_task_message:1367 - [DEBUG] Found 53 tasks for user
+2025-05-14 01:23:22 | INFO     | cogs.dsm:create_task_embeds:605 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 01:23:22 | INFO     | cogs.dsm:update_task_message:1371 - [DEBUG] Created embeds with 11 completed and 42 pending tasks
+2025-05-14 01:23:22 | INFO     | cogs.dsm:update_task_message:1375 - [DEBUG] Target channel: 1371882451709857843
+2025-05-14 01:23:22 | INFO     | cogs.dsm:update_task_message:1382 - [DEBUG] Found stored message IDs: {'pending_msg_id': 1371891598530576444, 'completed_msg_id': 1371891596265521275}
+2025-05-14 01:23:22 | INFO     | cogs.dsm:update_task_message:1386 - [DEBUG] Fetching messages from channel/thread: 1371882451709857843
+2025-05-14 01:23:22 | INFO     | cogs.dsm:update_task_message:1414 - [DEBUG] Searching target channel history for messages
+2025-05-14 01:23:22 | INFO     | cogs.dsm:update_task_message:1415 - [DEBUG] Searching in channel/thread: 1371882451709857843
+2025-05-14 01:23:23 | INFO     | cogs.dsm:update_task_message:1418 - [DEBUG] Found message with embeds: 1371899282990436463
+2025-05-14 01:23:23 | INFO     | cogs.dsm:update_task_message:1423 - [DEBUG] Found pending tasks message: 1371899282990436463
+2025-05-14 01:23:23 | INFO     | cogs.dsm:update_task_message:1418 - [DEBUG] Found message with embeds: 1371882465886732359
+2025-05-14 01:23:23 | INFO     | cogs.dsm:update_task_message:1423 - [DEBUG] Found pending tasks message: 1371882465886732359
+2025-05-14 01:23:23 | INFO     | cogs.dsm:update_task_message:1418 - [DEBUG] Found message with embeds: 1371882463869014158
+2025-05-14 01:23:23 | INFO     | cogs.dsm:update_task_message:1420 - [DEBUG] Found completed tasks message: 1371882463869014158
+2025-05-14 01:23:23 | INFO     | cogs.dsm:update_task_message:1418 - [DEBUG] Found message with embeds: 1371882456541696023
+2025-05-14 01:23:23 | ERROR    | cogs.dsm:update_task_message:1483 - [DEBUG] Error updating task message: invalid literal for int() with base 10: 'Part 1'
+2025-05-14 01:23:23 | ERROR    | cogs.dsm:dsm:1890 - [COMMAND] Error in dsm command: invalid literal for int() with base 10: 'Part 1'
+2025-05-14 01:23:33 | INFO     | cogs.dsm:_add_task:942 - [DEBUG] Starting task addition for user 1048212846720327681 (pataponz)
+2025-05-14 01:23:33 | INFO     | cogs.dsm:_add_task:950 - [DEBUG] Generated task ID: gghm
+2025-05-14 01:23:33 | INFO     | cogs.dsm:_add_task:959 - [DEBUG] Added task to user's task list
+2025-05-14 01:23:34 | DEBUG    | services.firebase_service:save_user:59 - Saved user data for pataponz
+2025-05-14 01:23:34 | INFO     | cogs.dsm:_add_task:972 - [DEBUG] Updated user data in Firebase
+2025-05-14 01:23:34 | INFO     | services.firebase_service:save_tasks:95 - Saved tasks to Firebase
+2025-05-14 01:23:34 | INFO     | cogs.dsm:_add_task:976 - [DEBUG] Saved tasks to Firebase
+2025-05-14 01:23:34 | INFO     | cogs.dsm:_add_task:982 - [DEBUG] Searching for DSM thread for date 2025-05-14
+2025-05-14 01:23:34 | INFO     | cogs.dsm:_add_task:994 - [DEBUG] Found active thread: 1371882451709857843
+2025-05-14 01:23:34 | INFO     | cogs.dsm:_add_task:999 - [DEBUG] Updating messages in thread 1371882451709857843
+2025-05-14 01:23:34 | INFO     | cogs.dsm:update_task_message:1336 - [DEBUG] Starting update_task_message for channel 1371882451709857843
+2025-05-14 01:23:34 | INFO     | cogs.dsm:update_task_message:1351 - [DEBUG] Updating for specific user 1048212846720327681
+2025-05-14 01:23:34 | INFO     | cogs.dsm:update_task_message:1367 - [DEBUG] Found 54 tasks for user
+2025-05-14 01:23:34 | INFO     | cogs.dsm:create_task_embeds:605 - [DEBUG] Created 1 completed embeds and 2 pending embeds
+2025-05-14 01:23:34 | INFO     | cogs.dsm:update_task_message:1371 - [DEBUG] Created embeds with 11 completed and 43 pending tasks
+2025-05-14 01:23:34 | INFO     | cogs.dsm:update_task_message:1375 - [DEBUG] Target channel: 1371882451709857843
+2025-05-14 01:23:34 | INFO     | cogs.dsm:update_task_message:1382 - [DEBUG] Found stored message IDs: {'pending_msg_id': 1371891598530576444, 'completed_msg_id': 1371891596265521275}
+2025-05-14 01:23:34 | INFO     | cogs.dsm:update_task_message:1386 - [DEBUG] Fetching messages from channel/thread: 1371882451709857843
+2025-05-14 01:23:34 | INFO     | cogs.dsm:update_task_message:1414 - [DEBUG] Searching target channel history for messages
+2025-05-14 01:23:34 | INFO     | cogs.dsm:update_task_message:1415 - [DEBUG] Searching in channel/thread: 1371882451709857843
+2025-05-14 01:23:35 | INFO     | cogs.dsm:update_task_message:1418 - [DEBUG] Found message with embeds: 1371899282990436463
+2025-05-14 01:23:35 | INFO     | cogs.dsm:update_task_message:1423 - [DEBUG] Found pending tasks message: 1371899282990436463
+2025-05-14 01:23:35 | INFO     | cogs.dsm:update_task_message:1418 - [DEBUG] Found message with embeds: 1371882465886732359
+2025-05-14 01:23:35 | INFO     | cogs.dsm:update_task_message:1423 - [DEBUG] Found pending tasks message: 1371882465886732359
+2025-05-14 01:23:35 | INFO     | cogs.dsm:update_task_message:1418 - [DEBUG] Found message with embeds: 1371882463869014158
+2025-05-14 01:23:35 | INFO     | cogs.dsm:update_task_message:1420 - [DEBUG] Found completed tasks message: 1371882463869014158
+2025-05-14 01:23:35 | INFO     | cogs.dsm:update_task_message:1418 - [DEBUG] Found message with embeds: 1371882456541696023
+2025-05-14 01:23:35 | ERROR    | cogs.dsm:update_task_message:1483 - [DEBUG] Error updating task message: invalid literal for int() with base 10: 'Part 1'
+2025-05-14 01:23:35 | ERROR    | cogs.dsm:_add_task:1009 - [DEBUG] Error in _add_task: invalid literal for int() with base 10: 'Part 1'
+2025-05-14 01:25:43 | INFO     | cogs.dsm:cog_unload:327 - DSM cog unloaded

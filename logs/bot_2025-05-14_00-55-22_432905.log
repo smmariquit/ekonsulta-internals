@@ -1,0 +1,16 @@
+2025-05-14 00:55:22 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 00:55:27 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 00:55:27 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 00:55:27 | INFO     | cogs.dsm:__init__:287 - DSM cog initialized
+2025-05-14 00:55:28 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 00:55:31 | INFO     | cogs.dsm:before_daily_standup:686 - Daily standup task started
+2025-05-14 00:55:31 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals
+2025-05-14 00:55:31 | INFO     | services.firebase_service:load_tasks:116 - Loaded tasks from Firebase
+2025-05-14 00:55:31 | INFO     | services.firebase_service:load_dsm_messages:195 - Loaded DSM messages from Firebase
+2025-05-14 00:55:31 | INFO     | cogs.dsm:on_ready:324 - Tasks and DSM messages loaded from Firebase
+2025-05-14 00:55:35 | INFO     | cogs.dsm:simulate_dsm:918 - [COMMAND] /simulate_dsm used by pataponz (1048212846720327681) in stimmie's server (1365369294623608882)
+2025-05-14 00:55:37 | INFO     | cogs.dsm:simulate_dsm:956 - [COMMAND] Created DSM thread: DAILY STANDUP MEETING - 2025-05-14 (1371893659439730719)
+2025-05-14 00:55:37 | INFO     | services.firebase_service:save_dsm_session:130 - Saved DSM session for guild 1365369294623608882
+2025-05-14 00:55:37 | INFO     | cogs.dsm:simulate_dsm:984 - [COMMAND] Sent opening message to thread 1371893659439730719
+2025-05-14 00:55:37 | ERROR    | cogs.dsm:simulate_dsm:996 - [COMMAND] Error in simulate_dsm: 'DSM' object has no attribute 'logger'
+2025-05-14 00:57:42 | INFO     | cogs.dsm:cog_unload:317 - DSM cog unloaded
