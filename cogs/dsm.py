@@ -1083,23 +1083,27 @@ class DSM(commands.Cog):
             config = await self.firebase_service.get_config(interaction.guild_id)
             if config:
                 updated_participants = set(config.get('updated_participants', []))
-                updated_participants.add(user_id)
+                updated_participants.add(str(user_id))  # Convert to string to ensure consistency
                 config['updated_participants'] = list(updated_participants)
                 await self.firebase_service.update_config(interaction.guild_id, config)
+                logger.info(f"[DEBUG] Updated participant status in config")
             
-            # Find the current DSM thread using get_current_dsm_thread
+            # Find the current DSM thread
+            current_thread = None
             if isinstance(interaction.channel, discord.TextChannel):
                 current_thread = await self.get_current_dsm_thread(interaction.channel)
-                if current_thread:
-                    logger.info(f"[DEBUG] Using DSM thread: {current_thread.id} ({current_thread.name})")
-                    await self.update_task_message(current_thread, user_id)
-                    # Update DSM statistics
-                    await self.update_dsm_statistics(interaction.guild_id)
-                else:
-                    logger.info(f"[DEBUG] No DSM thread found, updating in channel {interaction.channel.id}")
-                    await self.update_task_message(interaction.channel, user_id)
+            
+            # Update task message in the appropriate channel
+            if current_thread:
+                logger.info(f"[DEBUG] Using DSM thread: {current_thread.id} ({current_thread.name})")
+                await self.update_task_message(current_thread, user_id)
             else:
+                logger.info(f"[DEBUG] No DSM thread found, updating in channel {interaction.channel.id}")
                 await self.update_task_message(interaction.channel, user_id)
+            
+            # Update DSM statistics
+            await self.update_dsm_statistics(interaction.guild_id)
+            logger.info(f"[DEBUG] Updated DSM statistics")
             
             logger.info(f"[DEBUG] Task addition completed for {interaction.user.name}")
             await interaction.followup.send(f"Task added with ID: `{task_id}`", ephemeral=True)
