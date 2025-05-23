@@ -615,71 +615,62 @@ class DSM(commands.Cog):
             # Get current DSM date from config
             config = await self.firebase_service.get_config(guild.id)
             date_str = config.get('dsm_date', datetime.datetime.now().strftime("%B %d, %Y"))
-            
-            # Get previous DSM date
-            previous_dsm_date = None
-            if config.get('latest_dsm_thread'):
-                thread_info = config['latest_dsm_thread']
-                if isinstance(thread_info, dict):
-                    previous_date = thread_info.get('date')
-                    if previous_date:
-                        previous_dsm_date = datetime.datetime.strptime(previous_date, '%Y-%m-%d').date()
+            current_dsm_date = datetime.datetime.strptime(config.get('dsm_date', datetime.datetime.now().strftime('%Y-%m-%d')), '%Y-%m-%d').date()
 
             # Create empty completed tasks embed
             completed_embed = discord.Embed(
-                title=f"✅ {member.display_name}'s Completed Tasks (Previous DSM)",
-                description=f"**Daily Standup Meeting: {date_str}**\nNo tasks completed in the previous DSM.",
+                title=f"✅ {member.display_name}'s Completed Tasks",
+                description=f"**Daily Standup Meeting: {date_str}**\nNo tasks completed today.",
                 color=discord.Color.green()
             )
             if member.avatar:
                 completed_embed.set_thumbnail(url=member.avatar.url)
             completed_embeds = [completed_embed]
 
-            # Only update completed tasks embed if there are tasks completed in previous DSM
-            if previous_dsm_date:
-                completed_tasks = []
-                for task in tasks:
-                    if task.status == "done" and task.completed_at:
-                        try:
-                            completed_at = datetime.datetime.fromisoformat(task.completed_at).date()
-                            if completed_at == previous_dsm_date:
-                                completed_tasks.append(task)
-                        except (ValueError, TypeError):
-                            continue
+            # Get tasks completed during current DSM
+            completed_tasks = []
+            for task in tasks:
+                if task.status == "done" and task.completed_at:
+                    try:
+                        completed_at = datetime.datetime.fromisoformat(task.completed_at).date()
+                        if completed_at == current_dsm_date:
+                            completed_tasks.append(task)
+                    except (ValueError, TypeError):
+                        continue
 
-                if completed_tasks:
-                    # Group by day
-                    tasks_by_day = {}
-                    for task in completed_tasks:
-                        day = task.created_at.split('T')[0]
-                        if day not in tasks_by_day:
-                            tasks_by_day[day] = []
-                        tasks_by_day[day].append(task)
-                    
-                    completed_embeds = []
-                    for day, day_tasks in sorted(tasks_by_day.items(), reverse=True):
-                        completed_embed = discord.Embed(
-                            title=f"✅ {member.display_name}'s Completed Tasks (Previous DSM)",
-                            description=f"**Daily Standup Meeting: {date_str}**",
-                            color=discord.Color.green()
-                        )
-                        if member.avatar:
-                            completed_embed.set_thumbnail(url=member.avatar.url)
-                        task_list = []
-                        for task in day_tasks:
-                            task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description} ({task.completed_at.split('T')[1][:5] if task.completed_at else 'N/A'})"
-                            if task.remarks:
-                                task_str += f"\n   📝 **Remark:** {task.remarks}"
-                            task_list.append(task_str)
-                        completed_embed.add_field(
-                            name=f"📅 {day}",
-                            value="\n".join(task_list),
-                            inline=False
-                        )
-                        # Add footer with the task day
-                        task_day = datetime.datetime.strptime(day, '%Y-%m-%d').strftime('%B %d, %Y')
-                        completed_embed.set_footer(text=f"Tasks for: {task_day}")
-                        completed_embeds.append(completed_embed)
+            if completed_tasks:
+                # Group by day
+                tasks_by_day = {}
+                for task in completed_tasks:
+                    day = task.created_at.split('T')[0]
+                    if day not in tasks_by_day:
+                        tasks_by_day[day] = []
+                    tasks_by_day[day].append(task)
+                
+                completed_embeds = []
+                for day, day_tasks in sorted(tasks_by_day.items(), reverse=True):
+                    completed_embed = discord.Embed(
+                        title=f"✅ {member.display_name}'s Completed Tasks",
+                        description=f"**Daily Standup Meeting: {date_str}**",
+                        color=discord.Color.green()
+                    )
+                    if member.avatar:
+                        completed_embed.set_thumbnail(url=member.avatar.url)
+                    task_list = []
+                    for task in day_tasks:
+                        task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description} ({task.completed_at.split('T')[1][:5] if task.completed_at else 'N/A'})"
+                        if task.remarks:
+                            task_str += f"\n   📝 **Remark:** {task.remarks}"
+                        task_list.append(task_str)
+                    completed_embed.add_field(
+                        name=f"📅 {day}",
+                        value="\n".join(task_list),
+                        inline=False
+                    )
+                    # Add footer with the task day
+                    task_day = datetime.datetime.strptime(day, '%Y-%m-%d').strftime('%B %d, %Y')
+                    completed_embed.set_footer(text=f"Tasks for: {task_day}")
+                    completed_embeds.append(completed_embed)
 
             # Pending tasks - show all pending tasks
             pending_tasks = [t for t in tasks if t.status == "pending"]
