@@ -1699,6 +1699,27 @@ class DSM(commands.Cog):
                     if user_data and "tasks" in user_data:
                         tasks.extend(user_data["tasks"])
 
+            # Delete old messages if they exist
+            if 'dsm_messages' in config:
+                if user_id:
+                    user_messages = config['dsm_messages'].get(str(user_id), {})
+                    for msg_id in user_messages.get('completed_messages', []) + user_messages.get('pending_messages', []):
+                        try:
+                            msg = await channel.fetch_message(int(msg_id))
+                            await msg.delete()
+                            logger.info(f"[DEBUG] Deleted old message: {msg_id}")
+                        except (discord.NotFound, discord.Forbidden):
+                            logger.info(f"[DEBUG] Could not delete old message: {msg_id}")
+                else:
+                    for user_messages in config['dsm_messages'].values():
+                        for msg_id in user_messages.get('completed_messages', []) + user_messages.get('pending_messages', []):
+                            try:
+                                msg = await channel.fetch_message(int(msg_id))
+                                await msg.delete()
+                                logger.info(f"[DEBUG] Deleted old message: {msg_id}")
+                            except (discord.NotFound, discord.Forbidden):
+                                logger.info(f"[DEBUG] Could not delete old message: {msg_id}")
+
             # Create embeds
             completed_embeds, pending_embeds = await self.create_task_embeds(tasks, user_id)
 
@@ -2943,6 +2964,27 @@ class DSM(commands.Cog):
                 for user_data in self.user_tasks.values():
                     if user_data and "tasks" in user_data:
                         tasks.extend(user_data["tasks"])
+
+            # Delete old messages if they exist
+            if 'dsm_messages' in config:
+                if user_id:
+                    user_messages = config['dsm_messages'].get(str(user_id), {})
+                    for msg_id in user_messages.get('completed_messages', []) + user_messages.get('pending_messages', []):
+                        try:
+                            msg = await channel.fetch_message(int(msg_id))
+                            await msg.delete()
+                            logger.info(f"[DEBUG] Deleted old message: {msg_id}")
+                        except (discord.NotFound, discord.Forbidden):
+                            logger.info(f"[DEBUG] Could not delete old message: {msg_id}")
+                else:
+                    for user_messages in config['dsm_messages'].values():
+                        for msg_id in user_messages.get('completed_messages', []) + user_messages.get('pending_messages', []):
+                            try:
+                                msg = await channel.fetch_message(int(msg_id))
+                                await msg.delete()
+                                logger.info(f"[DEBUG] Deleted old message: {msg_id}")
+                            except (discord.NotFound, discord.Forbidden):
+                                logger.info(f"[DEBUG] Could not delete old message: {msg_id}")
 
             # Create embeds
             completed_embeds, pending_embeds = await self.create_task_embeds(tasks, user_id)
