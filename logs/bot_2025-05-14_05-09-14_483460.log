@@ -1,0 +1,18 @@
+2025-05-14 05:09:14 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 05:09:16 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 05:09:16 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 05:09:16 | INFO     | cogs.dsm:__init__:463 - DSM cog initialized
+2025-05-14 05:09:16 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 05:09:19 | INFO     | cogs.dsm:before_daily_standup:1160 - Daily standup task will start in 40.39 seconds
+2025-05-14 05:09:19 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals - Testing
+2025-05-14 05:09:20 | INFO     | services.firebase_service:load_tasks:123 - Loaded tasks from Firebase
+2025-05-14 05:09:20 | INFO     | cogs.dsm:on_ready:2600 - Tasks loaded from Firebase
+2025-05-14 05:09:20 | INFO     | cogs.dsm:on_ready:2607 - Loaded DSM messages for guild 1365369294623608882
+2025-05-14 05:09:20 | INFO     | cogs.dsm:on_ready:2616 - DSM messages loaded from config
+2025-05-14 05:09:36 | INFO     | cogs.dsm:simulate_dsm:2627 - Manual DSM triggered by pataponz in Testing Server
+2025-05-14 05:09:37 | INFO     | cogs.dsm:simulate_dsm:2650 - Archived previous DSM thread: Daily Standup Meeting for May 14, 2025
+2025-05-14 05:09:40 | INFO     | services.firebase_service:update_config:140 - Updated config for guild 1365369294623608882
+2025-05-14 05:09:40 | INFO     | cogs.dsm:simulate_dsm:2735 - Manual DSM thread created: Daily Standup Meeting for May 14, 2025 (ID: 1371957588517982289)
+2025-05-14 05:10:00 | INFO     | cogs.dsm:before_daily_standup:1162 - Daily standup task started
+2025-05-14 05:10:00 | INFO     | cogs.dsm:daily_standup:921 - Target time 2025-05-13 03:45:00+00:00 has passed for guild 1365369294623608882, skipping DSM
+2025-05-14 05:14:00 | INFO     | cogs.dsm:cog_unload:493 - DSM cog unloaded

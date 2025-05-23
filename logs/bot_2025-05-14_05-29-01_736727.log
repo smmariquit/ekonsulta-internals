@@ -1,0 +1,8 @@
+2025-05-14 05:29:01 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 05:29:04 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 05:29:04 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 05:29:05 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 05:29:08 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals - Testing
+2025-05-14 05:29:09 | INFO     | services.firebase_service:load_tasks:123 - Loaded tasks from Firebase
+2025-05-14 05:29:15 | INFO     | services.firebase_service:update_config:140 - Updated config for guild 1365369294623608882
+2025-05-14 05:29:29 | INFO     | services.firebase_service:update_config:140 - Updated config for guild 1365369294623608882
