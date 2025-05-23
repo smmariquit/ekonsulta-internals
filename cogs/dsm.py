@@ -753,7 +753,7 @@ class DSM(commands.Cog):
                     completed_tasks += len([t for t in user_tasks if t.status == "done"])
                     if user_tasks:
                         participants.add(str(user_id))
-                        # Only add to pending if not in updated_participants
+                        # Only add to pending if they have tasks but haven't updated
                         if str(user_id) not in updated_participants:
                             pending_participants.add(str(user_id))
             
@@ -1788,7 +1788,8 @@ class DSM(commands.Cog):
                     logger.info(f"[DEBUG] Using DSM thread: {current_thread.id}")
             
             # Get latest message IDs from config
-            latest_messages = await self.get_latest_dsm_message(channel.guild.id, str(user_id))
+            config = await self.firebase_service.get_config(channel.guild.id)
+            latest_messages = config.get('dsm_messages', {}).get(str(user_id), {})
             
             # Delete existing messages if they exist
             if latest_messages:
@@ -1815,11 +1816,16 @@ class DSM(commands.Cog):
                 logger.info(f"[DEBUG] Sent new pending message: {msg.id}")
             
             # Save new message IDs to config
-            await self.save_dsm_message(channel.guild.id, str(user_id), {
+            if 'dsm_messages' not in config:
+                config['dsm_messages'] = {}
+            
+            config['dsm_messages'][str(user_id)] = {
                 'completed_messages': [str(msg.id) for msg in completed_messages],
                 'pending_messages': [str(msg.id) for msg in pending_messages],
                 'last_updated': datetime.datetime.now().isoformat()
-            })
+            }
+            
+            await self.firebase_service.update_config(channel.guild.id, config)
             logger.info(f"[DEBUG] Saved new message IDs to config for user {user_id}")
             
             # Update DSM statistics
@@ -3030,7 +3036,8 @@ class DSM(commands.Cog):
                     logger.info(f"[DEBUG] Using DSM thread: {current_thread.id}")
             
             # Get latest message IDs from config
-            latest_messages = await self.get_latest_dsm_message(channel.guild.id, str(user_id))
+            config = await self.firebase_service.get_config(channel.guild.id)
+            latest_messages = config.get('dsm_messages', {}).get(str(user_id), {})
             
             # Delete existing messages if they exist
             if latest_messages:
@@ -3057,11 +3064,16 @@ class DSM(commands.Cog):
                 logger.info(f"[DEBUG] Sent new pending message: {msg.id}")
             
             # Save new message IDs to config
-            await self.save_dsm_message(channel.guild.id, str(user_id), {
+            if 'dsm_messages' not in config:
+                config['dsm_messages'] = {}
+            
+            config['dsm_messages'][str(user_id)] = {
                 'completed_messages': [str(msg.id) for msg in completed_messages],
                 'pending_messages': [str(msg.id) for msg in pending_messages],
                 'last_updated': datetime.datetime.now().isoformat()
-            })
+            }
+            
+            await self.firebase_service.update_config(channel.guild.id, config)
             logger.info(f"[DEBUG] Saved new message IDs to config for user {user_id}")
             
             # Update DSM statistics
