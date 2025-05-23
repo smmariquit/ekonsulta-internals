@@ -2844,13 +2844,7 @@ class DSM(commands.Cog):
             )
 
     async def create_dsm(self, channel, config, is_automatic: bool = True):
-        """
-        Create a DSM in the given channel using the config.
-        This is called by the AutoDSMService for automatic DSMs.
-        """
-        # You can refactor the logic from your simulate_dsm or daily_standup here.
-        # For now, call simulate_dsm logic, but without interaction.
-        # You may need to adapt this for your needs.
+        """Create a DSM in the given channel using the config."""
         try:
             # Archive previous thread if exists
             current_thread = None
@@ -2863,8 +2857,9 @@ class DSM(commands.Cog):
                         current_thread = await channel.guild.fetch_channel(int(thread_id))
                         if current_thread and isinstance(current_thread, discord.Thread):
                             await current_thread.edit(archived=True)
-                except Exception:
-                    pass
+                            logger.info(f"[DEBUG] Archived previous thread: {current_thread.id}")
+                except Exception as e:
+                    logger.error(f"[DEBUG] Error archiving previous thread: {str(e)}")
 
             # Get current time in guild's timezone
             tz_str = config.get('timezone', 'UTC')
@@ -2899,22 +2894,170 @@ class DSM(commands.Cog):
                 name=f"DAILY STANDUP MEETING - {now.strftime('%Y-%m-%d')}",
                 auto_archive_duration=config.get('thread_auto_archive_duration', 10080)
             )
+            logger.info(f"[DEBUG] Created new thread: {thread.id}")
 
-            # (You can add the rest of your statistics and task-embed logic here, as in simulate_dsm)
+            # Calculate statistics from current tasks
+            total_tasks = 0
+            completed_tasks = 0
+            participants = set()
+            
+            for user_id, user_data in self.user_tasks.items():
+                if user_data and "tasks" in user_data:
+                    user_tasks = user_data["tasks"]
+                    total_tasks += len(user_tasks)
+                    completed_tasks += len([t for t in user_tasks if t.status == "done"])
+                    if user_tasks:
+                        participants.add(str(user_id))
 
-            # Update config with new thread info and clear old message IDs
+            # Create statistics embed
+            stats_embed = discord.Embed(
+                title=f"Daily Standup Meeting for {now.strftime('%B %d, %Y')}",
+                color=discord.Color.blue()
+            )
+            
+            # Add statistics fields
+            stats_embed.add_field(
+                name="Task Statistics",
+                value=f"Total Tasks: {total_tasks}\nCompleted: {completed_tasks}\nPending: {total_tasks - completed_tasks}",
+                inline=False
+            )
+            
+            # Add participant field - Start with empty lists since it's a new day
+            stats_embed.add_field(
+                name="Participants",
+                value=f"Total: {len(participants)}\nUpdated: 0\nPending: {len(participants)}\n\n**Updated:**\nNone\n\n**Pending:**\n" + "\n".join([f"<@{uid}>" for uid in participants]) if participants else "None",
+                inline=False
+            )
+            
+            # Add timeline field
+            stats_embed.add_field(
+                name="Timeline",
+                value=f"Start: {now.strftime('%Y-%m-%d %I:%M %p %Z')}\nDeadline: {deadline.strftime('%Y-%m-%d %I:%M %p %Z')}\nEnd: {end_time.strftime('%Y-%m-%d %I:%M %p %Z')}",
+                inline=False
+            )
+            
+            # Send statistics message
+            stats_message = await thread.send(embed=stats_embed)
+            logger.info(f"[DEBUG] Sent statistics message: {stats_message.id}")
+
+            # Update config with new thread info and reset tracking
             config['latest_dsm_thread'] = {
                 'thread_id': str(thread.id),
                 'created_at': now.isoformat(),
                 'date': now.strftime('%Y-%m-%d')
             }
-            config['dsm_messages'] = {}
-            config['updated_participants'] = []
-            config['pending_participants'] = []
+            config['latest_dsm_stats_message'] = stats_message.id
+            config['dsm_messages'] = {}  # Clear old message IDs
+            config['updated_participants'] = []  # Reset updated participants for new day
+            config['pending_participants'] = list(participants)  # Set all participants as pending initially
             await self.firebase_service.update_config(channel.guild.id, config)
+            logger.info(f"[DEBUG] Updated config with new thread info and reset tracking")
+
+            # Send task status for each user
+            for user_id, user_data in self.user_tasks.items():
+                if user_data and "tasks" in user_data and user_data["tasks"]:
+                    try:
+                        # Get the member
+                        member = channel.guild.get_member(int(user_id))
+                        if not member:
+                            continue
+
+                        # Create completed tasks embed
+                        completed_tasks = [t for t in user_data["tasks"] if t.status == "done"]
+                        if completed_tasks:
+                            completed_embed = discord.Embed(
+                                title=f"✅ {member.display_name}'s Completed Tasks",
+                                description=f"**Daily Standup Meeting: {now.strftime('%B %d, %Y')}**",
+                                color=discord.Color.green()
+                            )
+                            if member.avatar:
+                                completed_embed.set_thumbnail(url=member.avatar.url)
+                            
+                            # Group tasks by day
+                            tasks_by_day = {}
+                            for task in completed_tasks:
+                                day = task.created_at.split('T')[0]
+                                if day not in tasks_by_day:
+                                    tasks_by_day[day] = []
+                                tasks_by_day[day].append(task)
+                            
+                            # Add tasks to embed
+                            for day, day_tasks in sorted(tasks_by_day.items(), reverse=True):
+                                task_list = []
+                                for task in day_tasks:
+                                    task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description} ({task.completed_at.split('T')[1][:5] if task.completed_at else 'N/A'})"
+                                    if task.remarks:
+                                        task_str += f"\n   📝 **Remark:** {task.remarks}"
+                                    task_list.append(task_str)
+                                
+                                completed_embed.add_field(
+                                    name=f"📅 {day}",
+                                    value="\n".join(task_list),
+                                    inline=False
+                                )
+                            
+                            completed_embed.set_footer(text=f"Total Completed Tasks: {len(completed_tasks)}")
+                            msg = await thread.send(embed=completed_embed)
+                            logger.info(f"[DEBUG] Sent completed tasks message for {member.display_name}: {msg.id}")
+
+                        # Create pending tasks embed
+                        pending_tasks = [t for t in user_data["tasks"] if t.status == "pending"]
+                        if pending_tasks:
+                            pending_embed = discord.Embed(
+                                title=f"⏳ {member.display_name}'s Pending Tasks",
+                                description=f"**Daily Standup Meeting: {now.strftime('%B %d, %Y')}**",
+                                color=discord.Color.orange()
+                            )
+                            if member.avatar:
+                                pending_embed.set_thumbnail(url=member.avatar.url)
+                            
+                            # Group tasks by day
+                            tasks_by_day = {}
+                            for task in pending_tasks:
+                                day = task.created_at.split('T')[0]
+                                if day not in tasks_by_day:
+                                    tasks_by_day[day] = []
+                                tasks_by_day[day].append(task)
+                            
+                            # Add tasks to embed
+                            for day, day_tasks in sorted(tasks_by_day.items(), reverse=True):
+                                task_list = []
+                                for task in day_tasks:
+                                    task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description}"
+                                    if task.remarks:
+                                        task_str += f"\n   📝 **Remark:** {task.remarks}"
+                                    task_list.append(task_str)
+                                
+                                pending_embed.add_field(
+                                    name=f"📅 {day}",
+                                    value="\n".join(task_list),
+                                    inline=False
+                                )
+                            
+                            pending_embed.set_footer(text=f"Total Pending Tasks: {len(pending_tasks)}")
+                            msg = await thread.send(embed=pending_embed)
+                            logger.info(f"[DEBUG] Sent pending tasks message for {member.display_name}: {msg.id}")
+
+                        # Save message IDs to config
+                        if 'dsm_messages' not in config:
+                            config['dsm_messages'] = {}
+                        
+                        user_messages = config['dsm_messages'].get(str(user_id), {})
+                        if completed_tasks:
+                            user_messages['completed_messages'] = [str(msg.id)]
+                        if pending_tasks:
+                            user_messages['pending_messages'] = [str(msg.id)]
+                        config['dsm_messages'][str(user_id)] = user_messages
+                        
+                        await self.firebase_service.update_config(channel.guild.id, config)
+                        logger.info(f"[DEBUG] Updated message IDs for {member.display_name}")
+
+                    except Exception as e:
+                        logger.error(f"[DEBUG] Error sending task status for user {user_id}: {str(e)}")
 
         except Exception as e:
-            logger.error(f"Error in create_dsm: {str(e)}")
+            logger.error(f"[DEBUG] Error in create_dsm: {str(e)}")
+            raise
 
     @app_commands.command(name="remind", description="Send a reminder for DSM deadline")
     @app_commands.default_permissions(administrator=True)
