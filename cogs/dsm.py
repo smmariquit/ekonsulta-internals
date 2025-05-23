@@ -868,65 +868,49 @@ class DSM(commands.Cog):
 
     @tasks.loop(minutes=1)
     async def auto_dsm_task(self):
+        """Automatically create DSM threads at configured times."""
         try:
-            current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            logger.info(f"[{current_time}] AutoDSMTask running...")
+            now = datetime.datetime.now()
             for guild in self.bot.guilds:
-                config = await self.firebase_service.get_config(guild.id)
-                if not config:
-                    logger.debug(f"No config found for guild {guild.id}")
-                    continue
-                dsm_time = config.get('dsm_time')
-                if not dsm_time:
-                    logger.debug(f"No DSM time configured for guild {guild.id}")
-                    continue
-                tz_str = config.get('timezone', 'UTC')
                 try:
-                    tz = pytz.timezone(tz_str)
-                except pytz.exceptions.UnknownTimeZoneError:
-                    logger.error(f"Invalid timezone {tz_str} for guild {guild.id}, defaulting to UTC")
-                    tz = pytz.UTC
-                now = datetime.datetime.now(tz)
-                logger.info(f"[DSM CHECK] Guild: {guild.id} | Name: {guild.name} | Current time: {now.strftime('%Y-%m-%d %H:%M:%S %Z')} | Configured DSM time: {dsm_time} {tz_str}")
-                try:
-                    hour, minute = map(int, dsm_time.split(':'))
-                    dsm_datetime = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-                except ValueError:
-                    logger.error(f"Invalid DSM time format {dsm_time} for guild {guild.id}")
-                    continue
-                time_diff = abs((now - dsm_datetime).total_seconds())
-                logger.info(
-                    f"DSM Check for guild {guild.id}: Current time: {now.strftime('%Y-%m-%d %H:%M:%S %Z')}, "
-                    f"DSM time: {dsm_datetime.strftime('%Y-%m-%d %H:%M:%S %Z')}, "
-                    f"Timezone: {tz_str}, Time difference: {time_diff} seconds"
-                )
-                if time_diff <= 120:  # Within 2 minutes
-                    logger.info(f"DSM time is within 2 minutes for guild {guild.id} (difference: {time_diff} seconds)")
-                    latest_dsm = config.get('latest_dsm_thread', {})
-                    if isinstance(latest_dsm, dict):
-                        latest_date = latest_dsm.get('date')
-                        if latest_date == now.strftime('%Y-%m-%d'):
-                            logger.info(f"DSM already created today for guild {guild.id} at {latest_date}")
-                            continue
-                    channel_id = config.get('dsm_channel_id')
-                    if not channel_id:
-                        logger.warning(f"No DSM channel configured for guild {guild.id}")
+                    config = await self.firebase_service.get_config(guild.id)
+                    if not config or not config.get('dsm_channel_id'):
                         continue
-                    channel = guild.get_channel(int(channel_id))
-                    if not channel:
-                        logger.warning(f"DSM channel {channel_id} not found in guild {guild.id}")
+
+                    # Get guild's timezone
+                    tz = await self.get_guild_timezone(guild.id)
+                    now = datetime.datetime.now(tz)
+
+                    # Check if DSM is skipped for today
+                    skipped_dates = config.get('skipped_dsm_dates', [])
+                    if now.strftime('%Y-%m-%d') in skipped_dates:
+                        logger.debug(f"DSM skipped for guild {guild.id} on {now.strftime('%Y-%m-%d')}")
                         continue
-                    logger.info(
-                        f"Creating automatic DSM for guild {guild.id} at {now.strftime('%Y-%m-%d %H:%M:%S %Z')} in channel {channel.name} ({channel.id})"
-                    )
-                    await self.create_dsm(channel, config, True)
-                    logger.info(f"Automatic DSM created in guild {guild.id}")
+
+                    # Get DSM time from config
+                    dsm_time = config.get('dsm_time', '09:00')
+                    dsm_datetime = datetime.datetime.strptime(dsm_time, '%H:%M').time()
+                    dsm_datetime = datetime.datetime.combine(now.date(), dsm_datetime)
+                    dsm_datetime = tz.localize(dsm_datetime)
+
+                    # Check if it's time for DSM (within 2 minutes)
+                    time_diff = abs((now - dsm_datetime).total_seconds())
+                    if time_diff <= 120:  # 2 minutes
+                        channel = guild.get_channel(int(config['dsm_channel_id']))
+                        if channel:
+                            await self.create_dsm(channel, config, True)
+                            logger.info(f"Automatic DSM created in guild {guild.id}")
                     else:
-                    logger.debug(
-                        f"DSM time not within 2 minutes for guild {guild.id}. Current: {now.strftime('%H:%M:%S')}, Target: {dsm_datetime.strftime('%H:%M:%S')}, Difference: {time_diff} seconds"
-                    )
+                        logger.debug(
+                            f"DSM time not within 2 minutes for guild {guild.id}. Current: {now.strftime('%H:%M:%S')}, Target: {dsm_datetime.strftime('%H:%M:%S')}, Difference: {time_diff} seconds"
+                        )
+
+                except Exception as e:
+                    logger.error(f"Error in auto_dsm_task for guild {guild.id}: {str(e)}")
+                    continue
+
         except Exception as e:
-            logger.error(f"Error in auto_dsm_task: {str(e)}", exc_info=True)
+            logger.error(f"Error in auto_dsm_task: {str(e)}")
 
     @auto_dsm_task.before_loop
     async def before_auto_dsm_task(self):
@@ -1162,16 +1146,12 @@ class DSM(commands.Cog):
             except:
                 pass
 
-    @app_commands.command(name="config", description="Configure standup settings")
+    @app_commands.command(name="configure", description="Configure DSM settings")
     @app_commands.default_permissions(administrator=True)
     async def configure(self, interaction: discord.Interaction,
-                       hour: int = None,
-                       minute: int = None,
-                       thread_name: str = None,
-                       auto_archive: int = None,
-                   use_threads: bool = None,
-                   timezone: str = None,
-                   dsm_channel: discord.TextChannel = None):
+                       timezone: str = None,
+                       dsm_time: str = None,
+                       dsm_channel: discord.TextChannel = None):
         """Configure standup settings"""
         try:
             # Get current config
@@ -1180,7 +1160,7 @@ class DSM(commands.Cog):
                 config = {}
 
             changes = []
-            
+
             # Handle timezone
             if timezone:
                 try:
@@ -1189,47 +1169,27 @@ class DSM(commands.Cog):
                     changes.append(f"Timezone: {timezone}")
                 except pytz.exceptions.UnknownTimeZoneError:
                     await interaction.response.send_message(
-                        "❌ Invalid timezone. Please use a valid IANA timezone name.\n"
-                        "Example: Asia/Manila, America/New_York, Europe/London\n"
-                        "For a complete list, visit: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones",
+                        f"Invalid timezone: {timezone}. Please use a valid timezone name (e.g., 'Asia/Manila', 'UTC').",
                         ephemeral=True
                     )
-                return
+                    return
 
             # Handle DSM time
-            if hour is not None and minute is not None:
-                if not (0 <= hour <= 23 and 0 <= minute <= 59):
+            if dsm_time:
+                try:
+                    hour, minute = map(int, dsm_time.split(':'))
+                    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+                        raise ValueError
+                    config['dsm_time'] = dsm_time
+                    changes.append(f"DSM Time: {dsm_time}")
+                except ValueError:
                     await interaction.response.send_message(
-                        "❌ Invalid time. Hour must be 0-23 and minute must be 0-59.",
+                        "Invalid time format. Please use HH:MM format (e.g., '09:00').",
                         ephemeral=True
                     )
-                return
-                time_str = f"{hour:02d}:{minute:02d}"
-                config['dsm_time'] = time_str
-                changes.append(f"DSM Time: {time_str}")
+                    return
 
-            # Handle thread name
-            if thread_name:
-                config['thread_name'] = thread_name
-                changes.append(f"Thread Name: {thread_name}")
-
-            # Handle auto archive duration
-        if auto_archive is not None:
-            if auto_archive not in [60, 1440, 4320, 10080]:
-                    await interaction.response.send_message(
-                        "❌ Invalid auto archive duration. Must be one of: 60, 1440, 4320, 10080 minutes.",
-                        ephemeral=True
-                    )
-                return
-                config['thread_auto_archive_duration'] = auto_archive
-                changes.append(f"Auto Archive Duration: {auto_archive} minutes")
-        
-            # Handle use threads
-        if use_threads is not None:
-                config['use_threads'] = use_threads
-                changes.append(f"Use Threads: {use_threads}")
-
-                # Handle DSM channel
+            # Handle DSM channel
             if dsm_channel is not None:
                 config['dsm_channel_id'] = dsm_channel.id
                 changes.append(f"DSM Channel: {dsm_channel.mention}")
@@ -1244,14 +1204,13 @@ class DSM(commands.Cog):
                 color=discord.Color.green()
             )
 
-            # Add changes to embed
             if changes:
                 embed.add_field(
-                    name="Changes",
+                    name="Changes Made",
                     value="\n".join(f"• {change}" for change in changes),
                     inline=False
                 )
-        else:
+            else:
                 embed.add_field(
                     name="No Changes",
                     value="No settings were updated. Please specify at least one setting to change.",
@@ -1264,12 +1223,10 @@ class DSM(commands.Cog):
                 current_config.append(f"Timezone: {config['timezone']}")
             if config.get('dsm_time'):
                 current_config.append(f"DSM Time: {config['dsm_time']}")
-            if config.get('thread_name'):
-                current_config.append(f"Thread Name: {config['thread_name']}")
-            if config.get('thread_auto_archive_duration'):
-                current_config.append(f"Auto Archive Duration: {config['thread_auto_archive_duration']} minutes")
-            if 'use_threads' in config:
-                current_config.append(f"Use Threads: {config['use_threads']}")
+            if config.get('dsm_channel_id'):
+                channel = interaction.guild.get_channel(config['dsm_channel_id'])
+                if channel:
+                    current_config.append(f"DSM Channel: {channel.mention}")
 
             if current_config:
                 embed.add_field(
@@ -1277,36 +1234,6 @@ class DSM(commands.Cog):
                     value="\n".join(f"• {setting}" for setting in current_config),
                     inline=False
                 )
-
-            if config.get('dsm_channel_id'):
-                channel = interaction.guild.get_channel(int(config['dsm_channel_id']))
-                if channel:
-                    current_config.append(f"DSM Channel: {channel.mention}")
-                else:
-                    current_config.append(f"DSM Channel ID: {config['dsm_channel_id']}")
-
-            # Add timezone-specific information if timezone is set
-            if config.get('timezone'):
-                try:
-                    tz = pytz.timezone(config['timezone'])
-                    now = datetime.datetime.now(tz)
-                    embed.add_field(
-                        name="Current Time",
-                        value=f"{now.strftime('%Y-%m-%d %I:%M:%S %p %Z')}",
-                        inline=False
-                    )
-
-                    # Add next DSM time if configured
-                    if config.get('dsm_time'):
-                        hour, minute = map(int, config['dsm_time'].split(':'))
-                        dsm_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-                        embed.add_field(
-                            name="Next DSM",
-                            value=f"{dsm_time.strftime('%Y-%m-%d %I:%M:%S %p %Z')}",
-                            inline=False
-                        )
-                except pytz.exceptions.UnknownTimeZoneError:
-                    pass
 
             await interaction.response.send_message(embed=embed, ephemeral=True)
             logger.info(f"Configuration updated for guild {interaction.guild_id}: {', '.join(changes)}")
@@ -1316,7 +1243,7 @@ class DSM(commands.Cog):
             # Only send a response if one hasn't already been sent
             if not interaction.response.is_done():
                 await interaction.response.send_message(
-                    "❌ Failed to update configuration. Please try again.",
+                    f"An error occurred while updating the configuration: {str(e)}",
                     ephemeral=True
                 )
 
@@ -1753,76 +1680,65 @@ class DSM(commands.Cog):
         return None
 
     async def update_task_message(self, channel: discord.TextChannel, user_id: int = None):
-        """Update task messages in the channel."""
+        """Update the task message in the channel."""
         try:
-            # Get the member
-            member = channel.guild.get_member(user_id)
-            if not member:
-                logger.error(f"[DEBUG] Member {user_id} not found in guild")
-                return
-            
-            # Get user data
-            user_data = self.user_tasks.get(user_id)
-            if not user_data or not user_data.get("tasks"):
-                logger.info(f"[DEBUG] No tasks found for user {user_id}")
-                return
-            
-            # Create task embeds
-            completed_embeds, pending_embeds = await self.create_task_embeds(user_data["tasks"], user_id)
-            
-            # Get target channel (thread or channel)
-            target_channel = channel
-            if isinstance(channel, discord.TextChannel):
-                # Try to find the current DSM thread
-                current_thread = await self.get_current_dsm_thread(channel)
-                if current_thread:
-                    target_channel = current_thread
-                    logger.info(f"[DEBUG] Using DSM thread: {current_thread.id}")
-            
-            # Get latest message IDs from config
+            # Get the config
             config = await self.firebase_service.get_config(channel.guild.id)
-            latest_messages = config.get('dsm_messages', {}).get(str(user_id), {})
-            
-            # Delete existing messages if they exist
-            if latest_messages:
-                for msg_id in latest_messages.get('completed_messages', []) + latest_messages.get('pending_messages', []):
-                    try:
-                        msg = await target_channel.fetch_message(int(msg_id))
-                        await msg.delete()
-                        logger.info(f"[DEBUG] Deleted message {msg_id}")
-                    except (discord.NotFound, discord.Forbidden):
-                        logger.info(f"[DEBUG] Could not delete message {msg_id}")
-            
+            if not config:
+                logger.error(f"[DEBUG] No config found for guild {channel.guild.id}")
+                return
+
+            # Get the tasks
+            tasks = []
+            if user_id:
+                user_data = self.user_tasks.get(str(user_id))
+                if user_data and "tasks" in user_data:
+                    tasks = user_data["tasks"]
+            else:
+                for user_data in self.user_tasks.values():
+                    if user_data and "tasks" in user_data:
+                        tasks.extend(user_data["tasks"])
+
+            # Create embeds
+            completed_embeds, pending_embeds = await self.create_task_embeds(tasks, user_id)
+
             # Send new completed messages
             completed_messages = []
             for embed in completed_embeds:
-                    msg = await target_channel.send(embed=embed)
+                msg = await channel.send(embed=embed)
                 completed_messages.append(msg)
-                    logger.info(f"[DEBUG] Sent new completed message: {msg.id}")
-            
+                logger.info(f"[DEBUG] Sent new completed message: {msg.id}")
+
             # Send new pending messages
             pending_messages = []
             for embed in pending_embeds:
-                    msg = await target_channel.send(embed=embed)
+                msg = await channel.send(embed=embed)
                 pending_messages.append(msg)
-                    logger.info(f"[DEBUG] Sent new pending message: {msg.id}")
-            
+                logger.info(f"[DEBUG] Sent new pending message: {msg.id}")
+
             # Save new message IDs to config
             if 'dsm_messages' not in config:
                 config['dsm_messages'] = {}
             
-            config['dsm_messages'][str(user_id)] = {
-                'completed_messages': [str(msg.id) for msg in completed_messages],
-                'pending_messages': [str(msg.id) for msg in pending_messages],
-                'last_updated': datetime.datetime.now().isoformat()
-            }
-            
+            if user_id:
+                user_messages = config['dsm_messages'].get(str(user_id), {})
+                if completed_messages:
+                    user_messages['completed_messages'] = [str(msg.id) for msg in completed_messages]
+                if pending_messages:
+                    user_messages['pending_messages'] = [str(msg.id) for msg in pending_messages]
+                config['dsm_messages'][str(user_id)] = user_messages
+            else:
+                for user_id, user_data in self.user_tasks.items():
+                    user_messages = config['dsm_messages'].get(str(user_id), {})
+                    if completed_messages:
+                        user_messages['completed_messages'] = [str(msg.id) for msg in completed_messages]
+                    if pending_messages:
+                        user_messages['pending_messages'] = [str(msg.id) for msg in pending_messages]
+                    config['dsm_messages'][str(user_id)] = user_messages
+
             await self.firebase_service.update_config(channel.guild.id, config)
-            logger.info(f"[DEBUG] Saved new message IDs to config for user {user_id}")
-            
-            # Update DSM statistics
-            await self.update_dsm_statistics(channel.guild.id)
-            
+            logger.info(f"[DEBUG] Updated message IDs in config")
+
         except Exception as e:
             logger.error(f"[DEBUG] Error in update_task_message: {str(e)}")
             raise
@@ -2771,107 +2687,75 @@ class DSM(commands.Cog):
     @app_commands.command(name="set_config", description="Set configuration options")
     @app_commands.default_permissions(administrator=True)
     async def set_config(self, interaction: discord.Interaction, timezone: str = None):
-        """Set configuration options"""
+        """Configure standup settings"""
         try:
             # Get current config
             config = await self.firebase_service.get_config(interaction.guild_id)
             if not config:
                 config = {}
 
+            changes = []
+
+            # Handle timezone
             if timezone:
-                # Validate timezone
                 try:
                     tz = pytz.timezone(timezone)
                     config['timezone'] = timezone
-                    await self.firebase_service.update_config(interaction.guild_id, config)
-                    
-                    # Create confirmation embed
-                    embed = discord.Embed(
-                        title="✅ Timezone Updated",
-                        description=f"Server timezone set to **{timezone}**",
-                        color=discord.Color.green()
-                    )
-                    
-                    # Add current time in new timezone
-                    now = datetime.datetime.now(tz)
-                    embed.add_field(
-                        name="Current Time",
-                        value=f"{now.strftime('%Y-%m-%d %I:%M:%S %p %Z')}",
-                        inline=False
-                    )
-                    
-                    # Add DSM time if configured
-                    if config.get('dsm_time'):
-                        hour, minute = map(int, config['dsm_time'].split(':'))
-                        dsm_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-                        embed.add_field(
-                            name="Next DSM",
-                            value=f"{dsm_time.strftime('%Y-%m-%d %I:%M:%S %p %Z')}",
-                            inline=False
-                        )
-                    
-                    await interaction.response.send_message(embed=embed, ephemeral=True)
-                    logger.info(f"Timezone set to {timezone} for guild {interaction.guild_id}")
-                    
-                    # Restart the DSM check task to apply the new timezone
-                    self.dsm_check.restart()
-                    logger.info("DSM check task restarted with new timezone")
-                    
+                    changes.append(f"Timezone: {timezone}")
                 except pytz.exceptions.UnknownTimeZoneError:
                     await interaction.response.send_message(
-                        "❌ Invalid timezone. Please use a valid IANA timezone name.\n"
-                        "Example: Asia/Manila, America/New_York, Europe/London\n"
-                        "For a complete list, visit: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones",
+                        f"Invalid timezone: {timezone}. Please use a valid timezone name (e.g., 'Asia/Manila', 'UTC').",
                         ephemeral=True
                     )
                     return
 
+            # Handle auto archive duration
+            auto_archive = config.get('thread_auto_archive_duration', 10080)  # Default to 7 days
+            if auto_archive:
+                config['thread_auto_archive_duration'] = auto_archive
+                changes.append(f"Auto Archive Duration: {auto_archive} minutes")
+
+            # Save changes
+            if changes:
+                await self.firebase_service.update_config(interaction.guild_id, config)
+                await interaction.response.send_message(
+                    f"Configuration updated:\n" + "\n".join(f"• {change}" for change in changes),
+                    ephemeral=True
+                )
+            else:
+                await interaction.response.send_message(
+                    "No changes were made to the configuration.",
+                    ephemeral=True
+                )
+
         except Exception as e:
             logger.error(f"Error in set_config: {str(e)}")
             await interaction.response.send_message(
-                "❌ Failed to update configuration. Please try again.",
+                f"An error occurred while updating the configuration: {str(e)}",
                 ephemeral=True
             )
 
     async def create_dsm(self, channel, config, is_automatic: bool = True):
-        """Create a DSM in the given channel using the config."""
+        """Create a new DSM thread."""
         try:
-            # Archive previous thread if exists
-            current_thread = None
-            if config.get('latest_dsm_thread'):
-                try:
-                    thread_id = config['latest_dsm_thread']
-                    if isinstance(thread_id, dict):
-                        thread_id = thread_id.get('thread_id')
-                    if thread_id:
-                        current_thread = await channel.guild.fetch_channel(int(thread_id))
-                        if current_thread and isinstance(current_thread, discord.Thread):
-                            await current_thread.edit(archived=True)
-                            logger.info(f"[DEBUG] Archived previous thread: {current_thread.id}")
-                except Exception as e:
-                    logger.error(f"[DEBUG] Error archiving previous thread: {str(e)}")
-
             # Get current time in guild's timezone
-            tz_str = config.get('timezone', 'UTC')
-            try:
-                tz = pytz.timezone(tz_str)
-            except pytz.exceptions.UnknownTimeZoneError:
-                tz = pytz.UTC
+            tz = await self.get_guild_timezone(channel.guild.id)
             now = datetime.datetime.now(tz)
-            end_time = now + datetime.timedelta(hours=1)
-            deadline = now + datetime.timedelta(hours=config.get('deadline_hours', 12))
 
-            # Create initial message with embed
+            # Calculate deadline and end time
+            deadline = now + datetime.timedelta(hours=config.get('deadline_hours', 2))
+            end_time = now + datetime.timedelta(hours=config.get('end_hours', 8))
+
+            # Create initial embed
             initial_embed = discord.Embed(
-                title="📋 Daily Standup Meeting",
+                title="Daily Standup Meeting",
                 description=(
-                    f"Good morning! A new daily standup meeting has been initiated.\n\n"
+                    f"A new daily standup meeting has been initiated.\n\n"
                     f"**Timeline:**\n"
                     f"🕒 End Time: {end_time.strftime('%I:%M %p %Z')}\n"
                     f"⚠️ Deadline: {deadline.strftime('%Y-%m-%d %I:%M %p %Z')}\n\n"
                     f"**Type:** {'Automatic' if is_automatic else 'Manual Trigger'}\n"
-                    f"Please check the thread below for details and updates.\n"
-                    f"React with ✅ when you've updated your tasks!"
+                    f"Please check the thread below for details and updates."
                 ),
                 color=discord.Color.blue()
             )
@@ -2942,106 +2826,10 @@ class DSM(commands.Cog):
             await self.firebase_service.update_config(channel.guild.id, config)
             logger.info(f"[DEBUG] Updated config with new thread info and reset tracking")
 
-            # Send task status for each user
-            for user_id, user_data in self.user_tasks.items():
-                if user_data and "tasks" in user_data and user_data["tasks"]:
-                    try:
-                        # Get the member
-                        member = channel.guild.get_member(int(user_id))
-                        if not member:
-                            continue
-
-                        # Create completed tasks embed
-                        completed_tasks = [t for t in user_data["tasks"] if t.status == "done"]
-                        if completed_tasks:
-                            completed_embed = discord.Embed(
-                                title=f"✅ {member.display_name}'s Completed Tasks",
-                                description=f"**Daily Standup Meeting: {now.strftime('%B %d, %Y')}**",
-                                color=discord.Color.green()
-                            )
-                            if member.avatar:
-                                completed_embed.set_thumbnail(url=member.avatar.url)
-                            
-                            # Group tasks by day
-                            tasks_by_day = {}
-                            for task in completed_tasks:
-                                day = task.created_at.split('T')[0]
-                                if day not in tasks_by_day:
-                                    tasks_by_day[day] = []
-                                tasks_by_day[day].append(task)
-                            
-                            # Add tasks to embed
-                            for day, day_tasks in sorted(tasks_by_day.items(), reverse=True):
-                                task_list = []
-                                for task in day_tasks:
-                                    task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description} ({task.completed_at.split('T')[1][:5] if task.completed_at else 'N/A'})"
-                                    if task.remarks:
-                                        task_str += f"\n   📝 **Remark:** {task.remarks}"
-                                    task_list.append(task_str)
-                                
-                                completed_embed.add_field(
-                                    name=f"📅 {day}",
-                                    value="\n".join(task_list),
-                                    inline=False
-                                )
-                                # Add footer for each day
-                                completed_embed.set_footer(text=f"For: {datetime.datetime.strptime(day, '%Y-%m-%d').strftime('%B %d, %Y')}")
-
-                        # Create pending tasks embed
-                        pending_tasks = [t for t in user_data["tasks"] if t.status == "pending"]
-                        if pending_tasks:
-                            pending_embed = discord.Embed(
-                                title=f"⏳ {member.display_name}'s Pending Tasks",
-                                description=f"**Daily Standup Meeting: {now.strftime('%B %d, %Y')}**",
-                                color=discord.Color.orange()
-                            )
-                            if member.avatar:
-                                pending_embed.set_thumbnail(url=member.avatar.url)
-                            
-                            # Group tasks by day
-                            tasks_by_day = {}
-                            for task in pending_tasks:
-                                day = task.created_at.split('T')[0]
-                                if day not in tasks_by_day:
-                                    tasks_by_day[day] = []
-                                tasks_by_day[day].append(task)
-                            
-                            # Add tasks to embed
-                            for day, day_tasks in sorted(tasks_by_day.items(), reverse=True):
-                                task_list = []
-                                for task in day_tasks:
-                                    task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description}"
-                                    if task.remarks:
-                                        task_str += f"\n   📝 **Remark:** {task.remarks}"
-                                    task_list.append(task_str)
-                                
-                                pending_embed.add_field(
-                                    name=f"📅 {day}",
-                                    value="\n".join(task_list),
-                                    inline=False
-                                )
-                                # Add footer for each day
-                                pending_embed.set_footer(text=f"For: {datetime.datetime.strptime(day, '%Y-%m-%d').strftime('%B %d, %Y')}")
-
-                        # Save message IDs to config
-                        if 'dsm_messages' not in config:
-                            config['dsm_messages'] = {}
-                        
-                        user_messages = config['dsm_messages'].get(str(user_id), {})
-                        if completed_tasks:
-                            user_messages['completed_messages'] = [str(msg.id)]
-                        if pending_tasks:
-                            user_messages['pending_messages'] = [str(msg.id)]
-                        config['dsm_messages'][str(user_id)] = user_messages
-                        
-                        await self.firebase_service.update_config(channel.guild.id, config)
-                        logger.info(f"[DEBUG] Updated message IDs for {member.display_name}")
-
-                    except Exception as e:
-                        logger.error(f"[DEBUG] Error sending task status for user {user_id}: {str(e)}")
+            return thread
 
         except Exception as e:
-            logger.error(f"[DEBUG] Error in create_dsm: {str(e)}")
+            logger.error(f"Error in create_dsm: {str(e)}")
             raise
 
     @app_commands.command(name="remind", description="Send a reminder for DSM deadline")
@@ -3137,76 +2925,65 @@ class DSM(commands.Cog):
             logger.error(f"Error checking deadline: {str(e)}")
 
     async def update_task_message(self, channel: discord.TextChannel, user_id: int = None):
-        """Update task messages in the channel."""
+        """Update the task message in the channel."""
         try:
-            # Get the member
-            member = channel.guild.get_member(user_id)
-            if not member:
-                logger.error(f"[DEBUG] Member {user_id} not found in guild")
-                return
-            
-            # Get user data
-            user_data = self.user_tasks.get(user_id)
-            if not user_data or not user_data.get("tasks"):
-                logger.info(f"[DEBUG] No tasks found for user {user_id}")
-                return
-            
-            # Create task embeds
-            completed_embeds, pending_embeds = await self.create_task_embeds(user_data["tasks"], user_id)
-            
-            # Get target channel (thread or channel)
-            target_channel = channel
-            if isinstance(channel, discord.TextChannel):
-                # Try to find the current DSM thread
-                current_thread = await self.get_current_dsm_thread(channel)
-                if current_thread:
-                    target_channel = current_thread
-                    logger.info(f"[DEBUG] Using DSM thread: {current_thread.id}")
-            
-            # Get latest message IDs from config
+            # Get the config
             config = await self.firebase_service.get_config(channel.guild.id)
-            latest_messages = config.get('dsm_messages', {}).get(str(user_id), {})
-            
-            # Delete existing messages if they exist
-            if latest_messages:
-                for msg_id in latest_messages.get('completed_messages', []) + latest_messages.get('pending_messages', []):
-                    try:
-                        msg = await target_channel.fetch_message(int(msg_id))
-                        await msg.delete()
-                        logger.info(f"[DEBUG] Deleted message {msg_id}")
-                    except (discord.NotFound, discord.Forbidden):
-                        logger.info(f"[DEBUG] Could not delete message {msg_id}")
-            
+            if not config:
+                logger.error(f"[DEBUG] No config found for guild {channel.guild.id}")
+                return
+
+            # Get the tasks
+            tasks = []
+            if user_id:
+                user_data = self.user_tasks.get(str(user_id))
+                if user_data and "tasks" in user_data:
+                    tasks = user_data["tasks"]
+            else:
+                for user_data in self.user_tasks.values():
+                    if user_data and "tasks" in user_data:
+                        tasks.extend(user_data["tasks"])
+
+            # Create embeds
+            completed_embeds, pending_embeds = await self.create_task_embeds(tasks, user_id)
+
             # Send new completed messages
             completed_messages = []
             for embed in completed_embeds:
-                msg = await target_channel.send(embed=embed)
+                msg = await channel.send(embed=embed)
                 completed_messages.append(msg)
                 logger.info(f"[DEBUG] Sent new completed message: {msg.id}")
-            
+
             # Send new pending messages
             pending_messages = []
             for embed in pending_embeds:
-                msg = await target_channel.send(embed=embed)
+                msg = await channel.send(embed=embed)
                 pending_messages.append(msg)
                 logger.info(f"[DEBUG] Sent new pending message: {msg.id}")
-            
+
             # Save new message IDs to config
             if 'dsm_messages' not in config:
                 config['dsm_messages'] = {}
             
-            config['dsm_messages'][str(user_id)] = {
-                'completed_messages': [str(msg.id) for msg in completed_messages],
-                'pending_messages': [str(msg.id) for msg in pending_messages],
-                'last_updated': datetime.datetime.now().isoformat()
-            }
-            
+            if user_id:
+                user_messages = config['dsm_messages'].get(str(user_id), {})
+                if completed_messages:
+                    user_messages['completed_messages'] = [str(msg.id) for msg in completed_messages]
+                if pending_messages:
+                    user_messages['pending_messages'] = [str(msg.id) for msg in pending_messages]
+                config['dsm_messages'][str(user_id)] = user_messages
+            else:
+                for user_id, user_data in self.user_tasks.items():
+                    user_messages = config['dsm_messages'].get(str(user_id), {})
+                    if completed_messages:
+                        user_messages['completed_messages'] = [str(msg.id) for msg in completed_messages]
+                    if pending_messages:
+                        user_messages['pending_messages'] = [str(msg.id) for msg in pending_messages]
+                    config['dsm_messages'][str(user_id)] = user_messages
+
             await self.firebase_service.update_config(channel.guild.id, config)
-            logger.info(f"[DEBUG] Saved new message IDs to config for user {user_id}")
-            
-            # Update DSM statistics
-            await self.update_dsm_statistics(channel.guild.id)
-            
+            logger.info(f"[DEBUG] Updated message IDs in config")
+
         except Exception as e:
             logger.error(f"[DEBUG] Error in update_task_message: {str(e)}")
             raise
