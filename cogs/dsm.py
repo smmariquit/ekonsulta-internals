@@ -961,20 +961,13 @@ class DSM(commands.Cog):
         try:
             # Get all members who should participate
             members = [member for member in thread.guild.members if not member.bot]
-            completed_members = set()
-            
-            # Check messages in thread for task updates
-            async for message in thread.history(limit=None):
-                if not message.author.bot and message.author in members:
-                    completed_members.add(message.author)
-            
-            # Find members who haven't completed tasks
-            missing_members = [member for member in members if member not in completed_members]
+            updated_participants = set(str(uid) for uid in config.get('updated_participants', []))
+            missing_members = [member for member in members if str(member.id) not in updated_participants]
             
             if missing_members:
                 # Create warning message
                 warning_embed = discord.Embed(
-                    title="⚠️ Deadline Passed ⚠️",
+                    title="⚠️ DSM Deadline Passed ⚠️",
                     description=(
                         "The following members have not completed their daily tasks:\n" +
                         "\n".join([f"- {member.mention}" for member in missing_members]) +
@@ -990,6 +983,11 @@ class DSM(commands.Cog):
                 # Log the late updates
                 for member in missing_members:
                     await self.log_late_update(member, thread)
+                    
+                # Update config to mark these members as late
+                config['late_participants'] = [str(member.id) for member in missing_members]
+                await self.firebase_service.update_config(thread.guild.id, config)
+                
         except Exception as e:
             logger.error(f"Error checking deadline: {str(e)}")
 
@@ -1842,6 +1840,9 @@ class DSM(commands.Cog):
                 'last_updated': datetime.datetime.now().isoformat()
             })
             logger.info(f"[DEBUG] Saved new message IDs to config for user {user_id}")
+            
+            # Update DSM statistics
+            await self.update_dsm_statistics(channel.guild.id)
             
         except Exception as e:
             logger.error(f"[DEBUG] Error in update_task_message: {str(e)}")
@@ -2927,6 +2928,167 @@ class DSM(commands.Cog):
 
         except Exception as e:
             logger.error(f"Error in create_dsm: {str(e)}")
+
+    @app_commands.command(name="remind", description="Send a reminder for DSM deadline")
+    @app_commands.default_permissions(administrator=True)
+    async def remind(self, interaction: discord.Interaction):
+        """Send a reminder for DSM deadline."""
+        try:
+            # Defer the response since this might take a moment
+            await interaction.response.defer(ephemeral=True)
+            
+            # Get current config
+            config = await self.firebase_service.get_config(interaction.guild_id)
+            if not config:
+                await interaction.followup.send("No DSM configuration found!", ephemeral=True)
+                return
+            
+            # Get the current DSM thread
+            thread_id = config.get('latest_dsm_thread', {})
+            if isinstance(thread_id, dict):
+                thread_id = thread_id.get('thread_id')
+            
+            if not thread_id:
+                await interaction.followup.send("No active DSM thread found!", ephemeral=True)
+                return
+            
+            thread = await interaction.guild.fetch_channel(int(thread_id))
+            if not thread or not isinstance(thread, discord.Thread):
+                await interaction.followup.send("DSM thread not found!", ephemeral=True)
+                return
+            
+            # Get all members who should participate
+            members = [member for member in interaction.guild.members if not member.bot]
+            updated_participants = set(str(uid) for uid in config.get('updated_participants', []))
+            pending_members = [member for member in members if str(member.id) not in updated_participants]
+            
+            if not pending_members:
+                await interaction.followup.send("All members have completed their DSM!", ephemeral=True)
+                return
+            
+            # Create reminder embed
+            reminder_embed = discord.Embed(
+                title="⚠️ DSM Reminder",
+                description=(
+                    "The DSM deadline is approaching! The following members still need to complete their DSM:\n\n" +
+                    "\n".join([f"- {member.mention}" for member in pending_members]) +
+                    "\n\nPlease update your tasks before the deadline!"
+                ),
+                color=discord.Color.orange()
+            )
+            
+            # Send reminder
+            await thread.send(embed=reminder_embed)
+            await interaction.followup.send("Reminder sent successfully!", ephemeral=True)
+            logger.info(f"Sent DSM reminder in thread {thread.name}")
+            
+        except Exception as e:
+            logger.error(f"Error in remind command: {str(e)}")
+            await interaction.followup.send("Failed to send reminder. Please try again.", ephemeral=True)
+
+    async def check_deadline(self, thread: discord.Thread, config: dict):
+        """Check who hasn't completed their tasks by the deadline."""
+        try:
+            # Get all members who should participate
+            members = [member for member in thread.guild.members if not member.bot]
+            updated_participants = set(str(uid) for uid in config.get('updated_participants', []))
+            missing_members = [member for member in members if str(member.id) not in updated_participants]
+            
+            if missing_members:
+                # Create warning message
+                warning_embed = discord.Embed(
+                    title="⚠️ DSM Deadline Passed ⚠️",
+                    description=(
+                        "The following members have not completed their daily tasks:\n" +
+                        "\n".join([f"- {member.mention}" for member in missing_members]) +
+                        "\n\nThis has been logged for record-keeping."
+                    ),
+                    color=discord.Color.red()
+                )
+                warning_embed.timestamp = datetime.datetime.now()
+                
+                await thread.send(embed=warning_embed)
+                logger.info(f"Deadline passed for {len(missing_members)} members in thread {thread.name}")
+                
+                # Log the late updates
+                for member in missing_members:
+                    await self.log_late_update(member, thread)
+                    
+                # Update config to mark these members as late
+                config['late_participants'] = [str(member.id) for member in missing_members]
+                await self.firebase_service.update_config(thread.guild.id, config)
+                
+        except Exception as e:
+            logger.error(f"Error checking deadline: {str(e)}")
+
+    async def update_task_message(self, channel: discord.TextChannel, user_id: int = None):
+        """Update task messages in the channel."""
+        try:
+            # Get the member
+            member = channel.guild.get_member(user_id)
+            if not member:
+                logger.error(f"[DEBUG] Member {user_id} not found in guild")
+                return
+            
+            # Get user data
+            user_data = self.user_tasks.get(user_id)
+            if not user_data or not user_data.get("tasks"):
+                logger.info(f"[DEBUG] No tasks found for user {user_id}")
+                return
+            
+            # Create task embeds
+            completed_embeds, pending_embeds = self.create_task_embeds(user_data["tasks"], user_id)
+            
+            # Get target channel (thread or channel)
+            target_channel = channel
+            if isinstance(channel, discord.TextChannel):
+                # Try to find the current DSM thread
+                current_thread = await self.get_current_dsm_thread(channel)
+                if current_thread:
+                    target_channel = current_thread
+                    logger.info(f"[DEBUG] Using DSM thread: {current_thread.id}")
+            
+            # Get latest message IDs from config
+            latest_messages = await self.get_latest_dsm_message(channel.guild.id, str(user_id))
+            
+            # Delete existing messages if they exist
+            if latest_messages:
+                for msg_id in latest_messages.get('completed_messages', []) + latest_messages.get('pending_messages', []):
+                    try:
+                        msg = await target_channel.fetch_message(int(msg_id))
+                        await msg.delete()
+                        logger.info(f"[DEBUG] Deleted message {msg_id}")
+                    except (discord.NotFound, discord.Forbidden):
+                        logger.info(f"[DEBUG] Could not delete message {msg_id}")
+            
+            # Send new completed messages
+            completed_messages = []
+            for embed in completed_embeds:
+                msg = await target_channel.send(embed=embed)
+                completed_messages.append(msg)
+                logger.info(f"[DEBUG] Sent new completed message: {msg.id}")
+            
+            # Send new pending messages
+            pending_messages = []
+            for embed in pending_embeds:
+                msg = await target_channel.send(embed=embed)
+                pending_messages.append(msg)
+                logger.info(f"[DEBUG] Sent new pending message: {msg.id}")
+            
+            # Save new message IDs to config
+            await self.save_dsm_message(channel.guild.id, str(user_id), {
+                'completed_messages': [str(msg.id) for msg in completed_messages],
+                'pending_messages': [str(msg.id) for msg in pending_messages],
+                'last_updated': datetime.datetime.now().isoformat()
+            })
+            logger.info(f"[DEBUG] Saved new message IDs to config for user {user_id}")
+            
+            # Update DSM statistics
+            await self.update_dsm_statistics(channel.guild.id)
+            
+        except Exception as e:
+            logger.error(f"[DEBUG] Error in update_task_message: {str(e)}")
+            raise
 
 # Move setup function outside of the class, at module level
 async def setup(bot: commands.Bot):
