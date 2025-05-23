@@ -1350,8 +1350,7 @@ class DSM(commands.Cog):
             time_str = current_date.strftime("%I:%M %p %Z")
             
             # Create initial message
-            initial_message = await channel.send(f"Daily Standup Meeting for {date_str}\nReact with ✅ when you've updated your tasks!")
-            await initial_message.add_reaction('✅')
+            initial_message = await channel.send(f"Daily Standup Meeting for {date_str}")
             # Create thread with full date format
             thread = await initial_message.create_thread(
                 name=f"Daily Standup Meeting for {date_str}",
@@ -1464,14 +1463,12 @@ class DSM(commands.Cog):
                     f"⚠️ Deadline: {deadline.strftime('%Y-%m-%d %I:%M %p %Z')}\n\n"
                     f"**Type:** Manual Trigger\n"
                     f"**Triggered by:** {interaction.user.mention}\n\n"
-                    f"Please check the thread below for details and updates.\n"
-                    f"React with ✅ when you've updated your tasks!"
+                    f"Please check the thread below for details and updates."
                 ),
                 color=discord.Color.blue()
             )
             initial_embed.timestamp = now
             initial_message = await interaction.channel.send(embed=initial_embed)
-            await initial_message.add_reaction('✅')
             
             # Create new thread
             thread = await initial_message.create_thread(
@@ -2626,14 +2623,12 @@ class DSM(commands.Cog):
                     f"⚠️ Deadline: {deadline.strftime('%Y-%m-%d %I:%M %p %Z')}\n\n"
                     f"**Type:** Manual Trigger\n"
                     f"**Triggered by:** {interaction.user.mention}\n\n"
-                    f"Please check the thread below for details and updates.\n"
-                    f"React with ✅ when you've updated your tasks!"
+                    f"Please check the thread below for details and updates."
                 ),
                 color=discord.Color.blue()
             )
             initial_embed.timestamp = now
             initial_message = await interaction.channel.send(embed=initial_embed)
-            await initial_message.add_reaction('✅')
             
             # Create new thread
             thread = await initial_message.create_thread(
@@ -2887,7 +2882,6 @@ class DSM(commands.Cog):
             )
             initial_embed.timestamp = now
             initial_message = await channel.send(embed=initial_embed)
-            await initial_message.add_reaction('✅')
 
             # Create new thread
             thread = await initial_message.create_thread(
