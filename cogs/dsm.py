@@ -602,123 +602,103 @@ class DSM(commands.Cog):
             except:
                 pass
 
-    def create_task_embeds(self, tasks, user_id):
+    async def create_task_embeds(self, tasks, user_id):
         """Create embeds for completed and pending tasks."""
-        completed_tasks = [t for t in tasks if t.status == "done"]
-        pending_tasks = [t for t in tasks if t.status == "pending"]
-        
-        completed_embeds = []
-        pending_embeds = []
-        
-        # Get the member for avatar and name
-        member = self.bot.get_user(user_id)
-        if not member:
-            logger.error(f"[DEBUG] Member {user_id} not found")
+        try:
+            # Get the member
+            guild = self.bot.get_guild(int(tasks[0].guild_id))
+            member = guild.get_member(user_id)
+            if not member:
+                logger.error(f"[DEBUG] Member {user_id} not found in guild")
+                return [], []
+            
+            # Get current DSM date from config
+            config = await self.firebase_service.get_config(guild.id)
+            date_str = config.get('dsm_date', datetime.datetime.now().strftime("%B %d, %Y"))
+            
+            # Create completed tasks embed
+            completed_tasks = [t for t in tasks if t.status == "done"]
+            completed_embeds = []
+            
+            if completed_tasks:
+                completed_embed = discord.Embed(
+                    title=f"✅ {member.display_name}'s Completed Tasks",
+                    description=f"**Daily Standup Meeting: {date_str}**",
+                    color=discord.Color.green()
+                )
+                if member.avatar:
+                    completed_embed.set_thumbnail(url=member.avatar.url)
+                
+                # Group tasks by day
+                tasks_by_day = {}
+                for task in completed_tasks:
+                    day = task.created_at.split('T')[0]
+                    if day not in tasks_by_day:
+                        tasks_by_day[day] = []
+                    tasks_by_day[day].append(task)
+                
+                # Add tasks to embed
+                for day, day_tasks in sorted(tasks_by_day.items(), reverse=True):
+                    task_list = []
+                    for task in day_tasks:
+                        task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description} ({task.completed_at.split('T')[1][:5] if task.completed_at else 'N/A'})"
+                        if task.remarks:
+                            task_str += f"\n   📝 **Remark:** {task.remarks}"
+                        task_list.append(task_str)
+                    
+                    completed_embed.add_field(
+                        name=f"📅 {day}",
+                        value="\n".join(task_list),
+                        inline=False
+                    )
+                
+                completed_embed.set_footer(text=f"Total Completed Tasks: {len(completed_tasks)}")
+                completed_embeds.append(completed_embed)
+            
+            # Create pending tasks embed
+            pending_tasks = [t for t in tasks if t.status == "pending"]
+            pending_embeds = []
+            
+            if pending_tasks:
+                pending_embed = discord.Embed(
+                    title=f"⏳ {member.display_name}'s Pending Tasks",
+                    description=f"**Daily Standup Meeting: {date_str}**",
+                    color=discord.Color.orange()
+                )
+                if member.avatar:
+                    pending_embed.set_thumbnail(url=member.avatar.url)
+                
+                # Group tasks by day
+                tasks_by_day = {}
+                for task in pending_tasks:
+                    day = task.created_at.split('T')[0]
+                    if day not in tasks_by_day:
+                        tasks_by_day[day] = []
+                    tasks_by_day[day].append(task)
+                
+                # Add tasks to embed
+                for day, day_tasks in sorted(tasks_by_day.items(), reverse=True):
+                    task_list = []
+                    for task in day_tasks:
+                        task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description}"
+                        if task.remarks:
+                            task_str += f"\n   📝 **Remark:** {task.remarks}"
+                        task_list.append(task_str)
+                    
+                    pending_embed.add_field(
+                        name=f"📅 {day}",
+                        value="\n".join(task_list),
+                        inline=False
+                    )
+                
+                pending_embed.set_footer(text=f"Total Pending Tasks: {len(pending_tasks)}")
+                pending_embeds.append(pending_embed)
+            
             return completed_embeds, pending_embeds
-        
-        # Create completed tasks embeds
-        if completed_tasks:
-            current_embed = discord.Embed(
-                title=f"✅ {member.display_name}'s Completed Tasks",
-                color=discord.Color.green()
-            )
-            if member.avatar:
-                current_embed.set_thumbnail(url=member.avatar.url)
-            current_tasks = []
-            current_length = 0
             
-            for task in completed_tasks:
-                task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description} ({task.completed_at.split('T')[1][:5] if task.completed_at else 'N/A'})"
-                if task.remarks:
-                    task_str += f"\n   📝 **Remark:** {task.remarks}"
-                
-                if current_length + len(task_str) > 1024:
-                    if current_tasks:
-                        current_embed.add_field(
-                            name="Tasks",
-                            value="\n".join(current_tasks),
-                            inline=False
-                        )
-                        current_embed.set_footer(text=f"Total Completed Tasks: {len(completed_tasks)}")
-                        completed_embeds.append(current_embed)
-                        current_embed = discord.Embed(
-                            title=f"✅ {member.display_name}'s Completed Tasks",
-                            color=discord.Color.green()
-                        )
-                        if member.avatar:
-                            current_embed.set_thumbnail(url=member.avatar.url)
-                        current_tasks = []
-                        current_length = 0
-                
-                current_tasks.append(task_str)
-                current_length += len(task_str)
-            
-            if current_tasks:
-                current_embed.add_field(
-                    name="Tasks",
-                    value="\n".join(current_tasks),
-                    inline=False
-                )
-                current_embed.set_footer(text=f"Total Completed Tasks: {len(completed_tasks)}")
-                completed_embeds.append(current_embed)
-        
-        # Create pending tasks embeds
-        if pending_tasks:
-            current_embed = discord.Embed(
-                title=f"⏳ {member.display_name}'s Pending Tasks",
-                color=discord.Color.orange()
-            )
-            if member.avatar:
-                current_embed.set_thumbnail(url=member.avatar.url)
-            current_tasks = []
-            current_length = 0
-            
-            for task in pending_tasks:
-                task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description}"
-                if task.remarks:
-                    task_str += f"\n   📝 **Remark:** {task.remarks}"
-                
-                if current_length + len(task_str) > 1024:
-                    if current_tasks:
-                        current_embed.add_field(
-                            name="Tasks",
-                            value="\n".join(current_tasks),
-                            inline=False
-                        )
-                        current_embed.set_footer(text=f"Total Pending Tasks: {len(pending_tasks)}")
-                        pending_embeds.append(current_embed)
-                        current_embed = discord.Embed(
-                            title=f"⏳ {member.display_name}'s Pending Tasks",
-                            color=discord.Color.orange()
-                        )
-                        if member.avatar:
-                            current_embed.set_thumbnail(url=member.avatar.url)
-                        current_tasks = []
-                        current_length = 0
-                
-                current_tasks.append(task_str)
-                current_length += len(task_str)
-            
-            if current_tasks:
-                current_embed.add_field(
-                    name="Tasks",
-                    value="\n".join(current_tasks),
-                    inline=False
-                )
-                current_embed.set_footer(text=f"Total Pending Tasks: {len(pending_tasks)}")
-                pending_embeds.append(current_embed)
-        
-        # Add part numbers only if there are multiple embeds
-        if len(completed_embeds) > 1:
-            for i, embed in enumerate(completed_embeds, 1):
-                embed.set_footer(text=f"Part {i}/{len(completed_embeds)} • Total Completed Tasks: {len(completed_tasks)}")
-        
-        if len(pending_embeds) > 1:
-            for i, embed in enumerate(pending_embeds, 1):
-                embed.set_footer(text=f"Part {i}/{len(pending_embeds)} • Total Pending Tasks: {len(pending_tasks)}")
-        
-        logger.info(f"[DEBUG] Created {len(completed_embeds)} completed embeds and {len(pending_embeds)} pending embeds")
-        return completed_embeds, pending_embeds
+        except Exception as e:
+            logger.error(f"[DEBUG] Error creating task embeds: {str(e)}")
+            return [], []
 
     async def update_dsm_statistics(self, guild_id):
         """Update DSM statistics in the opening message."""
@@ -773,6 +753,7 @@ class DSM(commands.Cog):
                     completed_tasks += len([t for t in user_tasks if t.status == "done"])
                     if user_tasks:
                         participants.add(str(user_id))
+                        # Only add to pending if not in updated_participants
                         if str(user_id) not in updated_participants:
                             pending_participants.add(str(user_id))
             
@@ -1795,7 +1776,7 @@ class DSM(commands.Cog):
                 return
             
             # Create task embeds
-            completed_embeds, pending_embeds = self.create_task_embeds(user_data["tasks"], user_id)
+            completed_embeds, pending_embeds = await self.create_task_embeds(user_data["tasks"], user_id)
             
             # Get target channel (thread or channel)
             target_channel = channel
@@ -3037,7 +3018,7 @@ class DSM(commands.Cog):
                 return
             
             # Create task embeds
-            completed_embeds, pending_embeds = self.create_task_embeds(user_data["tasks"], user_id)
+            completed_embeds, pending_embeds = await self.create_task_embeds(user_data["tasks"], user_id)
             
             # Get target channel (thread or channel)
             target_channel = channel
