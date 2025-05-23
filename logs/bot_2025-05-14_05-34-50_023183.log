@@ -1,0 +1,6 @@
+2025-05-14 05:34:50 | INFO     | __main__:__init__:34 - Bot initialized
+2025-05-14 05:34:52 | INFO     | services.firebase_service:initialize:30 - Firebase connection established
+2025-05-14 05:34:52 | INFO     | services.firebase_service:__init__:22 - Firebase service initialized
+2025-05-14 05:34:53 | INFO     | __main__:setup_hook:42 - Cogs loaded
+2025-05-14 05:34:56 | INFO     | __main__:on_ready:46 - Logged in as E-Konsulta Internals - Testing
+2025-05-14 05:34:56 | INFO     | services.firebase_service:load_tasks:123 - Loaded tasks from Firebase
