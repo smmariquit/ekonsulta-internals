@@ -2770,6 +2770,22 @@ class DSM(commands.Cog):
             await self.firebase_service.update_config(channel.guild.id, config)
             logger.info(f"[DEBUG] Updated config with new thread info and reset tracking")
 
+            # After sending the statistics message, send per-user task embeds
+            for user_id, user_data in self.user_tasks.items():
+                if user_data and "tasks" in user_data and user_data["tasks"]:
+                    try:
+                        member = channel.guild.get_member(int(user_id))
+                        if not member:
+                            continue
+                        completed_embeds, pending_embeds = await self.create_task_embeds(user_data["tasks"], int(user_id))
+                        for embed in completed_embeds:
+                            await thread.send(embed=embed)
+                        for embed in pending_embeds:
+                            await thread.send(embed=embed)
+                        logger.info(f"[DEBUG] Sent task status for user {member.display_name} in auto DSM")
+                    except Exception as e:
+                        logger.error(f"[DEBUG] Error sending task status for user {user_id} in auto DSM: {str(e)}")
+
             return thread
 
         except Exception as e:
