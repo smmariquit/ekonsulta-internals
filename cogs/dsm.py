@@ -614,52 +614,53 @@ class DSM(commands.Cog):
             
             # Get current DSM date from config
             config = await self.firebase_service.get_config(guild.id)
-            current_dsm_date = datetime.datetime.strptime(config.get('dsm_date', datetime.datetime.now().strftime('%Y-%m-%d')), '%Y-%m-%d').date()
+            dsm_date_str = config.get('dsm_date', datetime.datetime.now().strftime('%Y-%m-%d'))
+            current_dsm_date = datetime.datetime.strptime(dsm_date_str, '%Y-%m-%d').date()
             date_str = current_dsm_date.strftime("%B %d, %Y")
 
-            # Create empty completed tasks embed for current DSM
-            completed_embed = discord.Embed(
-                title=f"✅ {member.display_name}'s Completed Tasks",
-                description=f"**Daily Standup Meeting: {date_str}**\nNo tasks completed today.",
-                color=discord.Color.green()
-            )
-            if member.avatar:
-                completed_embed.set_thumbnail(url=member.avatar.url)
-            completed_embeds = [completed_embed]
-
-            # Get tasks completed during current DSM day only
-            completed_tasks = []
+            # Filter tasks completed today only
+            completed_tasks_today = []
             for task in tasks:
                 if task.status == "done" and task.completed_at:
                     try:
                         completed_at = datetime.datetime.fromisoformat(task.completed_at).date()
                         if completed_at == current_dsm_date:
-                            completed_tasks.append(task)
-                    except (ValueError, TypeError):
+                            completed_tasks_today.append(task)
+                    except Exception:
                         continue
 
-            if completed_tasks:
+            # Completed tasks embed
+            if completed_tasks_today:
                 completed_embed = discord.Embed(
-                    title=f"✅ {member.display_name}'s Completed Tasks",
+                    title=f"✅ {member.display_name}'s Completed Tasks for {dsm_date_str}",
                     description=f"**Daily Standup Meeting: {date_str}**",
                     color=discord.Color.green()
                 )
                 if member.avatar:
                     completed_embed.set_thumbnail(url=member.avatar.url)
-                
                 task_list = []
-                for task in completed_tasks:
-                    task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description} ({task.completed_at.split('T')[1][:5] if task.completed_at else 'N/A'})"
+                for task in completed_tasks_today:
+                    completed_time = task.completed_at.split('T')[1][:5] if task.completed_at else 'N/A'
+                    task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description} ({completed_time})"
                     if task.remarks:
                         task_str += f"\n   📝 **Remark:** {task.remarks}"
                     task_list.append(task_str)
-                
                 completed_embed.add_field(
-                    name=f"📅 {current_dsm_date.strftime('%Y-%m-%d')}",
+                    name=f"Tasks completed on {dsm_date_str}",
                     value="\n".join(task_list),
                     inline=False
                 )
-                completed_embed.set_footer(text=f"Tasks completed on: {date_str}")
+                completed_embed.set_footer(text=f"Total Completed Tasks Today: {len(completed_tasks_today)}")
+                completed_embeds = [completed_embed]
+            else:
+                completed_embed = discord.Embed(
+                    title=f"✅ {member.display_name}'s Completed Tasks for {dsm_date_str}",
+                    description=f"**Daily Standup Meeting: {date_str}**\nNo tasks completed today.",
+                    color=discord.Color.green()
+                )
+                if member.avatar:
+                    completed_embed.set_thumbnail(url=member.avatar.url)
+                completed_embed.set_footer(text="Total Completed Tasks Today: 0")
                 completed_embeds = [completed_embed]
 
             # Pending tasks - show all pending tasks
@@ -1739,14 +1740,14 @@ class DSM(commands.Cog):
             completed_messages = []
             for embed in completed_embeds:
                 msg = await channel.send(embed=embed)
-                completed_messages.append(msg)
+                completed_messages.append(str(msg.id))
                 logger.info(f"[DEBUG] Sent new completed message: {msg.id}")
 
             # Send new pending messages
             pending_messages = []
             for embed in pending_embeds:
                 msg = await channel.send(embed=embed)
-                pending_messages.append(msg)
+                pending_messages.append(str(msg.id))
                 logger.info(f"[DEBUG] Sent new pending message: {msg.id}")
 
             # Save new message IDs to config
@@ -1755,18 +1756,14 @@ class DSM(commands.Cog):
             
             if user_id:
                 user_messages = config['dsm_messages'].get(str(user_id), {})
-                if completed_messages:
-                    user_messages['completed_messages'] = [str(msg.id) for msg in completed_messages]
-                if pending_messages:
-                    user_messages['pending_messages'] = [str(msg.id) for msg in pending_messages]
+                user_messages['completed_messages'] = completed_messages
+                user_messages['pending_messages'] = pending_messages
                 config['dsm_messages'][str(user_id)] = user_messages
             else:
                 for user_id, user_data in self.user_tasks.items():
                     user_messages = config['dsm_messages'].get(str(user_id), {})
-                    if completed_messages:
-                        user_messages['completed_messages'] = [str(msg.id) for msg in completed_messages]
-                    if pending_messages:
-                        user_messages['pending_messages'] = [str(msg.id) for msg in pending_messages]
+                    user_messages['completed_messages'] = completed_messages
+                    user_messages['pending_messages'] = pending_messages
                     config['dsm_messages'][str(user_id)] = user_messages
 
             await self.firebase_service.update_config(channel.guild.id, config)
@@ -3005,14 +3002,14 @@ class DSM(commands.Cog):
             completed_messages = []
             for embed in completed_embeds:
                 msg = await channel.send(embed=embed)
-                completed_messages.append(msg)
+                completed_messages.append(str(msg.id))
                 logger.info(f"[DEBUG] Sent new completed message: {msg.id}")
 
             # Send new pending messages
             pending_messages = []
             for embed in pending_embeds:
                 msg = await channel.send(embed=embed)
-                pending_messages.append(msg)
+                pending_messages.append(str(msg.id))
                 logger.info(f"[DEBUG] Sent new pending message: {msg.id}")
 
             # Save new message IDs to config
@@ -3021,18 +3018,14 @@ class DSM(commands.Cog):
             
             if user_id:
                 user_messages = config['dsm_messages'].get(str(user_id), {})
-                if completed_messages:
-                    user_messages['completed_messages'] = [str(msg.id) for msg in completed_messages]
-                if pending_messages:
-                    user_messages['pending_messages'] = [str(msg.id) for msg in pending_messages]
+                user_messages['completed_messages'] = completed_messages
+                user_messages['pending_messages'] = pending_messages
                 config['dsm_messages'][str(user_id)] = user_messages
             else:
                 for user_id, user_data in self.user_tasks.items():
                     user_messages = config['dsm_messages'].get(str(user_id), {})
-                    if completed_messages:
-                        user_messages['completed_messages'] = [str(msg.id) for msg in completed_messages]
-                    if pending_messages:
-                        user_messages['pending_messages'] = [str(msg.id) for msg in pending_messages]
+                    user_messages['completed_messages'] = completed_messages
+                    user_messages['pending_messages'] = pending_messages
                     config['dsm_messages'][str(user_id)] = user_messages
 
             await self.firebase_service.update_config(channel.guild.id, config)
