@@ -1466,55 +1466,12 @@ class DSM(commands.Cog):
                         if not member:
                             continue
 
-                        # Create completed tasks embed
-                        completed_tasks = [t for t in user_data["tasks"] if t.status == "done"]
-                        if completed_tasks:
-                            completed_embed = discord.Embed(
-                                title=f"✅ {member.display_name}'s Completed Tasks",
-                                color=discord.Color.green()
-                            )
-                            if member.avatar:
-                                completed_embed.set_thumbnail(url=member.avatar.url)
-                            
-                            task_list = []
-                            for task in completed_tasks:
-                                task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description} ({task.completed_at.split('T')[1][:5] if task.completed_at else 'N/A'})"
-                                if task.remarks:
-                                    task_str += f"\n   📝 **Remark:** {task.remarks}"
-                                task_list.append(task_str)
-                            
-                            completed_embed.add_field(
-                                name="Tasks",
-                                value="\n".join(task_list),
-                                inline=False
-                            )
-                            completed_embed.set_footer(text=f"Total Completed Tasks: {len(completed_tasks)}")
-                            await thread.send(embed=completed_embed)
-
-                        # Create pending tasks embed
-                        pending_tasks = [t for t in user_data["tasks"] if t.status == "pending"]
-                        if pending_tasks:
-                            pending_embed = discord.Embed(
-                                title=f"⏳ {member.display_name}'s Pending Tasks",
-                                color=discord.Color.orange()
-                            )
-                            if member.avatar:
-                                pending_embed.set_thumbnail(url=member.avatar.url)
-                            
-                            task_list = []
-                            for task in pending_tasks:
-                                task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description}"
-                                if task.remarks:
-                                    task_str += f"\n   📝 **Remark:** {task.remarks}"
-                                task_list.append(task_str)
-                            
-                            pending_embed.add_field(
-                                name="Tasks",
-                                value="\n".join(task_list),
-                                inline=False
-                            )
-                            pending_embed.set_footer(text=f"Total Pending Tasks: {len(pending_tasks)}")
-                            await thread.send(embed=pending_embed)
+                        # Use the same embed logic as everywhere else
+                        completed_embeds, pending_embeds = await self.create_task_embeds(user_data["tasks"], int(user_id))
+                        for embed in completed_embeds:
+                            await thread.send(embed=embed)
+                        for embed in pending_embeds:
+                            await thread.send(embed=embed)
 
                         logger.info(f"Sent task status for user {member.display_name}")
                     except Exception as e:
@@ -2632,55 +2589,12 @@ class DSM(commands.Cog):
                         if not member:
                             continue
 
-                        # Create completed tasks embed
-                        completed_tasks = [t for t in user_data["tasks"] if t.status == "done"]
-                        if completed_tasks:
-                            completed_embed = discord.Embed(
-                                title=f"✅ {member.display_name}'s Completed Tasks",
-                                color=discord.Color.green()
-                            )
-                            if member.avatar:
-                                completed_embed.set_thumbnail(url=member.avatar.url)
-                            
-                            task_list = []
-                            for task in completed_tasks:
-                                task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description} ({task.completed_at.split('T')[1][:5] if task.completed_at else 'N/A'})"
-                                if task.remarks:
-                                    task_str += f"\n   📝 **Remark:** {task.remarks}"
-                                task_list.append(task_str)
-                            
-                            completed_embed.add_field(
-                                name="Tasks",
-                                value="\n".join(task_list),
-                                inline=False
-                            )
-                            completed_embed.set_footer(text=f"Total Completed Tasks: {len(completed_tasks)}")
-                            await thread.send(embed=completed_embed)
-
-                        # Create pending tasks embed
-                        pending_tasks = [t for t in user_data["tasks"] if t.status == "pending"]
-                        if pending_tasks:
-                            pending_embed = discord.Embed(
-                                title=f"⏳ {member.display_name}'s Pending Tasks",
-                                color=discord.Color.orange()
-                            )
-                            if member.avatar:
-                                pending_embed.set_thumbnail(url=member.avatar.url)
-                            
-                            task_list = []
-                            for task in pending_tasks:
-                                task_str = f"{task.created_at.split('T')[1][:5]} [`{task.task_id}`] {task.description}"
-                                if task.remarks:
-                                    task_str += f"\n   📝 **Remark:** {task.remarks}"
-                                task_list.append(task_str)
-                            
-                            pending_embed.add_field(
-                                name="Tasks",
-                                value="\n".join(task_list),
-                                inline=False
-                            )
-                            pending_embed.set_footer(text=f"Total Pending Tasks: {len(pending_tasks)}")
-                            await thread.send(embed=pending_embed)
+                        # Use the same embed logic as everywhere else
+                        completed_embeds, pending_embeds = await self.create_task_embeds(user_data["tasks"], int(user_id))
+                        for embed in completed_embeds:
+                            await thread.send(embed=embed)
+                        for embed in pending_embeds:
+                            await thread.send(embed=embed)
 
                         logger.info(f"Sent task status for user {member.display_name}")
                     except Exception as e:
