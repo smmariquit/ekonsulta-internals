@@ -112,14 +112,20 @@ class DSM(commands.Cog):
                     if tasks:
                         total_tasks += len(tasks)
                         # Check if user has any TODO messages
+                        is_updated = False
                         async for message in channel.history(after=current_time - datetime.timedelta(hours=24), limit=None):
                             if message.author.id == member.id and any(indicator in message.content.lower() for indicator in ['todo', 'to do', 'tasks']):
                                 updated_users.add(member)
                                 completed_tasks += len(tasks)
+                                is_updated = True
                                 break
-                        else:
+                        
+                        if not is_updated:
                             pending_users.add(member)
                             pending_tasks += len(tasks)
+                    else:
+                        # If user has no tasks, they are still pending
+                        pending_users.add(member)
 
             # Create DSM message
             embed = discord.Embed(
