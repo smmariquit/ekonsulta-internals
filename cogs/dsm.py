@@ -121,33 +121,26 @@ class DSM(commands.Cog):
             for member in channel.guild.members:
                 if not member.bot and member.id not in excluded_users:
                     todos = []
-                    async for message in channel.history(after=last_dsm_time, limit=None):
+                    async for message in channel.history(after=last_dsm_time, before=current_time, limit=None):
                         if message.author.id == member.id:
                             extracted = self.extract_tasks_from_message(message.content)
                             if extracted:
                                 todos.extend(extracted)
                     user_todos[member] = todos
 
-            updated_users = [user for user, todos in user_todos.items() if todos]
-            pending_users = [user for user, todos in user_todos.items() if not todos]
+            # For the new DSM, no one is updated yet
+            updated_users = []
+            pending_users = [user for user in user_todos.keys()]
 
             embed = discord.Embed(
-                title="Daily Standup Meeting",
-                description=(
-                    "A new daily standup meeting has been initiated.\n\n"
-                    "Below are your TODOs from the previous DSM. Please update your status for today by replying with your new TODOs and Dones!"
-                ),
+                title=f"Daily Standup Meeting - {current_time.strftime('%B %d, %Y')}",
+                description="A new daily standup meeting has been initiated.",
                 color=discord.Color.blue()
             )
             embed.add_field(
                 name="Timeline:",
                 value=f"🕒 End Time: {end_time.strftime('%I:%M %p %Z')}\n"
                       f"⚠️ Deadline: {deadline_time.strftime('%Y-%m-%d %I:%M %p %Z')}",
-                inline=False
-            )
-            embed.add_field(
-                name=f"Daily Standup Meeting for {current_time.strftime('%B %d, %Y')}",
-                value="",
                 inline=False
             )
             embed.add_field(
@@ -167,8 +160,6 @@ class DSM(commands.Cog):
                 value=pending_list,
                 inline=False
             )
-
-            # Add each user's TODOs
             for user, todos in user_todos.items():
                 if todos:
                     embed.add_field(
@@ -176,10 +167,8 @@ class DSM(commands.Cog):
                         value="\n".join([f"- {task}" for task in todos]),
                         inline=False
                     )
-
             dsm_message = await channel.send(embed=embed)
             config['last_dsm_time'] = current_time.isoformat()
-            # Store DSM message and channel ID for live updates
             config['current_dsm_message_id'] = dsm_message.id
             config['current_dsm_channel_id'] = channel.id
             await self.firebase_service.update_config(channel.guild.id, config)
@@ -226,27 +215,39 @@ class DSM(commands.Cog):
                         if extracted:
                             todos.extend(extracted)
                 user_todos[member] = todos
-        logger.info(f"[update_live_dsm_embed] user_todos: {{ {', '.join(f'{user.display_name}: {todos}' for user, todos in user_todos.items())} }}")
-        updated_users = [user for user, todos in user_todos.items() if todos]
-        pending_users = [user for user, todos in user_todos.items() if not todos]
+
+        # Mark as updated only if user has sent a TODO after the DSM was created
+        updated_users = []
+        pending_users = []
+        for user, todos in user_todos.items():
+            # Check if user has sent a TODO message after last_dsm_time
+            if todos:
+                # Find the latest message with a TODO for this user
+                found = False
+                async for message in channel.history(after=last_dsm_time, limit=None):
+                    if message.author.id == user.id:
+                        extracted = self.extract_tasks_from_message(message.content)
+                        if extracted:
+                            # Only count as updated if message is after DSM creation
+                            if message.created_at > last_dsm_time:
+                                found = True
+                                break
+                if found:
+                    updated_users.append(user)
+                else:
+                    pending_users.append(user)
+            else:
+                pending_users.append(user)
 
         embed = discord.Embed(
-            title="Daily Standup Meeting",
-            description=(
-                "A new daily standup meeting has been initiated.\n\n"
-                "Below are your TODOs from the previous DSM. Please update your status for today by replying with your new TODOs and Dones!"
-            ),
+            title=f"Daily Standup Meeting - {current_time.strftime('%B %d, %Y')}",
+            description="A new daily standup meeting has been initiated.",
             color=discord.Color.blue()
         )
         embed.add_field(
             name="Timeline:",
             value=f"🕒 End Time: {end_time.strftime('%I:%M %p %Z')}\n"
                   f"⚠️ Deadline: {deadline_time.strftime('%Y-%m-%d %I:%M %p %Z')}",
-            inline=False
-        )
-        embed.add_field(
-            name=f"Daily Standup Meeting for {current_time.strftime('%B %d, %Y')}",
-            value="",
             inline=False
         )
         embed.add_field(
