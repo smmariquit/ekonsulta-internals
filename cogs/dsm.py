@@ -150,12 +150,17 @@ class DSM(commands.Cog):
         config = await self.firebase_service.get_config(guild.id)
         todo_message_map = config.get('todo_message_map', {})
         todo_embed_id = config.get('todo_tasks_embed_id')
+        last_dsm_time = config.get('last_dsm_time')
+        if last_dsm_time:
+            last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
+        else:
+            last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
         embed = discord.Embed(
             title="🚀 Tasks To Do for Today",
             description=(
                 "Let us know what you intend to work on for today!\n"
                 "Simply send a message containing the following format:"
-                "```\n...rest of message...\nTODO\nTask1\nTask2\n<leave last line blank to signify end>\n...rest of message...\n```"
+                "```\nTODO\nTask1\nTask2\nTask3\n<leave last line blank to signify end>\n```"
                 "It will automatically be posted here. You can also share what you got done from yesterday, any notes, or blockers."
             ),
             color=discord.Color.orange()
@@ -170,12 +175,6 @@ class DSM(commands.Cog):
                 for msg_id in messages:
                     try:
                         msg = await channel.fetch_message(int(msg_id))
-                        config = await self.firebase_service.get_config(guild.id)
-                        last_dsm_time = config.get('last_dsm_time')
-                        if last_dsm_time:
-                            last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
-                        else:
-                            last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
                         if msg.created_at >= last_dsm_time:
                             all_tasks.extend(messages[msg_id])
                             if not latest_msg or msg.created_at > latest_msg.created_at:
@@ -236,29 +235,6 @@ class DSM(commands.Cog):
                 if not member.bot and member.id not in excluded_users:
                     user_todos_yesterday.setdefault(member, [])
 
-            # Gather today's TODOs (after DSM creation)
-            todo_message_map = config.get('todo_message_map', {})
-            user_todos_today = {}
-            user_latest_todo_msg = {}
-            for user_id, messages in todo_message_map.items():
-                member = channel.guild.get_member(int(user_id))
-                if member and not member.bot and member.id not in excluded_users:
-                    for msg_id in messages:
-                        try:
-                            msg = await channel.fetch_message(int(msg_id))
-                            if msg.created_at > current_time:
-                                continue  # Ignore messages after now (shouldn't happen)
-                            if msg.created_at >= current_time:
-                                user_todos_today.setdefault(member, []).extend(messages[msg_id])
-                                if member not in user_latest_todo_msg or msg.created_at > user_latest_todo_msg[member].created_at:
-                                    user_latest_todo_msg[member] = msg
-                        except Exception:
-                            continue
-
-            # Mark as updated only if user has a TODO after DSM creation
-            updated_users = list(user_todos_today.keys())
-            pending_users = [member for member in channel.guild.members if not member.bot and member.id not in excluded_users and member not in updated_users]
-
             end_time_str = end_time.strftime('%B %d, %Y %I:%M %p %Z')
             deadline_time_str = deadline_time.strftime('%B %d, %Y %I:%M %p %Z')
             dsm_date_str = current_time.strftime('%B %d, %Y')
@@ -277,6 +253,35 @@ class DSM(commands.Cog):
                       f"⚠️ Deadline: {deadline_time_str}",
                 inline=False
             )
+            # Send DSM embed and update last_dsm_time in config immediately
+            dsm_message = await channel.send(embed=embed)
+            config['last_dsm_time'] = dsm_message.created_at.isoformat()
+            await self.firebase_service.update_config(channel.guild.id, config)
+
+            # Use the new last_dsm_time for today's TODOs
+            last_dsm_time = dsm_message.created_at
+
+            # Gather today's TODOs (after DSM creation)
+            todo_message_map = config.get('todo_message_map', {})
+            user_todos_today = {}
+            user_latest_todo_msg = {}
+            for user_id, messages in todo_message_map.items():
+                member = channel.guild.get_member(int(user_id))
+                if member and not member.bot and member.id not in excluded_users:
+                    for msg_id in messages:
+                        try:
+                            msg = await channel.fetch_message(int(msg_id))
+                            if msg.created_at >= last_dsm_time:
+                                user_todos_today.setdefault(member, []).extend(messages[msg_id])
+                                if member not in user_latest_todo_msg or msg.created_at > user_latest_todo_msg[member].created_at:
+                                    user_latest_todo_msg[member] = msg
+                        except Exception:
+                            continue
+
+            # Mark as updated only if user has a TODO after DSM creation
+            updated_users = list(user_todos_today.keys())
+            pending_users = [member for member in channel.guild.members if not member.bot and member.id not in excluded_users and member not in updated_users]
+
             participants_line = f"👥 Total: {len(updated_users) + len(pending_users)}  ✅ Updated: {len(updated_users)}  ⏳ Pending: {len(pending_users)}"
             embed.add_field(
                 name="Participants",
@@ -295,7 +300,8 @@ class DSM(commands.Cog):
                 value=pending_list,
                 inline=False
             )
-            dsm_message = await channel.send(embed=embed)
+            # Edit the DSM embed to add the participant fields
+            await dsm_message.edit(embed=embed)
 
             # Message 2: Pending tasks from yesterday (as embed, always show instructions)
             pending_embed = discord.Embed(
@@ -348,7 +354,6 @@ class DSM(commands.Cog):
             todo_msg = await channel.send(embed=todo_embed)
             config['todo_tasks_embed_id'] = todo_msg.id
 
-            config['last_dsm_time'] = current_time.isoformat()
             config['current_dsm_message_id'] = dsm_message.id
             config['current_dsm_channel_id'] = channel.id
             config['todo_message_map'] = {}  # Reset for new DSM
