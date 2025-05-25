@@ -101,6 +101,42 @@ class DSM(commands.Cog):
             logger.info(f"[on_message] No tasks found, not updating DSM.")
         await self.bot.process_commands(message)
 
+    @commands.Cog.listener()
+    async def on_message_edit(self, before, after):
+        logger.info(f"[on_message_edit] Message edited by {after.author} in channel {getattr(after.channel, 'name', None)}: {repr(after.content)}")
+        if after.author.bot or not after.guild:
+            logger.info("[on_message_edit] Ignored bot or non-guild message.")
+            return
+        config = await self.firebase_service.get_config(after.guild.id)
+        dsm_channel_id = config.get('dsm_channel_id')
+        if dsm_channel_id and after.channel.id != dsm_channel_id:
+            logger.info(f"[on_message_edit] Ignored message not in DSM channel (expected {dsm_channel_id}).")
+            return
+        # Only consider edits within the current DSM window
+        last_dsm_time = config.get('last_dsm_time')
+        if last_dsm_time:
+            last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
+        else:
+            last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
+        if after.created_at < last_dsm_time:
+            logger.info(f"[on_message_edit] Ignored edit for message before current DSM window.")
+            return
+        tasks = self.extract_tasks_from_message(after.content)
+        logger.info(f"[on_message_edit] Extracted tasks: {tasks}")
+        if tasks:
+            dsm_user_updates = config.get('dsm_user_updates', {})
+            dsm_user_updates[str(after.author.id)] = {
+                'tasks': tasks,
+                'updated': True,
+                'last_update': after.edited_at.isoformat() if after.edited_at else after.created_at.isoformat()
+            }
+            config['dsm_user_updates'] = dsm_user_updates
+            await self.firebase_service.update_config(after.guild.id, config)
+            logger.info(f"[on_message_edit] Updated dsm_user_updates for user {after.author.id}.")
+            await self.update_live_dsm_embed(after.guild)
+        else:
+            logger.info(f"[on_message_edit] No tasks found, not updating DSM.")
+
     async def create_dsm(self, channel: discord.TextChannel, config: dict, is_automatic: bool = True):
         """Create a new DSM in the specified channel."""
         try:
@@ -116,8 +152,8 @@ class DSM(commands.Cog):
             else:
                 last_dsm_time = current_time - datetime.timedelta(days=1)
 
-            # Gather TODOs for each user since the last DSM
-            user_todos = {}
+            # Gather TODOs for each user since the last DSM (yesterday's tasks)
+            user_todos_yesterday = {}
             for member in channel.guild.members:
                 if not member.bot and member.id not in excluded_users:
                     todos = []
@@ -126,11 +162,11 @@ class DSM(commands.Cog):
                             extracted = self.extract_tasks_from_message(message.content)
                             if extracted:
                                 todos.extend(extracted)
-                    user_todos[member] = todos
+                    user_todos_yesterday[member] = todos
 
             # For the new DSM, no one is updated yet
             updated_users = []
-            pending_users = [user for user in user_todos.keys()]
+            pending_users = [user for user in user_todos_yesterday.keys()]
 
             embed = discord.Embed(
                 title=f"Daily Standup Meeting - {current_time.strftime('%B %d, %Y')}",
@@ -145,7 +181,7 @@ class DSM(commands.Cog):
             )
             embed.add_field(
                 name="Participants",
-                value=f"Total: {len(user_todos)}\nUpdated: {len(updated_users)}\nPending: {len(pending_users)}",
+                value=f"Total: {len(user_todos_yesterday)}\nUpdated: {len(updated_users)}\nPending: {len(pending_users)}",
                 inline=False
             )
             updated_list = "\n".join([user.mention for user in updated_users]) if updated_users else "None"
@@ -160,14 +196,34 @@ class DSM(commands.Cog):
                 value=pending_list,
                 inline=False
             )
-            for user, todos in user_todos.items():
-                if todos:
-                    embed.add_field(
-                        name=f"TODOs for {user.display_name}",
-                        value="\n".join([f"- {task}" for task in todos]),
-                        inline=False
-                    )
             dsm_message = await channel.send(embed=embed)
+
+            # Message 2: Pending tasks from yesterday
+            pending_tasks_msg = "**PENDING TASKS FROM YESTERDAY**\n"
+            for user, todos in user_todos_yesterday.items():
+                if todos:
+                    pending_tasks_msg += f"\n{user.display_name}:\n"
+                    for task in todos:
+                        pending_tasks_msg += f"{task}\n"
+            if pending_tasks_msg.strip() == "**PENDING TASKS FROM YESTERDAY**":
+                pending_tasks_msg += "\nNone"
+            await channel.send(pending_tasks_msg)
+
+            # Message 3: TODO tasks for the current day (initially empty)
+            todo_tasks_msg = "**TODO TASKS for Today**\n"
+            # We'll use dsm_user_updates for this
+            dsm_user_updates = config.get('dsm_user_updates', {})
+            for user in channel.guild.members:
+                if not user.bot and user.id not in excluded_users:
+                    user_update = dsm_user_updates.get(str(user.id))
+                    if user_update and user_update.get('tasks'):
+                        todo_tasks_msg += f"\n{user.display_name}:\n"
+                        for task in user_update['tasks']:
+                            todo_tasks_msg += f"{task}\n"
+            if todo_tasks_msg.strip() == "**TODO TASKS for Today**":
+                todo_tasks_msg += "\nNone"
+            await channel.send(todo_tasks_msg)
+
             config['last_dsm_time'] = current_time.isoformat()
             config['current_dsm_message_id'] = dsm_message.id
             config['current_dsm_channel_id'] = channel.id
