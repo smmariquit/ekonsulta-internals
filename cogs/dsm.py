@@ -86,112 +86,123 @@ class DSM(commands.Cog):
         
         return list(set(tasks))  # Remove duplicates
 
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        # Ignore bot messages
+        if message.author.bot or not message.guild:
+            return
+
+        # Only process messages in the DSM channel (optional, remove this check if you want all channels)
+        config = await self.firebase_service.get_config(message.guild.id)
+        dsm_channel_id = config.get('dsm_channel_id')
+        if dsm_channel_id and message.channel.id != dsm_channel_id:
+            return
+
+        # Extract tasks from every message
+        tasks = self.extract_tasks_from_message(message.content)
+        if tasks:
+            # Store/update tasks for this user in config under 'dsm_user_updates'
+            dsm_user_updates = config.get('dsm_user_updates', {})
+            dsm_user_updates[str(message.author.id)] = {
+                'tasks': tasks,
+                'updated': True,
+                'last_update': message.created_at.isoformat()
+            }
+            config['dsm_user_updates'] = dsm_user_updates
+            await self.firebase_service.update_config(message.guild.id, config)
+
+        # Allow commands to work
+        await self.bot.process_commands(message)
+
     async def create_dsm(self, channel: discord.TextChannel, config: dict, is_automatic: bool = True):
         """Create a new DSM in the specified channel."""
         try:
-            # Get current time and calculate end time (8 hours from now)
             timezone = await self.get_guild_timezone(channel.guild.id)
             current_time = datetime.datetime.now(timezone)
             end_time = current_time + datetime.timedelta(hours=8)
-            deadline_time = end_time + datetime.timedelta(hours=4)  # 4 hours after end time
+            deadline_time = end_time + datetime.timedelta(hours=4)
 
-            # Initialize task tracking
-            total_tasks = 0
-            completed_tasks = 0
-            pending_tasks = 0
-            updated_users = set()
-            pending_users = set()
-
-            # Get excluded users from config
             excluded_users = set(config.get('excluded_users', []))
+            last_dsm_time = config.get('last_dsm_time')
+            if last_dsm_time:
+                last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
+            else:
+                last_dsm_time = current_time - datetime.timedelta(days=1)
 
-            # Get tasks for each user
-            for member in channel.guild.members:  # Changed from channel.members to guild.members
-                if not member.bot and member.id not in excluded_users:  # Check if user is not excluded
-                    tasks = await self.get_user_tasks(channel, member)
-                    if tasks:
-                        total_tasks += len(tasks)
-                        # Check if user has any TODO messages
-                        is_updated = False
-                        async for message in channel.history(after=current_time - datetime.timedelta(hours=24), limit=None):
-                            if message.author.id == member.id and any(indicator in message.content.lower() for indicator in ['todo', 'to do', 'tasks']):
-                                updated_users.add(member)
-                                completed_tasks += len(tasks)
-                                is_updated = True
-                                break
-                        
-                        if not is_updated:
-                            pending_users.add(member)
-                            pending_tasks += len(tasks)
-                    else:
-                        # If user has no tasks, they are still pending
-                        pending_users.add(member)
+            # Gather TODOs for each user since the last DSM
+            user_todos = {}
+            for member in channel.guild.members:
+                if not member.bot and member.id not in excluded_users:
+                    todos = []
+                    async for message in channel.history(after=last_dsm_time, limit=None):
+                        if message.author.id == member.id:
+                            extracted = self.extract_tasks_from_message(message.content)
+                            if extracted:
+                                todos.extend(extracted)
+                    user_todos[member] = todos
 
-            # Create DSM message
+            # Build summary fields
+            total_tasks = sum(len(todos) for todos in user_todos.values())
+            completed_tasks = 0  # You can expand logic to track completed if you want
+            pending_tasks = total_tasks - completed_tasks
+            updated_users = [user for user, todos in user_todos.items() if todos]
+            pending_users = [user for user, todos in user_todos.items() if not todos]
+
             embed = discord.Embed(
                 title="Daily Standup Meeting",
-                description="A new daily standup meeting has been initiated.",
+                description=(
+                    "A new daily standup meeting has been initiated.\n\n"
+                    "Below are your TODOs from the previous DSM. Please update your status for today by replying with your new TODOs and Dones!"
+                ),
                 color=discord.Color.blue()
             )
-            
-            # Add timeline
             embed.add_field(
                 name="Timeline:",
                 value=f"🕒 End Time: {end_time.strftime('%I:%M %p %Z')}\n"
                       f"⚠️ Deadline: {deadline_time.strftime('%Y-%m-%d %I:%M %p %Z')}",
                 inline=False
             )
-
-            # Add meeting title
             embed.add_field(
                 name=f"Daily Standup Meeting for {current_time.strftime('%B %d, %Y')}",
                 value="",
                 inline=False
             )
-
-            # Add task statistics
             embed.add_field(
                 name="Task Statistics",
-                value=f"Total Tasks: {total_tasks}\n"
-                      f"Completed: {completed_tasks}\n"
-                      f"Pending: {pending_tasks}",
+                value=f"Total Tasks: {total_tasks}\nCompleted: {completed_tasks}\nPending: {pending_tasks}",
                 inline=False
             )
-
-            # Add participant statistics
             embed.add_field(
                 name="Participants",
-                value=f"Total: {len(updated_users) + len(pending_users)}\n"
-                      f"Updated: {len(updated_users)}\n"
-                      f"Pending: {len(pending_users)}",
+                value=f"Total: {len(user_todos)}\nUpdated: {len(updated_users)}\nPending: {len(pending_users)}",
                 inline=False
             )
-
-            # Add updated users
             updated_list = "\n".join([user.mention for user in updated_users]) if updated_users else "None"
             embed.add_field(
                 name="Updated:",
                 value=updated_list,
                 inline=False
             )
-
-            # Add pending users
             pending_list = "\n".join([user.mention for user in pending_users]) if pending_users else "None"
             embed.add_field(
                 name="Pending:",
                 value=pending_list,
                 inline=False
             )
-            
-            # Send the message
-            message = await channel.send(embed=embed)
-            
-            # Update last DSM time
+
+            # Add each user's TODOs
+            for user, todos in user_todos.items():
+                if todos:
+                    embed.add_field(
+                        name=f"TODOs for {user.display_name}",
+                        value="\n".join([f"- {task}" for task in todos]),
+                        inline=False
+                    )
+
+            await channel.send(embed=embed)
             config['last_dsm_time'] = current_time.isoformat()
             await self.firebase_service.update_config(channel.guild.id, config)
-            
             logger.info(f"Created DSM in channel {channel.name}")
-            
         except Exception as e:
             logger.error(f"Error creating DSM: {str(e)}")
 
