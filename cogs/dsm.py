@@ -155,7 +155,7 @@ class DSM(commands.Cog):
             description=(
                 "Let us know what you intend to work on for today!\n"
                 "Simply send a message containing the following format:"
-                "```\nTODO\nTask1\nTask2\nTask3\n<leave last line blank to signify end>\n```"
+                "```\n...rest of message...\nTODO\nTask1\nTask2\n<leave last line blank to signify end>\n...rest of message...\n```"
                 "It will automatically be posted here. You can also share what you got done from yesterday, any notes, or blockers."
             ),
             color=discord.Color.orange()
