@@ -80,8 +80,12 @@ class DSM(commands.Cog):
         print(f"[on_message] Processing message in DSM channel. Author: {message.author}")
         logger.info(f"[on_message] Processing message in DSM channel. Author: {message.author}")
 
-        # Update TODO tasks embed
+        # Update TODO tasks embed and get the updated todo_message_map
         await self.update_todo_tasks_for_today(message.guild, message.channel, message)
+        
+        # Get the latest config after update_todo_tasks_for_today
+        config = await self.firebase_service.get_config(message.guild.id)
+        todo_message_map = config.get('todo_message_map', {})
 
         # Update DSM embed if there's an active DSM
         current_dsm_message_id = config.get('current_dsm_message_id')
@@ -100,26 +104,15 @@ class DSM(commands.Cog):
                 print(f"[on_message] Last DSM time: {last_dsm_time}")
                 logger.info(f"[on_message] Last DSM time: {last_dsm_time}")
 
-                # Get all messages after last DSM
-                todo_message_map = config.get('todo_message_map', {})
+                # Process the todo_message_map directly
                 updated_users = set()
                 for user_id, messages in todo_message_map.items():
                     member = message.guild.get_member(int(user_id))
                     if member and not member.bot and member.id not in config.get('excluded_users', []):
-                        for msg_id in messages:
-                            try:
-                                msg = await message.channel.fetch_message(int(msg_id))
-                                print(f"[on_message] Processing message {msg_id} from {member.display_name} created at: {msg.created_at}")
-                                logger.info(f"[on_message] Processing message {msg_id} from {member.display_name} created at: {msg.created_at}")
-                                if msg.created_at >= last_dsm_time:
-                                    updated_users.add(member)
-                                    print(f"[on_message] Added {member.display_name} to updated users.")
-                                    logger.info(f"[on_message] Added {member.display_name} to updated users.")
-                                    break
-                            except Exception as e:
-                                print(f"[on_message] Error fetching message {msg_id}: {e}")
-                                logger.error(f"[on_message] Error fetching message {msg_id}: {e}")
-                                continue
+                        # If user has any messages in the map, they've updated
+                        updated_users.add(member)
+                        print(f"[on_message] Added {member.display_name} to updated users (has messages in todo_message_map)")
+                        logger.info(f"[on_message] Added {member.display_name} to updated users (has messages in todo_message_map)")
 
                 # Update the DSM embed
                 embed = dsm_message.embeds[0]
