@@ -10,11 +10,5 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     'admins': [],
     'dsm_messages': {},
     'updated_participants': [],
-    'pending_participants': [],
-    'standup_hour': 9,
-    'standup_minute': 15,
-    'thread_name_template': "Daily Stand-up {date}",
-    'thread_auto_archive_duration': 10080,  # 7 days in minutes (maximum allowed by Discord)
-    'deadline_hours': 12,  # Hours after DSM start time
-    'use_threads': True
-} 
+    'pending_participants': []
+}
