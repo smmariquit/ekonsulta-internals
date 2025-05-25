@@ -111,6 +111,9 @@ class DSM(commands.Cog):
             config['dsm_user_updates'] = dsm_user_updates
             await self.firebase_service.update_config(message.guild.id, config)
 
+            # Update the live DSM embed
+            await self.update_live_dsm_embed(message.guild)
+
         # Allow commands to work
         await self.bot.process_commands(message)
 
@@ -141,10 +144,6 @@ class DSM(commands.Cog):
                                 todos.extend(extracted)
                     user_todos[member] = todos
 
-            # Build summary fields
-            total_tasks = sum(len(todos) for todos in user_todos.values())
-            completed_tasks = 0  # You can expand logic to track completed if you want
-            pending_tasks = total_tasks - completed_tasks
             updated_users = [user for user, todos in user_todos.items() if todos]
             pending_users = [user for user, todos in user_todos.items() if not todos]
 
@@ -165,11 +164,6 @@ class DSM(commands.Cog):
             embed.add_field(
                 name=f"Daily Standup Meeting for {current_time.strftime('%B %d, %Y')}",
                 value="",
-                inline=False
-            )
-            embed.add_field(
-                name="Task Statistics",
-                value=f"Total Tasks: {total_tasks}\nCompleted: {completed_tasks}\nPending: {pending_tasks}",
                 inline=False
             )
             embed.add_field(
@@ -199,12 +193,103 @@ class DSM(commands.Cog):
                         inline=False
                     )
 
-            await channel.send(embed=embed)
+            dsm_message = await channel.send(embed=embed)
             config['last_dsm_time'] = current_time.isoformat()
+            # Store DSM message and channel ID for live updates
+            config['current_dsm_message_id'] = dsm_message.id
+            config['current_dsm_channel_id'] = channel.id
             await self.firebase_service.update_config(channel.guild.id, config)
             logger.info(f"Created DSM in channel {channel.name}")
         except Exception as e:
             logger.error(f"Error creating DSM: {str(e)}")
+
+    async def update_live_dsm_embed(self, guild):
+        """Update the live DSM embed message with the latest TODOs and status."""
+        config = await self.firebase_service.get_config(guild.id)
+        channel_id = config.get('current_dsm_channel_id')
+        message_id = config.get('current_dsm_message_id')
+        if not channel_id or not message_id:
+            return
+        channel = guild.get_channel(channel_id)
+        if not channel:
+            return
+        try:
+            dsm_message = await channel.fetch_message(message_id)
+        except Exception:
+            return
+
+        timezone = await self.get_guild_timezone(guild.id)
+        current_time = datetime.datetime.now(timezone)
+        end_time = current_time + datetime.timedelta(hours=8)
+        deadline_time = end_time + datetime.timedelta(hours=4)
+        excluded_users = set(config.get('excluded_users', []))
+        last_dsm_time = config.get('last_dsm_time')
+        if last_dsm_time:
+            last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
+        else:
+            last_dsm_time = current_time - datetime.timedelta(days=1)
+
+        user_todos = {}
+        for member in guild.members:
+            if not member.bot and member.id not in excluded_users:
+                todos = []
+                async for message in channel.history(after=last_dsm_time, limit=None):
+                    if message.author.id == member.id:
+                        extracted = self.extract_tasks_from_message(message.content)
+                        if extracted:
+                            todos.extend(extracted)
+                user_todos[member] = todos
+
+        updated_users = [user for user, todos in user_todos.items() if todos]
+        pending_users = [user for user, todos in user_todos.items() if not todos]
+
+        embed = discord.Embed(
+            title="Daily Standup Meeting",
+            description=(
+                "A new daily standup meeting has been initiated.\n\n"
+                "Below are your TODOs from the previous DSM. Please update your status for today by replying with your new TODOs and Dones!"
+            ),
+            color=discord.Color.blue()
+        )
+        embed.add_field(
+            name="Timeline:",
+            value=f"🕒 End Time: {end_time.strftime('%I:%M %p %Z')}\n"
+                  f"⚠️ Deadline: {deadline_time.strftime('%Y-%m-%d %I:%M %p %Z')}",
+            inline=False
+        )
+        embed.add_field(
+            name=f"Daily Standup Meeting for {current_time.strftime('%B %d, %Y')}",
+            value="",
+            inline=False
+        )
+        embed.add_field(
+            name="Participants",
+            value=f"Total: {len(user_todos)}\nUpdated: {len(updated_users)}\nPending: {len(pending_users)}",
+            inline=False
+        )
+        updated_list = "\n".join([user.mention for user in updated_users]) if updated_users else "None"
+        embed.add_field(
+            name="Updated:",
+            value=updated_list,
+            inline=False
+        )
+        pending_list = "\n".join([user.mention for user in pending_users]) if pending_users else "None"
+        embed.add_field(
+            name="Pending:",
+            value=pending_list,
+            inline=False
+        )
+        for user, todos in user_todos.items():
+            if todos:
+                embed.add_field(
+                    name=f"TODOs for {user.display_name}",
+                    value="\n".join([f"- {task}" for task in todos]),
+                    inline=False
+                )
+        try:
+            await dsm_message.edit(embed=embed)
+        except Exception as e:
+            logger.error(f"Failed to update DSM message: {str(e)}")
 
     @tasks.loop(minutes=1)
     async def auto_dsm_task(self):
