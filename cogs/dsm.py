@@ -25,43 +25,28 @@ class DSM(commands.Cog):
         logger.info("DSM cog initialized")
 
     def extract_tasks_from_message(self, content: str) -> List[str]:
-        """Extract tasks from a message content."""
-        # Look for task indicators
+        logger.info(f"[extract_tasks_from_message] Raw content: {repr(content)}")
         task_indicators = ['to do', 'todo', 'tasks', 'task list']
-        content_lower = content.lower()
-        
-        # Find the task section
-        task_section = None
-        for indicator in task_indicators:
-            if indicator in content_lower:
-                # Split by the indicator and take everything after it
-                parts = content.split(indicator, 1)
-                if len(parts) > 1:
-                    task_section = parts[1]
-                    break
-        
-        if not task_section:
-            return []
-        
-        # Split by newlines and filter out empty lines
-        lines = [line.strip() for line in task_section.split('\n') if line.strip()]
-        
-        # Find where the task list ends (empty line)
-        end_index = len(lines)
-        for i, line in enumerate(lines):
-            if not line:
-                end_index = i
-                break
-        
-        # Extract tasks (lines between start and end)
+        lines = content.splitlines()
         tasks = []
-        for line in lines[:end_index]:
-            # Remove common bullet points and numbering
-            line = re.sub(r'^[-•*]\s*', '', line)
-            line = re.sub(r'^\d+[\.\)]\s*', '', line)
-            if line.strip():
-                tasks.append(line.strip())
-        
+        capture = False
+        for line in lines:
+            logger.info(f"[extract_tasks_from_message] Line: {repr(line)} | Capture: {capture}")
+            if any(indicator in line.lower().replace(':', '').strip() for indicator in task_indicators):
+                logger.info(f"[extract_tasks_from_message] Found indicator in line: {repr(line)}")
+                capture = True
+                continue
+            if capture:
+                if not line.strip():  # Stop at empty line
+                    logger.info(f"[extract_tasks_from_message] Stopping at empty line after indicator.")
+                    break
+                # Remove bullet points/numbering
+                line_clean = re.sub(r'^[-•*]\s*', '', line)
+                line_clean = re.sub(r'^\d+[\.\)]\s*', '', line_clean)
+                if line_clean.strip() and line_clean.strip() != ':':
+                    logger.info(f"[extract_tasks_from_message] Adding task: {repr(line_clean.strip())}")
+                    tasks.append(line_clean.strip())
+        logger.info(f"[extract_tasks_from_message] Extracted tasks: {tasks}")
         return tasks
 
     async def get_user_tasks(self, channel: discord.TextChannel, user: discord.Member) -> List[str]:
@@ -88,20 +73,20 @@ class DSM(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        # Ignore bot messages
+        logger.info(f"[on_message] Received message from {message.author} in channel {getattr(message.channel, 'name', None)}: {repr(message.content)}")
         if message.author.bot or not message.guild:
+            logger.info("[on_message] Ignored bot or non-guild message.")
             return
 
-        # Only process messages in the DSM channel (optional, remove this check if you want all channels)
         config = await self.firebase_service.get_config(message.guild.id)
         dsm_channel_id = config.get('dsm_channel_id')
         if dsm_channel_id and message.channel.id != dsm_channel_id:
+            logger.info(f"[on_message] Ignored message not in DSM channel (expected {dsm_channel_id}).")
             return
 
-        # Extract tasks from every message
         tasks = self.extract_tasks_from_message(message.content)
+        logger.info(f"[on_message] Extracted tasks: {tasks}")
         if tasks:
-            # Store/update tasks for this user in config under 'dsm_user_updates'
             dsm_user_updates = config.get('dsm_user_updates', {})
             dsm_user_updates[str(message.author.id)] = {
                 'tasks': tasks,
@@ -110,11 +95,10 @@ class DSM(commands.Cog):
             }
             config['dsm_user_updates'] = dsm_user_updates
             await self.firebase_service.update_config(message.guild.id, config)
-
-            # Update the live DSM embed
+            logger.info(f"[on_message] Updated dsm_user_updates for user {message.author.id}.")
             await self.update_live_dsm_embed(message.guild)
-
-        # Allow commands to work
+        else:
+            logger.info(f"[on_message] No tasks found, not updating DSM.")
         await self.bot.process_commands(message)
 
     async def create_dsm(self, channel: discord.TextChannel, config: dict, is_automatic: bool = True):
@@ -204,18 +188,21 @@ class DSM(commands.Cog):
             logger.error(f"Error creating DSM: {str(e)}")
 
     async def update_live_dsm_embed(self, guild):
-        """Update the live DSM embed message with the latest TODOs and status."""
+        logger.info(f"[update_live_dsm_embed] Updating DSM embed for guild {guild.id}")
         config = await self.firebase_service.get_config(guild.id)
         channel_id = config.get('current_dsm_channel_id')
         message_id = config.get('current_dsm_message_id')
         if not channel_id or not message_id:
+            logger.warning(f"[update_live_dsm_embed] No DSM message/channel ID found in config.")
             return
         channel = guild.get_channel(channel_id)
         if not channel:
+            logger.warning(f"[update_live_dsm_embed] DSM channel not found.")
             return
         try:
             dsm_message = await channel.fetch_message(message_id)
-        except Exception:
+        except Exception as e:
+            logger.error(f"[update_live_dsm_embed] Failed to fetch DSM message: {e}")
             return
 
         timezone = await self.get_guild_timezone(guild.id)
@@ -239,7 +226,7 @@ class DSM(commands.Cog):
                         if extracted:
                             todos.extend(extracted)
                 user_todos[member] = todos
-
+        logger.info(f"[update_live_dsm_embed] user_todos: {{ {', '.join(f'{user.display_name}: {todos}' for user, todos in user_todos.items())} }}")
         updated_users = [user for user, todos in user_todos.items() if todos]
         pending_users = [user for user, todos in user_todos.items() if not todos]
 
@@ -288,8 +275,9 @@ class DSM(commands.Cog):
                 )
         try:
             await dsm_message.edit(embed=embed)
+            logger.info(f"[update_live_dsm_embed] DSM embed updated successfully.")
         except Exception as e:
-            logger.error(f"Failed to update DSM message: {str(e)}")
+            logger.error(f"[update_live_dsm_embed] Failed to update DSM message: {str(e)}")
 
     @tasks.loop(minutes=1)
     async def auto_dsm_task(self):
