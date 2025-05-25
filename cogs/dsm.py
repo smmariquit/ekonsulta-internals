@@ -788,8 +788,12 @@ class DSM(commands.Cog):
 
     async def send_dsm_reminder(self, channel, config):
         # Compose the reminder message
-        deadline_time = datetime.datetime.fromisoformat(config['last_dsm_time']) + datetime.timedelta(hours=12)
-        deadline_str = deadline_time.strftime('%B %d, %Y %I:%M %p %Z')
+# Use the same timezone as the channel/guild
+        timezone = await self.get_guild_timezone(channel.guild.id)
+        last_dsm_time = config['last_dsm_time']
+        dsm_time = datetime.datetime.fromisoformat(last_dsm_time).astimezone(timezone)
+        deadline_time = dsm_time + datetime.timedelta(hours=12)
+        deadline_str = deadline_time.strftime('%B %d, %Y %I:%M %p')
         # Ping all pending users
         pending_mentions = []
         excluded_users = set(config.get('excluded_users', []))
