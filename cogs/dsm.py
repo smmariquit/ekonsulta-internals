@@ -158,13 +158,12 @@ class DSM(commands.Cog):
         todo_message_map = config.get('todo_message_map', {})
         todo_embed_id = config.get('todo_tasks_embed_id')
         embed = discord.Embed(
-            title="🚀 Tasks To Do for Today",
+            title="Tasks To Do for Today",
             description=(
-                "✨ **Let us know what you intend to work on for today!**\n"
+                "Let us know what you intend to work on for today!\n"
                 "Simply send a message containing the following format:"
                 "```\nTODO\nTask1\nTask2\nTask3\n<leave last line blank to signify end>\n```"
-                "It will automatically be posted here.\n"
-                "You can also also share what you got done from yesterday, any notes, or blockers. Let's help each other succeed! 🤝"
+                "It will automatically be posted here. You can also share what you got done from yesterday, any notes, or blockers."
             ),
             color=discord.Color.orange()
         )
@@ -227,18 +226,23 @@ class DSM(commands.Cog):
             updated_users = []
             pending_users = [user for user in user_todos_yesterday.keys()]
 
+            # Use 'Month Day, Year' format for all dates
+            end_time_str = end_time.strftime('%B %d, %Y %I:%M %p %Z')
+            deadline_time_str = deadline_time.strftime('%B %d, %Y %I:%M %p %Z')
+            dsm_date_str = current_time.strftime('%B %d, %Y')
+
             embed = discord.Embed(
-                title=f"🍰 Daily Standup Meeting – {current_time.strftime('%B %d, %Y')}",
+                title=f"🍰 Daily Standup Meeting – {dsm_date_str}",
                 description=(
-                    "🌞 **Good morning, E-Konsulta team!**\n\n"
+                    "**Good morning, E-Konsulta team!**\n\n"
                     "Let's make today productive and collaborative. Please update your tasks for today by sending your TODOs below."
                 ),
                 color=discord.Color.blue()
             )
             embed.add_field(
-                name="🗓️ Timeline",
-                value=f"🕒 End: {end_time.strftime('%Y-%m-%d %I:%M %p %Z')}\n"
-                      f"⚠️ Deadline: {deadline_time.strftime('%Y-%m-%d %I:%M %p %Z')}",
+                name="Timeline",
+                value=f"🕒 End: {end_time_str}\n"
+                      f"⚠️ Deadline: {deadline_time_str}",
                 inline=False
             )
             participants_line = f"👥 Total: {len(user_todos_yesterday)}  ✅ Updated: {len(updated_users)}  ⏳ Pending: {len(pending_users)}"
@@ -265,8 +269,7 @@ class DSM(commands.Cog):
             pending_embed = discord.Embed(
                 title='📝 Tasks Marked as "To-do" from Last Meeting',
                 description=(
-                    "⚠️ **These tasks were marked as _to-do_ in the last DSM.**\n"
-                    "Let us know of your progress, or mention any blockers."
+                    "These tasks were marked as _to-do_ in the last DSM. Let us know of your progress, or mention any blockers."
                 ),
                 color=discord.Color.red()
             )
@@ -290,13 +293,12 @@ class DSM(commands.Cog):
 
             # Message 3: TODO tasks for the current day (initially empty embed)
             todo_embed = discord.Embed(
-                title="🚀 Tasks To Do for Today",
+                title="Tasks To Do for Today",
                 description=(
-                    "✨ **Let us know what you intend to work on for today!**\n"
+                    "Let us know what you intend to work on for today!\n"
                     "Simply send a message containing the following format:"
                     "```\nTODO\nTask1\nTask2\nTask3\n<leave last line blank to signify end>\n```"
-                    "It will automatically be posted here.\n"
-                    "You can also share what you got done from yesterday, any notes, or blockers. Let's help each other succeed! 🤝"
+                    "It will automatically be posted here. You can also share what you got done from yesterday, any notes, or blockers."
                 ),
                 color=discord.Color.orange()
             )
