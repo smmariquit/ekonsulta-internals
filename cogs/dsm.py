@@ -156,10 +156,16 @@ class DSM(commands.Cog):
     async def update_todo_tasks_embed(self, guild, channel):
         config = await self.firebase_service.get_config(guild.id)
         todo_message_map = config.get('todo_message_map', {})
-        # Find or send the TODO TASKS for Today embed
         todo_embed_id = config.get('todo_tasks_embed_id')
         embed = discord.Embed(
-            title="TODO TASKS for Today",
+            title="🚀 Tasks To Do for Today",
+            description=(
+                "✨ **Let us know what you intend to work on for today!**\n\n"
+                "Simply send a message containing the following format:\n"
+                "```\nTODO \nTask1\nTask2\nTask3\n<leave last line blank to signify end>\n```\n\n"
+                "It will automatically be posted here.\n\n"
+                "_You can also share what you got done from yesterday, any notes, or blockers. Let's help each other succeed!_ 🤝"
+            ),
             color=discord.Color.orange()
         )
         any_tasks = False
@@ -177,8 +183,7 @@ class DSM(commands.Cog):
                         inline=False
                     )
         if not any_tasks:
-            embed.description = "No tasks yet."
-        # Edit or send the embed
+            embed.description += "\n\n🟠 No tasks yet."
         if todo_embed_id:
             try:
                 msg = await channel.fetch_message(todo_embed_id)
@@ -186,7 +191,6 @@ class DSM(commands.Cog):
                 return
             except Exception as e:
                 logger.warning(f"[update_todo_tasks_embed] Could not edit existing TODO embed: {e}")
-        # If not found, send a new one
         msg = await channel.send(embed=embed)
         config['todo_tasks_embed_id'] = msg.id
         await self.firebase_service.update_config(guild.id, config)
@@ -208,76 +212,100 @@ class DSM(commands.Cog):
 
             # Gather TODOs for each user since the last DSM (yesterday's tasks)
             user_todos_yesterday = {}
+            user_last_dsm_msg = {}
+            async for message in channel.history(after=last_dsm_time, before=current_time, limit=None):
+                if message.author.bot or message.author.id in excluded_users:
+                    continue
+                extracted = self.extract_tasks_from_message(message.content)
+                if extracted:
+                    user_todos_yesterday.setdefault(message.author, []).extend(extracted)
+                    # Store the first message with TODOs as the DSM source
+                    if message.author not in user_last_dsm_msg:
+                        user_last_dsm_msg[message.author] = message
             for member in channel.guild.members:
                 if not member.bot and member.id not in excluded_users:
-                    todos = []
-                    async for message in channel.history(after=last_dsm_time, before=current_time, limit=None):
-                        if message.author.id == member.id:
-                            extracted = self.extract_tasks_from_message(message.content)
-                            if extracted:
-                                todos.extend(extracted)
-                    user_todos_yesterday[member] = todos
+                    user_todos_yesterday.setdefault(member, [])
 
             # For the new DSM, no one is updated yet
             updated_users = []
             pending_users = [user for user in user_todos_yesterday.keys()]
 
+            # AI-enhanced, visually appealing copywriting
             embed = discord.Embed(
-                title=f"Daily Standup Meeting - {current_time.strftime('%B %d, %Y')}",
-                description="Good morning, E-Konsulta team! Please update your tasks for today.",
+                title=f"🍰 Daily Standup Meeting – {current_time.strftime('%B %d, %Y')}",
+                description=(
+                    "🌞 **Good morning, E-Konsulta team!**\n\n"
+                    "Let's make today productive and collaborative. Please update your tasks for today by sending your TODOs below.\n\n"
+                    "_Stay awesome, and don't forget to celebrate your wins!_ 🎉"
+                ),
                 color=discord.Color.blue()
             )
             embed.add_field(
-                name="Timeline:",
-                value=f"🕒 End Time: {end_time.strftime('%I:%M %p %Z')}\n"
-                      f"⚠️ Deadline: {deadline_time.strftime('%Y-%m-%d %I:%M %p %Z')}",
+                name="🗓️ Timeline",
+                value=f"🕒 **End:** {end_time.strftime('%I:%M %p %Z')}\n"
+                      f"⚠️ **Deadline:** {deadline_time.strftime('%Y-%m-%d %I:%M %p %Z')}",
                 inline=False
             )
+            # Condensed participants line with emojis
+            participants_line = f"👥 {len(user_todos_yesterday)}   ✅ {len(updated_users)}   ⏳ {len(pending_users)}"
             embed.add_field(
                 name="Participants",
-                value=f"Total: {len(user_todos_yesterday)}\nUpdated: {len(updated_users)}\nPending: {len(pending_users)}",
+                value=f"{participants_line}\n**Legend:** 👥 Total   ✅ Updated   ⏳ Pending",
                 inline=False
             )
             updated_list = "\n".join([user.mention for user in updated_users]) if updated_users else "None"
             embed.add_field(
-                name="Updated:",
+                name="✅ Updated",
                 value=updated_list,
                 inline=False
             )
             pending_list = "\n".join([user.mention for user in pending_users]) if pending_users else "None"
             embed.add_field(
-                name="Pending:",
+                name="⏳ Pending",
                 value=pending_list,
                 inline=False
             )
             dsm_message = await channel.send(embed=embed)
 
-            # Message 2: Pending tasks from yesterday (as embed)
+            # Message 2: Pending tasks from yesterday (as embed, always show instructions)
             pending_embed = discord.Embed(
-                title='Tasks Marked as "To-do" from Last Meeting',
-                description="These tasks were marked as todo in the last DSM. Let us know of your progress, or mention any blockers.",
+                title='📝 Tasks Marked as "To-do" from Last Meeting',
+                description=(
+                    "🔔 **These tasks were marked as _to-do_ in the last DSM.**\n"
+                    "Let us know of your progress, or mention any blockers.\n\n"
+                    "**How to update:**\n"
+                    "Reply with your progress, or send a new TODO message for today!"
+                ),
                 color=discord.Color.red()
             )
             any_pending = False
             for user, todos in user_todos_yesterday.items():
                 if todos:
                     any_pending = True
+                    # Add clickable link to previous DSM message if available
+                    msg = user_last_dsm_msg.get(user)
+                    if msg:
+                        user_link = f"[{user.display_name}](https://discord.com/channels/{channel.guild.id}/{channel.id}/{msg.id})"
+                    else:
+                        user_link = user.display_name
                     pending_embed.add_field(
-                        name=f"{user.display_name}",
+                        name=user_link,
                         value="\n".join(todos),
                         inline=False
                     )
             if not any_pending:
-                pending_embed.description = "None"
+                pending_embed.description += "\n\n🎉 No pending tasks from yesterday!"
             await channel.send(embed=pending_embed)
 
             # Message 3: TODO tasks for the current day (initially empty embed)
             todo_embed = discord.Embed(
-                title="Tasks To Do for Today",
+                title="🚀 Tasks To Do for Today",
                 description=(
-                    "Let us know what you intend to work on for today! Simply send a message containing the following format:\n"
+                    "✨ **Let us know what you intend to work on for today!**\n\n"
+                    "Simply send a message containing the following format:\n"
                     "```\nTODO \nTask1\nTask2\nTask3\n<leave last line blank to signify end>\n```\n\n"
-                    "It will automatically be posted here. The message *can* of course contain other things, such as what you got done from yesterday, any notes, blockers, etc. "
+                    "It will automatically be posted here.\n\n"
+                    "_You can also share what you got done from yesterday, any notes, or blockers. Let's help each other succeed!_ 🤝"
                 ),
                 color=discord.Color.orange()
             )
