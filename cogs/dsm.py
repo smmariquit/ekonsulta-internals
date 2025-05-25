@@ -26,29 +26,20 @@ class DSM(commands.Cog):
         logger.info("DSM cog initialized")
 
     def extract_tasks_from_message(self, content: str) -> List[str]:
-        logger.info(f"[extract_tasks_from_message] Raw content: {repr(content)}")
-        # Expanded indicators: 'todo', 'to do', 'to-do', 'tasks', 'task list'
-        task_indicators = ['to do', 'to-do', 'todo', 'tasks', 'task list']
+        # Accept 'todo', 'to do', 'to-do' (with or without colon, any case)
+        task_indicators = ['todo', 'to do', 'to-do']
         lines = content.splitlines()
         tasks = []
         capture = False
         for line in lines:
-            logger.info(f"[extract_tasks_from_message] Line: {repr(line)} | Capture: {capture}")
-            if any(indicator in line.lower().replace(':', '').strip() for indicator in task_indicators):
-                logger.info(f"[extract_tasks_from_message] Found indicator in line: {repr(line)}")
+            line_stripped = line.strip().lower().replace(':', '')
+            if not capture and any(line_stripped == indicator for indicator in task_indicators):
                 capture = True
                 continue
             if capture:
-                if not line.strip():  # Stop at empty line
-                    logger.info(f"[extract_tasks_from_message] Stopping at empty line after indicator.")
+                if not line.strip():
                     break
-                # Remove bullet points/numbering
-                line_clean = re.sub(r'^[-•*]\s*', '', line)
-                line_clean = re.sub(r'^\d+[\.\)]\s*', '', line_clean)
-                if line_clean.strip() and line_clean.strip() != ':':
-                    logger.info(f"[extract_tasks_from_message] Adding task: {repr(line_clean.strip())}")
-                    tasks.append(line_clean.strip())
-        logger.info(f"[extract_tasks_from_message] Extracted tasks: {tasks}")
+                tasks.append(line.strip())
         return tasks
 
     async def get_user_tasks(self, channel: discord.TextChannel, user: discord.Member) -> List[str]:
