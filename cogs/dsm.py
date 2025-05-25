@@ -260,7 +260,7 @@ class DSM(commands.Cog):
                 if all_tasks:
                     any_tasks = True
                     if latest_msg:
-                        user_link = f"{member.display_name}: {channel.mention} 🗨️"
+                        user_link = f"{member.display_name}: [View Message]({latest_msg.jump_url}) 🗨️"
                     else:
                         user_link = member.display_name
                     embed.add_field(
@@ -397,7 +397,7 @@ class DSM(commands.Cog):
                     any_pending = True
                     msg = user_last_dsm_msg.get(user)
                     if msg:
-                        user_link = f"{user.display_name}: {channel.mention} 🗨️"
+                        user_link = f"{user.display_name}: [View Message]({msg.jump_url}) 🗨️"
                     else:
                         user_link = user.display_name
                     pending_embed.add_field(
@@ -424,7 +424,7 @@ class DSM(commands.Cog):
                 if todos:
                     msg = user_latest_todo_msg.get(user)
                     if msg:
-                        user_link = f"{user.display_name}: {channel.mention} 🗨️"
+                        user_link = f"{user.display_name}: [View Message]({msg.jump_url}) 🗨️"
                     else:
                         user_link = user.display_name
                     todo_embed.add_field(
@@ -874,24 +874,40 @@ class DSM(commands.Cog):
 
     async def send_dsm_reminder(self, channel, config):
         # Compose the reminder message
-# Use the same timezone as the channel/guild
         timezone = await self.get_guild_timezone(channel.guild.id)
         last_dsm_time = config['last_dsm_time']
         dsm_time = datetime.datetime.fromisoformat(last_dsm_time).astimezone(timezone)
         deadline_time = dsm_time + datetime.timedelta(hours=12)
         deadline_str = deadline_time.strftime('%B %d, %Y %I:%M %p')
-        # Ping all pending users
-        pending_mentions = []
+
+        # Get users who haven't updated
+        todo_message_map = config.get('todo_message_map', {})
         excluded_users = set(config.get('excluded_users', []))
+        updated_users = set()
+        for user_id in todo_message_map:
+            if int(user_id) not in excluded_users:
+                updated_users.add(int(user_id))
+
+        # Only ping users who haven't updated
+        pending_mentions = []
         for member in channel.guild.members:
-            if not member.bot and member.id not in excluded_users:
+            if not member.bot and member.id not in excluded_users and member.id not in updated_users:
                 pending_mentions.append(member.mention)
-        reminder_msg = (
-            f"⏰ **DSM Reminder!**\n"
-            f"The deadline for today's DSM is approaching or has just passed. Please update your tasks if you haven't yet!\n"
-            f"Deadline: {deadline_str}\n"
-            f"{' '.join(pending_mentions)}"
-        )
+
+        if not pending_mentions:
+            reminder_msg = (
+                f"⏰ **DSM Reminder!**\n"
+                f"The deadline for today's DSM is approaching or has just passed.\n"
+                f"Deadline: {deadline_str}\n"
+                f"Everyone has already updated their tasks! 🎉"
+            )
+        else:
+            reminder_msg = (
+                f"⏰ **DSM Reminder!**\n"
+                f"The deadline for today's DSM is approaching or has just passed. Please update your tasks if you haven't yet!\n"
+                f"Deadline: {deadline_str}\n"
+                f"{' '.join(pending_mentions)}"
+            )
         await channel.send(reminder_msg)
 
     @tasks.loop(minutes=1)
