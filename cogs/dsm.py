@@ -260,7 +260,7 @@ class DSM(commands.Cog):
                 if all_tasks:
                     any_tasks = True
                     if latest_msg:
-                        user_link = f"{member.display_name}: [View Message]({latest_msg.jump_url}) 🗨️"
+                        user_link = f"{member.display_name} {latest_msg.jump_url} 🗨️"
                     else:
                         user_link = member.display_name
                     embed.add_field(
@@ -397,7 +397,7 @@ class DSM(commands.Cog):
                     any_pending = True
                     msg = user_last_dsm_msg.get(user)
                     if msg:
-                        user_link = f"{user.display_name}: [View Message]({msg.jump_url}) 🗨️"
+                        user_link = f"{user.display_name} {msg.jump_url} 🗨️"
                     else:
                         user_link = user.display_name
                     pending_embed.add_field(
@@ -424,7 +424,7 @@ class DSM(commands.Cog):
                 if todos:
                     msg = user_latest_todo_msg.get(user)
                     if msg:
-                        user_link = f"{user.display_name}: [View Message]({msg.jump_url}) 🗨️"
+                        user_link = f"{user.display_name} {msg.jump_url} 🗨️"
                     else:
                         user_link = user.display_name
                     todo_embed.add_field(
