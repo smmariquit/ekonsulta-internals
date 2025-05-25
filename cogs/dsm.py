@@ -102,9 +102,12 @@ class DSM(commands.Cog):
             updated_users = set()
             pending_users = set()
 
+            # Get excluded users from config
+            excluded_users = set(config.get('excluded_users', []))
+
             # Get tasks for each user
-            for member in channel.members:
-                if not member.bot:
+            for member in channel.guild.members:  # Changed from channel.members to guild.members
+                if not member.bot and member.id not in excluded_users:  # Check if user is not excluded
                     tasks = await self.get_user_tasks(channel, member)
                     if tasks:
                         total_tasks += len(tasks)
@@ -511,6 +514,107 @@ class DSM(commands.Cog):
             logger.error(f"Error in list_skipped_dsm: {str(e)}")
             await interaction.response.send_message(
                 f"Failed to list skipped dates: {str(e)}",
+                ephemeral=True
+            )
+
+    @app_commands.command(name="exclude_user", description="Exclude a user from DSM")
+    @app_commands.default_permissions(administrator=True)
+    async def exclude_user(self, interaction: discord.Interaction, user: discord.Member):
+        """Exclude a user from DSM."""
+        try:
+            config = await self.firebase_service.get_config(interaction.guild_id)
+            if not config:
+                config = {}
+
+            excluded_users = set(config.get('excluded_users', []))
+            excluded_users.add(user.id)
+            
+            config['excluded_users'] = list(excluded_users)
+            await self.firebase_service.update_config(interaction.guild_id, config)
+            
+            await interaction.response.send_message(
+                f"{user.mention} has been excluded from DSM.",
+                ephemeral=True
+            )
+            logger.info(f"Excluded user {user.name} ({user.id}) from DSM")
+            
+        except Exception as e:
+            logger.error(f"Error excluding user: {str(e)}")
+            await interaction.response.send_message(
+                "Failed to exclude user. Please try again.",
+                ephemeral=True
+            )
+
+    @app_commands.command(name="include_user", description="Include a user in DSM")
+    @app_commands.default_permissions(administrator=True)
+    async def include_user(self, interaction: discord.Interaction, user: discord.Member):
+        """Include a user in DSM."""
+        try:
+            config = await self.firebase_service.get_config(interaction.guild_id)
+            if not config:
+                config = {}
+
+            excluded_users = set(config.get('excluded_users', []))
+            if user.id in excluded_users:
+                excluded_users.remove(user.id)
+                config['excluded_users'] = list(excluded_users)
+                await self.firebase_service.update_config(interaction.guild_id, config)
+                
+                await interaction.response.send_message(
+                    f"{user.mention} has been included in DSM.",
+                    ephemeral=True
+                )
+                logger.info(f"Included user {user.name} ({user.id}) in DSM")
+            else:
+                await interaction.response.send_message(
+                    f"{user.mention} is already included in DSM.",
+                    ephemeral=True
+                )
+            
+        except Exception as e:
+            logger.error(f"Error including user: {str(e)}")
+            await interaction.response.send_message(
+                "Failed to include user. Please try again.",
+                ephemeral=True
+            )
+
+    @app_commands.command(name="list_excluded", description="List all excluded users")
+    @app_commands.default_permissions(administrator=True)
+    async def list_excluded(self, interaction: discord.Interaction):
+        """List all excluded users."""
+        try:
+            config = await self.firebase_service.get_config(interaction.guild_id)
+            excluded_users = config.get('excluded_users', [])
+            
+            if excluded_users:
+                excluded_members = []
+                for user_id in excluded_users:
+                    member = interaction.guild.get_member(user_id)
+                    if member:
+                        excluded_members.append(member.mention)
+                
+                embed = discord.Embed(
+                    title="Excluded Users",
+                    description="The following users are excluded from DSM:",
+                    color=discord.Color.blue()
+                )
+                embed.add_field(
+                    name="Users",
+                    value="\n".join(excluded_members) if excluded_members else "None",
+                    inline=False
+                )
+                
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+            else:
+                await interaction.response.send_message(
+                    "No users are currently excluded from DSM.",
+                    ephemeral=True
+                )
+            
+        except Exception as e:
+            logger.error(f"Error listing excluded users: {str(e)}")
+            await interaction.response.send_message(
+                "Failed to list excluded users. Please try again.",
                 ephemeral=True
             )
 
