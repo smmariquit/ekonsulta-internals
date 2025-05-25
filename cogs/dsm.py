@@ -191,7 +191,7 @@ class DSM(commands.Cog):
         """Automatically create DSM at configured time."""
         try:
             for guild in self.bot.guilds:
-                config = await self.firebase_service.get_guild_config(guild.id)
+                config = await self.firebase_service.get_config(guild.id)
                 if not config:
                     continue
 
