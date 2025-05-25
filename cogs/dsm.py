@@ -155,6 +155,7 @@ class DSM(commands.Cog):
             last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
         else:
             last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
+        print(f"[update_todo_tasks_embed] last_dsm_time: {last_dsm_time}")
         logger.info(f"[update_todo_tasks_embed] last_dsm_time: {last_dsm_time}")
         embed = discord.Embed(
             title="🚀 Tasks To Do for Today",
@@ -176,12 +177,14 @@ class DSM(commands.Cog):
                 for msg_id in messages:
                     try:
                         msg = await channel.fetch_message(int(msg_id))
+                        print(f"[update_todo_tasks_embed] Message {msg_id} created at: {msg.created_at}")
                         logger.info(f"[update_todo_tasks_embed] Message {msg_id} created at: {msg.created_at}")
                         if msg.created_at >= last_dsm_time:
                             all_tasks.extend(messages[msg_id])
                             if not latest_msg or msg.created_at > latest_msg.created_at:
                                 latest_msg = msg
                     except Exception as e:
+                        print(f"[update_todo_tasks_embed] Error fetching message {msg_id}: {e}")
                         logger.error(f"[update_todo_tasks_embed] Error fetching message {msg_id}: {e}")
                         continue
                 if all_tasks:
@@ -201,13 +204,16 @@ class DSM(commands.Cog):
             try:
                 msg = await channel.fetch_message(todo_embed_id)
                 await msg.edit(embed=embed)
+                print(f"[update_todo_tasks_embed] Edited existing TODO embed with ID {todo_embed_id}")
                 logger.info(f"[update_todo_tasks_embed] Edited existing TODO embed with ID {todo_embed_id}")
                 return
             except Exception as e:
+                print(f"[update_todo_tasks_embed] Could not edit existing TODO embed: {e}")
                 logger.warning(f"[update_todo_tasks_embed] Could not edit existing TODO embed: {e}")
         msg = await channel.send(embed=embed)
         config['todo_tasks_embed_id'] = msg.id
         await self.firebase_service.update_config(guild.id, config)
+        print(f"[update_todo_tasks_embed] Created new TODO embed with ID {msg.id}")
         logger.info(f"[update_todo_tasks_embed] Created new TODO embed with ID {msg.id}")
 
     async def create_dsm(self, channel: discord.TextChannel, config: dict, is_automatic: bool = True):
