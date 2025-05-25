@@ -109,8 +109,12 @@ class DSM(commands.Cog):
                         for msg_id in messages:
                             try:
                                 msg = await message.channel.fetch_message(int(msg_id))
+                                print(f"[on_message] Processing message {msg_id} from {member.display_name} created at: {msg.created_at}")
+                                logger.info(f"[on_message] Processing message {msg_id} from {member.display_name} created at: {msg.created_at}")
                                 if msg.created_at >= last_dsm_time:
                                     updated_users.add(member)
+                                    print(f"[on_message] Added {member.display_name} to updated users.")
+                                    logger.info(f"[on_message] Added {member.display_name} to updated users.")
                                     break
                             except Exception as e:
                                 print(f"[on_message] Error fetching message {msg_id}: {e}")
