@@ -226,7 +226,7 @@ class DSM(commands.Cog):
     async def simulate_dsm(self, interaction: discord.Interaction):
         """Manually trigger a DSM."""
         try:
-            config = await self.firebase_service.get_guild_config(interaction.guild_id)
+            config = await self.firebase_service.get_config(interaction.guild_id)
             if not config:
                 await interaction.response.send_message("Please configure DSM settings first using `/configure`.", ephemeral=True)
                 return
@@ -240,14 +240,24 @@ class DSM(commands.Cog):
             if not channel:
                 await interaction.response.send_message("The configured DSM channel no longer exists.", ephemeral=True)
                 return
-
+            
             await interaction.response.send_message("Creating DSM...", ephemeral=True)
             await self.create_dsm(channel, config, is_automatic=False)
-            await interaction.followup.send("DSM created successfully!", ephemeral=True)
-
+            
+            # Use a new interaction to send the success message
+            try:
+                await interaction.edit_original_response(content="DSM created successfully!")
+            except discord.NotFound:
+                # If the original message is gone, send a new one
+                await interaction.channel.send("DSM created successfully!", ephemeral=True)
+                
         except Exception as e:
             logger.error(f"Error in simulate_dsm: {str(e)}")
-            await interaction.followup.send("Failed to create DSM. Please try again.", ephemeral=True)
+            try:
+                await interaction.edit_original_response(content="Failed to create DSM. Please try again.")
+            except discord.NotFound:
+                # If the original message is gone, send a new one
+                await interaction.channel.send("Failed to create DSM. Please try again.", ephemeral=True)
 
     async def get_guild_timezone(self, guild_id: int) -> pytz.timezone:
         """Get the timezone for a guild, defaulting to UTC if not set."""
