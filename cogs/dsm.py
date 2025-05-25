@@ -77,28 +77,13 @@ class DSM(commands.Cog):
         if message.author.bot or not message.guild:
             logger.info("[on_message] Ignored bot or non-guild message.")
             return
-
         config = await self.firebase_service.get_config(message.guild.id)
         dsm_channel_id = config.get('dsm_channel_id')
         if dsm_channel_id and message.channel.id != dsm_channel_id:
             logger.info(f"[on_message] Ignored message not in DSM channel (expected {dsm_channel_id}).")
             return
-
-        tasks = self.extract_tasks_from_message(message.content)
-        logger.info(f"[on_message] Extracted tasks: {tasks}")
-        if tasks:
-            dsm_user_updates = config.get('dsm_user_updates', {})
-            dsm_user_updates[str(message.author.id)] = {
-                'tasks': tasks,
-                'updated': True,
-                'last_update': message.created_at.isoformat()
-            }
-            config['dsm_user_updates'] = dsm_user_updates
-            await self.firebase_service.update_config(message.guild.id, config)
-            logger.info(f"[on_message] Updated dsm_user_updates for user {message.author.id}.")
-            await self.update_live_dsm_embed(message.guild)
-        else:
-            logger.info(f"[on_message] No tasks found, not updating DSM.")
+        # Only update the TODO TASKS for Today embed
+        await self.update_todo_tasks_for_today(message.guild, message.channel, message)
         await self.bot.process_commands(message)
 
     @commands.Cog.listener()
@@ -120,7 +105,7 @@ class DSM(commands.Cog):
         if after.created_at < last_dsm_time:
             logger.info(f"[on_message_edit] Ignored edit for message before current DSM window.")
             return
-        # Update the message-task mapping for today
+        # Only update the TODO TASKS for Today embed
         await self.update_todo_tasks_for_today(after.guild, after.channel, after)
 
     @commands.Cog.listener()
@@ -132,7 +117,7 @@ class DSM(commands.Cog):
         dsm_channel_id = config.get('dsm_channel_id')
         if dsm_channel_id and message.channel.id != dsm_channel_id:
             return
-        # Remove the message-task mapping for today
+        # Only update the TODO TASKS for Today embed
         await self.update_todo_tasks_for_today(message.guild, message.channel, message, deleted=True)
 
     async def update_todo_tasks_for_today(self, guild, channel, message, deleted=False):
@@ -239,7 +224,7 @@ class DSM(commands.Cog):
 
             embed = discord.Embed(
                 title=f"Daily Standup Meeting - {current_time.strftime('%B %d, %Y')}",
-                description="A new daily standup meeting has been initiated.",
+                description="Good morning, E-Konsulta team! Please update your tasks for today.",
                 color=discord.Color.blue()
             )
             embed.add_field(
@@ -269,7 +254,8 @@ class DSM(commands.Cog):
 
             # Message 2: Pending tasks from yesterday (as embed)
             pending_embed = discord.Embed(
-                title="PENDING TASKS FROM YESTERDAY",
+                title='Tasks Marked as "To-do" from Last Meeting',
+                description="These tasks were marked as todo in the last DSM. Let us know of your progress, or mention any blockers.",
                 color=discord.Color.red()
             )
             any_pending = False
@@ -287,8 +273,12 @@ class DSM(commands.Cog):
 
             # Message 3: TODO tasks for the current day (initially empty embed)
             todo_embed = discord.Embed(
-                title="TODO TASKS for Today",
-                description="No tasks yet.",
+                title="Tasks To Do for Today",
+                description=(
+                    "Let us know what you intend to work on for today! Simply send a message containing the following format:\n"
+                    "```\nTODO \nTask1\nTask2\nTask3\n<leave last line blank to signify end>\n```\n\n"
+                    "It will automatically be posted here. The message *can* of course contain other things, such as what you got done from yesterday, any notes, blockers, etc. "
+                ),
                 color=discord.Color.orange()
             )
             todo_msg = await channel.send(embed=todo_embed)
@@ -302,110 +292,6 @@ class DSM(commands.Cog):
             logger.info(f"Created DSM in channel {channel.name}")
         except Exception as e:
             logger.error(f"Error creating DSM: {str(e)}")
-
-    async def update_live_dsm_embed(self, guild):
-        logger.info(f"[update_live_dsm_embed] Updating DSM embed for guild {guild.id}")
-        config = await self.firebase_service.get_config(guild.id)
-        channel_id = config.get('current_dsm_channel_id')
-        message_id = config.get('current_dsm_message_id')
-        if not channel_id or not message_id:
-            logger.warning(f"[update_live_dsm_embed] No DSM message/channel ID found in config.")
-            return
-        channel = guild.get_channel(channel_id)
-        if not channel:
-            logger.warning(f"[update_live_dsm_embed] DSM channel not found.")
-            return
-        try:
-            dsm_message = await channel.fetch_message(message_id)
-        except Exception as e:
-            logger.error(f"[update_live_dsm_embed] Failed to fetch DSM message: {e}")
-            return
-
-        timezone = await self.get_guild_timezone(guild.id)
-        current_time = datetime.datetime.now(timezone)
-        end_time = current_time + datetime.timedelta(hours=8)
-        deadline_time = end_time + datetime.timedelta(hours=4)
-        excluded_users = set(config.get('excluded_users', []))
-        last_dsm_time = config.get('last_dsm_time')
-        if last_dsm_time:
-            last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
-        else:
-            last_dsm_time = current_time - datetime.timedelta(days=1)
-
-        user_todos = {}
-        for member in guild.members:
-            if not member.bot and member.id not in excluded_users:
-                todos = []
-                async for message in channel.history(after=last_dsm_time, limit=None):
-                    if message.author.id == member.id:
-                        extracted = self.extract_tasks_from_message(message.content)
-                        if extracted:
-                            todos.extend(extracted)
-                user_todos[member] = todos
-
-        # Mark as updated only if user has sent a TODO after the DSM was created
-        updated_users = []
-        pending_users = []
-        for user, todos in user_todos.items():
-            # Check if user has sent a TODO message after last_dsm_time
-            if todos:
-                # Find the latest message with a TODO for this user
-                found = False
-                async for message in channel.history(after=last_dsm_time, limit=None):
-                    if message.author.id == user.id:
-                        extracted = self.extract_tasks_from_message(message.content)
-                        if extracted:
-                            # Only count as updated if message is after DSM creation
-                            if message.created_at > last_dsm_time:
-                                found = True
-                                break
-                if found:
-                    updated_users.append(user)
-                else:
-                    pending_users.append(user)
-            else:
-                pending_users.append(user)
-
-        embed = discord.Embed(
-            title=f"Daily Standup Meeting - {current_time.strftime('%B %d, %Y')}",
-            description="A new daily standup meeting has been initiated.",
-            color=discord.Color.blue()
-        )
-        embed.add_field(
-            name="Timeline:",
-            value=f"🕒 End Time: {end_time.strftime('%I:%M %p %Z')}\n"
-                  f"⚠️ Deadline: {deadline_time.strftime('%Y-%m-%d %I:%M %p %Z')}",
-            inline=False
-        )
-        embed.add_field(
-            name="Participants",
-            value=f"Total: {len(user_todos)}\nUpdated: {len(updated_users)}\nPending: {len(pending_users)}",
-            inline=False
-        )
-        updated_list = "\n".join([user.mention for user in updated_users]) if updated_users else "None"
-        embed.add_field(
-            name="Updated:",
-            value=updated_list,
-            inline=False
-        )
-        pending_list = "\n".join([user.mention for user in pending_users]) if pending_users else "None"
-        embed.add_field(
-            name="Pending:",
-            value=pending_list,
-            inline=False
-        )
-        for user, todos in user_todos.items():
-            if todos:
-                embed.add_field(
-                    name=f"TODOs for {user.display_name}",
-                    value="\n".join([f"- {task}" for task in todos]),
-                    inline=False
-                )
-        try:
-            await dsm_message.edit(embed=embed)
-            logger.info(f"[update_live_dsm_embed] DSM embed updated successfully.")
-        except Exception as e:
-            logger.error(f"[update_live_dsm_embed] Failed to update DSM message: {str(e)}")
 
     @tasks.loop(minutes=1)
     async def auto_dsm_task(self):
