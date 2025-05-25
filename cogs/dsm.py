@@ -173,18 +173,30 @@ class DSM(commands.Cog):
         for user_id, messages in todo_message_map.items():
             member = guild.get_member(int(user_id))
             if member:
-                # Get the latest message (by timestamp) for this user
-                latest_msg_id = max(messages, key=lambda mid: int(mid))
-                try:
-                    latest_msg = await channel.fetch_message(int(latest_msg_id))
-                    user_link = f"[{member.display_name}]({latest_msg.jump_url})"
-                except Exception:
-                    user_link = member.display_name
+                # Only show TODOs for today (after DSM creation)
                 all_tasks = []
-                for task_list in messages.values():
-                    all_tasks.extend(task_list)
+                latest_msg = None
+                for msg_id in messages:
+                    try:
+                        msg = await channel.fetch_message(int(msg_id))
+                        config = await self.firebase_service.get_config(guild.id)
+                        last_dsm_time = config.get('last_dsm_time')
+                        if last_dsm_time:
+                            last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
+                        else:
+                            last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
+                        if msg.created_at >= last_dsm_time:
+                            all_tasks.extend(messages[msg_id])
+                            if not latest_msg or msg.created_at > latest_msg.created_at:
+                                latest_msg = msg
+                    except Exception:
+                        continue
                 if all_tasks:
                     any_tasks = True
+                    if latest_msg:
+                        user_link = f"{member.display_name}: {channel.mention} 🗨️"
+                    else:
+                        user_link = member.display_name
                     embed.add_field(
                         name=user_link,
                         value="\n".join(all_tasks),
@@ -218,6 +230,7 @@ class DSM(commands.Cog):
             else:
                 last_dsm_time = current_time - datetime.timedelta(days=1)
 
+            # Gather yesterday's TODOs (before DSM creation)
             user_todos_yesterday = {}
             user_last_dsm_msg = {}
             async for message in channel.history(after=last_dsm_time, before=current_time, limit=None):
@@ -226,16 +239,34 @@ class DSM(commands.Cog):
                 extracted = self.extract_tasks_from_message(message.content)
                 if extracted:
                     user_todos_yesterday.setdefault(message.author, []).extend(extracted)
-                    if message.author not in user_last_dsm_msg:
+                    if message.author not in user_last_dsm_msg or message.created_at > user_last_dsm_msg[message.author].created_at:
                         user_last_dsm_msg[message.author] = message
             for member in channel.guild.members:
                 if not member.bot and member.id not in excluded_users:
                     user_todos_yesterday.setdefault(member, [])
 
-            # Use todo_message_map to determine updated/pending users
+            # Gather today's TODOs (after DSM creation)
             todo_message_map = config.get('todo_message_map', {})
-            updated_users = [member for member in channel.guild.members if str(member.id) in todo_message_map and not member.bot and member.id not in excluded_users]
-            pending_users = [member for member in channel.guild.members if str(member.id) not in todo_message_map and not member.bot and member.id not in excluded_users]
+            user_todos_today = {}
+            user_latest_todo_msg = {}
+            for user_id, messages in todo_message_map.items():
+                member = channel.guild.get_member(int(user_id))
+                if member and not member.bot and member.id not in excluded_users:
+                    for msg_id in messages:
+                        try:
+                            msg = await channel.fetch_message(int(msg_id))
+                            if msg.created_at > current_time:
+                                continue  # Ignore messages after now (shouldn't happen)
+                            if msg.created_at >= current_time:
+                                user_todos_today.setdefault(member, []).extend(messages[msg_id])
+                                if member not in user_latest_todo_msg or msg.created_at > user_latest_todo_msg[member].created_at:
+                                    user_latest_todo_msg[member] = msg
+                        except Exception:
+                            continue
+
+            # Mark as updated only if user has a TODO after DSM creation
+            updated_users = list(user_todos_today.keys())
+            pending_users = [member for member in channel.guild.members if not member.bot and member.id not in excluded_users and member not in updated_users]
 
             end_time_str = end_time.strftime('%B %d, %Y %I:%M %p %Z')
             deadline_time_str = deadline_time.strftime('%B %d, %Y %I:%M %p %Z')
@@ -288,7 +319,7 @@ class DSM(commands.Cog):
                     any_pending = True
                     msg = user_last_dsm_msg.get(user)
                     if msg:
-                        user_link = f"[{user.display_name}]({msg.jump_url})"
+                        user_link = f"{user.display_name}: {channel.mention} 🗨️"
                     else:
                         user_link = user.display_name
                     pending_embed.add_field(
@@ -311,26 +342,18 @@ class DSM(commands.Cog):
                 ),
                 color=discord.Color.orange()
             )
-            # Hyperlink each user's name to their latest TODO message for today
-            for user_id, messages in todo_message_map.items():
-                member = channel.guild.get_member(int(user_id))
-                if member:
-                    # Get the latest message (by timestamp) for this user
-                    latest_msg_id = max(messages, key=lambda mid: int(mid))
-                    try:
-                        latest_msg = await channel.fetch_message(int(latest_msg_id))
-                        user_link = f"[{member.display_name}]({latest_msg.jump_url})"
-                    except Exception:
-                        user_link = member.display_name
-                    all_tasks = []
-                    for task_list in messages.values():
-                        all_tasks.extend(task_list)
-                    if all_tasks:
-                        todo_embed.add_field(
-                            name=user_link,
-                            value="\n".join(all_tasks),
-                            inline=False
-                        )
+            for user, todos in user_todos_today.items():
+                if todos:
+                    msg = user_latest_todo_msg.get(user)
+                    if msg:
+                        user_link = f"{user.display_name}: {channel.mention} 🗨️"
+                    else:
+                        user_link = user.display_name
+                    todo_embed.add_field(
+                        name=user_link,
+                        value="\n".join(todos),
+                        inline=False
+                    )
             todo_msg = await channel.send(embed=todo_embed)
             config['todo_tasks_embed_id'] = todo_msg.id
 
