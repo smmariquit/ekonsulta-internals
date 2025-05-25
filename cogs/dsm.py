@@ -26,7 +26,8 @@ class DSM(commands.Cog):
 
     def extract_tasks_from_message(self, content: str) -> List[str]:
         logger.info(f"[extract_tasks_from_message] Raw content: {repr(content)}")
-        task_indicators = ['to do', 'todo', 'tasks', 'task list']
+        # Expanded indicators: 'todo', 'to do', 'to-do', 'tasks', 'task list'
+        task_indicators = ['to do', 'to-do', 'todo', 'tasks', 'task list']
         lines = content.splitlines()
         tasks = []
         capture = False
@@ -158,7 +159,7 @@ class DSM(commands.Cog):
         todo_message_map = config.get('todo_message_map', {})
         todo_embed_id = config.get('todo_tasks_embed_id')
         embed = discord.Embed(
-            title="Tasks To Do for Today",
+            title="🚀 Tasks To Do for Today",
             description=(
                 "Let us know what you intend to work on for today!\n"
                 "Simply send a message containing the following format:"
@@ -223,10 +224,22 @@ class DSM(commands.Cog):
                 if not member.bot and member.id not in excluded_users:
                     user_todos_yesterday.setdefault(member, [])
 
+            # Updated status: mark as updated if user has sent a TODO after DSM creation
             updated_users = []
-            pending_users = [user for user in user_todos_yesterday.keys()]
+            pending_users = []
+            for user in user_todos_yesterday.keys():
+                found = False
+                async for message in channel.history(after=current_time, limit=None):
+                    if message.author.id == user.id:
+                        extracted = self.extract_tasks_from_message(message.content)
+                        if extracted:
+                            found = True
+                            break
+                if found:
+                    updated_users.append(user)
+                else:
+                    pending_users.append(user)
 
-            # Use 'Month Day, Year' format for all dates
             end_time_str = end_time.strftime('%B %d, %Y %I:%M %p %Z')
             deadline_time_str = deadline_time.strftime('%B %d, %Y %I:%M %p %Z')
             dsm_date_str = current_time.strftime('%B %d, %Y')
@@ -268,11 +281,11 @@ class DSM(commands.Cog):
             # Message 2: Pending tasks from yesterday (as embed, always show instructions)
             pending_embed = discord.Embed(
                 title='📝 Tasks Marked as "To-do" from Last Meeting',
-                description=(
-                    "These tasks were marked as _to-do_ in the last DSM. Let us know of your progress, or mention any blockers."
-                ),
                 color=discord.Color.red()
             )
+            # Always show the instruction at the top
+            pending_desc = "These tasks were marked as to-do in the last DSM."
+            pending_embed.description = pending_desc
             any_pending = False
             for user, todos in user_todos_yesterday.items():
                 if todos:
@@ -288,12 +301,12 @@ class DSM(commands.Cog):
                         inline=False
                     )
             if not any_pending:
-                pending_embed.description = "No tasks from previous DSM."
+                pending_embed.description += "\nNo tasks from previous DSM."
             await channel.send(embed=pending_embed)
 
             # Message 3: TODO tasks for the current day (initially empty embed)
             todo_embed = discord.Embed(
-                title="Tasks To Do for Today",
+                title="🚀 Tasks To Do for Today",
                 description=(
                     "Let us know what you intend to work on for today!\n"
                     "Simply send a message containing the following format:"
