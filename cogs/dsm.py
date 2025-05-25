@@ -112,7 +112,6 @@ class DSM(commands.Cog):
         if dsm_channel_id and after.channel.id != dsm_channel_id:
             logger.info(f"[on_message_edit] Ignored message not in DSM channel (expected {dsm_channel_id}).")
             return
-        # Only consider edits within the current DSM window
         last_dsm_time = config.get('last_dsm_time')
         if last_dsm_time:
             last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
@@ -121,21 +120,91 @@ class DSM(commands.Cog):
         if after.created_at < last_dsm_time:
             logger.info(f"[on_message_edit] Ignored edit for message before current DSM window.")
             return
-        tasks = self.extract_tasks_from_message(after.content)
-        logger.info(f"[on_message_edit] Extracted tasks: {tasks}")
-        if tasks:
-            dsm_user_updates = config.get('dsm_user_updates', {})
-            dsm_user_updates[str(after.author.id)] = {
-                'tasks': tasks,
-                'updated': True,
-                'last_update': after.edited_at.isoformat() if after.edited_at else after.created_at.isoformat()
-            }
-            config['dsm_user_updates'] = dsm_user_updates
-            await self.firebase_service.update_config(after.guild.id, config)
-            logger.info(f"[on_message_edit] Updated dsm_user_updates for user {after.author.id}.")
-            await self.update_live_dsm_embed(after.guild)
+        # Update the message-task mapping for today
+        await self.update_todo_tasks_for_today(after.guild, after.channel, after)
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, message):
+        logger.info(f"[on_message_delete] Message deleted by {message.author if message.author else 'Unknown'} in channel {getattr(message.channel, 'name', None)}: {repr(message.content) if hasattr(message, 'content') else 'No content'}")
+        if not message.guild or message.author is None or message.author.bot:
+            return
+        config = await self.firebase_service.get_config(message.guild.id)
+        dsm_channel_id = config.get('dsm_channel_id')
+        if dsm_channel_id and message.channel.id != dsm_channel_id:
+            return
+        # Remove the message-task mapping for today
+        await self.update_todo_tasks_for_today(message.guild, message.channel, message, deleted=True)
+
+    async def update_todo_tasks_for_today(self, guild, channel, message, deleted=False):
+        config = await self.firebase_service.get_config(guild.id)
+        last_dsm_time = config.get('last_dsm_time')
+        if last_dsm_time:
+            last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
         else:
-            logger.info(f"[on_message_edit] No tasks found, not updating DSM.")
+            last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
+        # Use a mapping: {user_id: [tasks]} for today
+        todo_message_map = config.get('todo_message_map', {})
+        user_id = str(message.author.id)
+        message_id = str(message.id)
+        if deleted:
+            # Remove tasks for this message
+            if user_id in todo_message_map and message_id in todo_message_map[user_id]:
+                del todo_message_map[user_id][message_id]
+                if not todo_message_map[user_id]:
+                    del todo_message_map[user_id]
+        else:
+            tasks = self.extract_tasks_from_message(message.content)
+            if tasks:
+                if user_id not in todo_message_map:
+                    todo_message_map[user_id] = {}
+                todo_message_map[user_id][message_id] = tasks
+            else:
+                # If the message was edited to remove tasks
+                if user_id in todo_message_map and message_id in todo_message_map[user_id]:
+                    del todo_message_map[user_id][message_id]
+                    if not todo_message_map[user_id]:
+                        del todo_message_map[user_id]
+        config['todo_message_map'] = todo_message_map
+        await self.firebase_service.update_config(guild.id, config)
+        await self.update_todo_tasks_embed(guild, channel)
+
+    async def update_todo_tasks_embed(self, guild, channel):
+        config = await self.firebase_service.get_config(guild.id)
+        todo_message_map = config.get('todo_message_map', {})
+        # Find or send the TODO TASKS for Today embed
+        todo_embed_id = config.get('todo_tasks_embed_id')
+        embed = discord.Embed(
+            title="TODO TASKS for Today",
+            color=discord.Color.orange()
+        )
+        any_tasks = False
+        for user_id, messages in todo_message_map.items():
+            member = guild.get_member(int(user_id))
+            if member:
+                all_tasks = []
+                for task_list in messages.values():
+                    all_tasks.extend(task_list)
+                if all_tasks:
+                    any_tasks = True
+                    embed.add_field(
+                        name=f"{member.display_name}",
+                        value="\n".join(all_tasks),
+                        inline=False
+                    )
+        if not any_tasks:
+            embed.description = "No tasks yet."
+        # Edit or send the embed
+        if todo_embed_id:
+            try:
+                msg = await channel.fetch_message(todo_embed_id)
+                await msg.edit(embed=embed)
+                return
+            except Exception as e:
+                logger.warning(f"[update_todo_tasks_embed] Could not edit existing TODO embed: {e}")
+        # If not found, send a new one
+        msg = await channel.send(embed=embed)
+        config['todo_tasks_embed_id'] = msg.id
+        await self.firebase_service.update_config(guild.id, config)
 
     async def create_dsm(self, channel: discord.TextChannel, config: dict, is_automatic: bool = True):
         """Create a new DSM in the specified channel."""
@@ -198,35 +267,37 @@ class DSM(commands.Cog):
             )
             dsm_message = await channel.send(embed=embed)
 
-            # Message 2: Pending tasks from yesterday
-            pending_tasks_msg = "**PENDING TASKS FROM YESTERDAY**\n"
+            # Message 2: Pending tasks from yesterday (as embed)
+            pending_embed = discord.Embed(
+                title="PENDING TASKS FROM YESTERDAY",
+                color=discord.Color.red()
+            )
+            any_pending = False
             for user, todos in user_todos_yesterday.items():
                 if todos:
-                    pending_tasks_msg += f"\n{user.display_name}:\n"
-                    for task in todos:
-                        pending_tasks_msg += f"{task}\n"
-            if pending_tasks_msg.strip() == "**PENDING TASKS FROM YESTERDAY**":
-                pending_tasks_msg += "\nNone"
-            await channel.send(pending_tasks_msg)
+                    any_pending = True
+                    pending_embed.add_field(
+                        name=f"{user.display_name}",
+                        value="\n".join(todos),
+                        inline=False
+                    )
+            if not any_pending:
+                pending_embed.description = "None"
+            await channel.send(embed=pending_embed)
 
-            # Message 3: TODO tasks for the current day (initially empty)
-            todo_tasks_msg = "**TODO TASKS for Today**\n"
-            # We'll use dsm_user_updates for this
-            dsm_user_updates = config.get('dsm_user_updates', {})
-            for user in channel.guild.members:
-                if not user.bot and user.id not in excluded_users:
-                    user_update = dsm_user_updates.get(str(user.id))
-                    if user_update and user_update.get('tasks'):
-                        todo_tasks_msg += f"\n{user.display_name}:\n"
-                        for task in user_update['tasks']:
-                            todo_tasks_msg += f"{task}\n"
-            if todo_tasks_msg.strip() == "**TODO TASKS for Today**":
-                todo_tasks_msg += "\nNone"
-            await channel.send(todo_tasks_msg)
+            # Message 3: TODO tasks for the current day (initially empty embed)
+            todo_embed = discord.Embed(
+                title="TODO TASKS for Today",
+                description="No tasks yet.",
+                color=discord.Color.orange()
+            )
+            todo_msg = await channel.send(embed=todo_embed)
+            config['todo_tasks_embed_id'] = todo_msg.id
 
             config['last_dsm_time'] = current_time.isoformat()
             config['current_dsm_message_id'] = dsm_message.id
             config['current_dsm_channel_id'] = channel.id
+            config['todo_message_map'] = {}  # Reset for new DSM
             await self.firebase_service.update_config(channel.guild.id, config)
             logger.info(f"Created DSM in channel {channel.name}")
         except Exception as e:
