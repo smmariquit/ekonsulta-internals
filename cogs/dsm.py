@@ -22,6 +22,7 @@ class DSM(commands.Cog):
         self.bot = bot
         self.firebase_service = firebase_service
         self.auto_dsm_task.start()
+        self.dsm_reminder_task.start()
         logger.info("DSM cog initialized")
 
     def extract_tasks_from_message(self, content: str) -> List[str]:
@@ -755,6 +756,61 @@ class DSM(commands.Cog):
                 "Failed to list excluded users. Please try again.",
                 ephemeral=True
             )
+
+    async def send_dsm_reminder(self, channel, config):
+        # Compose the reminder message
+        deadline_time = datetime.datetime.fromisoformat(config['last_dsm_time']) + datetime.timedelta(hours=12)
+        deadline_str = deadline_time.strftime('%B %d, %Y %I:%M %p %Z')
+        # Ping all pending users
+        pending_mentions = []
+        excluded_users = set(config.get('excluded_users', []))
+        for member in channel.guild.members:
+            if not member.bot and member.id not in excluded_users:
+                pending_mentions.append(member.mention)
+        reminder_msg = (
+            f"⏰ **DSM Reminder!**\n"
+            f"The deadline for today's DSM is approaching or has just passed. Please update your tasks if you haven't yet!\n"
+            f"Deadline: {deadline_str}\n"
+            f"{' '.join(pending_mentions)}"
+        )
+        await channel.send(reminder_msg)
+
+    @tasks.loop(minutes=1)
+    async def dsm_reminder_task(self):
+        # Check every minute if it's time to send a reminder
+        for guild in self.bot.guilds:
+            config = await self.firebase_service.get_config(guild.id)
+            channel_id = config.get('current_dsm_channel_id')
+            last_dsm_time = config.get('last_dsm_time')
+            if not channel_id or not last_dsm_time:
+                continue
+            channel = guild.get_channel(channel_id)
+            if not channel:
+                continue
+            timezone = await self.get_guild_timezone(guild.id)
+            dsm_time = datetime.datetime.fromisoformat(last_dsm_time).astimezone(timezone)
+            deadline_time = dsm_time + datetime.timedelta(hours=12)
+            now = datetime.datetime.now(timezone)
+            # Reminder 1 hour before and 1 hour after deadline
+            if (deadline_time - datetime.timedelta(hours=1)) <= now < (deadline_time - datetime.timedelta(hours=1) + datetime.timedelta(minutes=1)):
+                await self.send_dsm_reminder(channel, config)
+            if (deadline_time + datetime.timedelta(hours=1)) <= now < (deadline_time + datetime.timedelta(hours=1) + datetime.timedelta(minutes=1)):
+                await self.send_dsm_reminder(channel, config)
+
+    @app_commands.command(name="remind", description="Manually send a DSM reminder to everyone")
+    @app_commands.default_permissions(administrator=True)
+    async def remind(self, interaction: discord.Interaction):
+        config = await self.firebase_service.get_config(interaction.guild_id)
+        channel_id = config.get('current_dsm_channel_id')
+        if not channel_id:
+            await interaction.response.send_message("No DSM channel is set.", ephemeral=True)
+            return
+        channel = interaction.guild.get_channel(channel_id)
+        if not channel:
+            await interaction.response.send_message("DSM channel not found.", ephemeral=True)
+            return
+        await self.send_dsm_reminder(channel, config)
+        await interaction.response.send_message("Reminder sent!", ephemeral=True)
 
 # Move setup function outside of the class, at module level
 async def setup(bot: commands.Bot):
