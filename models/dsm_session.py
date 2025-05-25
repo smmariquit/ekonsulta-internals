@@ -1,58 +1,37 @@
 """DSM Session model for the stand-up bot."""
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Optional
 
+@dataclass
 class DSMSession:
-    """Model for representing DSM sessions."""
-    
-    def __init__(self, 
-                 guild_id: int,
-                 thread_id: int,
-                 is_manual: bool,
-                 created_at: str = None,
-                 completed_tasks: int = 0,
-                 new_tasks: int = 0,
-                 participants: List[int] = None):
-        """Initialize a new DSM session.
-        
-        Args:
-            guild_id: The Discord guild ID
-            thread_id: The Discord thread ID
-            is_manual: Whether the DSM was manually triggered
-            created_at: When the DSM was created (default: current time)
-            completed_tasks: Number of tasks completed since last DSM
-            new_tasks: Number of new tasks added
-            participants: List of user IDs who participated
-        """
-        self.guild_id = guild_id
-        self.thread_id = thread_id
-        self.is_manual = is_manual
-        self.created_at = created_at or datetime.now().isoformat()
-        self.completed_tasks = completed_tasks
-        self.new_tasks = new_tasks
-        self.participants = participants or []
+    """DSM session data class."""
+    guild_id: int
+    channel_id: int
+    created_at: datetime
+    is_manual: bool = False
+    completed_tasks: int = 0
+    session_id: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert the DSM session to a dictionary for storage."""
+    def to_dict(self) -> dict:
+        """Convert session to dictionary."""
         return {
             'guild_id': self.guild_id,
-            'thread_id': self.thread_id,
+            'channel_id': self.channel_id,
+            'created_at': self.created_at.isoformat(),
             'is_manual': self.is_manual,
-            'created_at': self.created_at,
             'completed_tasks': self.completed_tasks,
-            'new_tasks': self.new_tasks,
-            'participants': self.participants
+            'session_id': self.session_id
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'DSMSession':
-        """Create a DSM session instance from a dictionary."""
+    def from_dict(cls, data: dict) -> 'DSMSession':
+        """Create session from dictionary."""
         return cls(
             guild_id=data['guild_id'],
-            thread_id=data['thread_id'],
-            is_manual=data['is_manual'],
-            created_at=data.get('created_at'),
+            channel_id=data['channel_id'],
+            created_at=datetime.fromisoformat(data['created_at']),
+            is_manual=data.get('is_manual', False),
             completed_tasks=data.get('completed_tasks', 0),
-            new_tasks=data.get('new_tasks', 0),
-            participants=data.get('participants', [])
+            session_id=data.get('session_id')
         ) 

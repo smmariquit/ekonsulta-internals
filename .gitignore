@@ -3,3 +3,4 @@ firebase-credentials.json
 specs.pdf
 discord.log
 deploy.bash
+config/default_config.py
