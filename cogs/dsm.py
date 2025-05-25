@@ -75,8 +75,81 @@ class DSM(commands.Cog):
         if dsm_channel_id and message.channel.id != dsm_channel_id:
             logger.info(f"[on_message] Ignored message not in DSM channel (expected {dsm_channel_id}).")
             return
-        # Only update the TODO TASKS for Today embed
+
+        # Update both the TODO tasks embed and the DSM embed
+        print(f"[on_message] Processing message in DSM channel. Author: {message.author}")
+        logger.info(f"[on_message] Processing message in DSM channel. Author: {message.author}")
+
+        # Update TODO tasks embed
         await self.update_todo_tasks_for_today(message.guild, message.channel, message)
+
+        # Update DSM embed if there's an active DSM
+        current_dsm_message_id = config.get('current_dsm_message_id')
+        if current_dsm_message_id:
+            try:
+                dsm_message = await message.channel.fetch_message(current_dsm_message_id)
+                print(f"[on_message] Found current DSM message: {current_dsm_message_id}")
+                logger.info(f"[on_message] Found current DSM message: {current_dsm_message_id}")
+
+                # Get the last DSM time
+                last_dsm_time = config.get('last_dsm_time')
+                if last_dsm_time:
+                    last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
+                else:
+                    last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
+                print(f"[on_message] Last DSM time: {last_dsm_time}")
+                logger.info(f"[on_message] Last DSM time: {last_dsm_time}")
+
+                # Get all messages after last DSM
+                todo_message_map = config.get('todo_message_map', {})
+                updated_users = set()
+                for user_id, messages in todo_message_map.items():
+                    member = message.guild.get_member(int(user_id))
+                    if member and not member.bot and member.id not in config.get('excluded_users', []):
+                        for msg_id in messages:
+                            try:
+                                msg = await message.channel.fetch_message(int(msg_id))
+                                if msg.created_at >= last_dsm_time:
+                                    updated_users.add(member)
+                                    break
+                            except Exception as e:
+                                print(f"[on_message] Error fetching message {msg_id}: {e}")
+                                logger.error(f"[on_message] Error fetching message {msg_id}: {e}")
+                                continue
+
+                # Update the DSM embed
+                embed = dsm_message.embeds[0]
+                updated_users_list = list(updated_users)
+                pending_users = [member for member in message.guild.members 
+                               if not member.bot 
+                               and member.id not in config.get('excluded_users', [])
+                               and member not in updated_users_list]
+
+                # Update the participants field
+                participants_line = f"👥 Total: {len(updated_users_list) + len(pending_users)}  ✅ Updated: {len(updated_users_list)}  ⏳ Pending: {len(pending_users)}"
+                for i, field in enumerate(embed.fields):
+                    if field.name == "Participants":
+                        embed.set_field_at(i, name="Participants", value=participants_line, inline=False)
+                        break
+
+                # Update the Updated and Pending fields
+                updated_list = "\n".join([user.mention for user in updated_users_list]) if updated_users_list else "None"
+                pending_list = "\n".join([user.mention for user in pending_users]) if pending_users else "None"
+
+                for i, field in enumerate(embed.fields):
+                    if field.name == "✅ Updated":
+                        embed.set_field_at(i, name="✅ Updated", value=updated_list, inline=False)
+                    elif field.name == "⏳ Pending":
+                        embed.set_field_at(i, name="⏳ Pending", value=pending_list, inline=False)
+
+                print(f"[on_message] Updating DSM embed with {len(updated_users_list)} updated users and {len(pending_users)} pending users")
+                logger.info(f"[on_message] Updating DSM embed with {len(updated_users_list)} updated users and {len(pending_users)} pending users")
+                await dsm_message.edit(embed=embed)
+
+            except Exception as e:
+                print(f"[on_message] Error updating DSM embed: {e}")
+                logger.error(f"[on_message] Error updating DSM embed: {e}")
+
         await self.bot.process_commands(message)
 
     @commands.Cog.listener()
