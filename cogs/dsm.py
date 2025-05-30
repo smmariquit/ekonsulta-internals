@@ -15,6 +15,15 @@ import logging
 logger = logging.getLogger(__name__)
 logging.getLogger(__name__).info('dsm.py module imported')
 
+def admin_required():
+    """Decorator to check if user is an admin."""
+    async def predicate(interaction: discord.Interaction) -> bool:
+        cog = interaction.client.get_cog('DSM')
+        if not cog:
+            return False
+        return await cog.is_admin(interaction.user.id, interaction.guild_id)
+    return app_commands.check(predicate)
+
 class DSM(commands.Cog):
     """Daily Standup Meeting cog."""
     
@@ -1027,15 +1036,6 @@ class DSM(commands.Cog):
             return
         await self.send_dsm_reminder(channel, config)
         await interaction.response.send_message("Reminder sent!", ephemeral=True)
-
-    def admin_required():
-        """Decorator to check if user is an admin."""
-        async def predicate(interaction: discord.Interaction) -> bool:
-            cog = interaction.client.get_cog('DSM')
-            if not cog:
-                return False
-            return await cog.is_admin(interaction.user.id, interaction.guild_id)
-        return app_commands.check(predicate)
 
     @app_commands.command(name="add_admin", description="Add an admin user to the bot")
     @app_commands.default_permissions(administrator=True)
