@@ -1007,31 +1007,61 @@ class DSM(commands.Cog):
                 last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
             else:
                 last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
+
+            # Get current excluded users
+            excluded_users = set(self.ensure_str_ids(config.get('excluded_users', [])))
+            logger.info(f"[DEBUG] Current excluded users in update_dsm_embed: {excluded_users}")
+
+            # Check todo_message_map and remove any messages from excluded users
             todo_message_map = config.get('todo_message_map', {})
+            updated_todo_map = {}
+            for user_id, messages in todo_message_map.items():
+                if str(user_id) not in excluded_users:
+                    updated_todo_map[user_id] = messages
+                else:
+                    logger.info(f"[DEBUG] Removing excluded user {user_id} from todo_message_map")
+            
+            if updated_todo_map != todo_message_map:
+                config['todo_message_map'] = updated_todo_map
+                await self.firebase_service.update_config(guild.id, config)
+                logger.info(f"[DEBUG] Updated todo_message_map after removing excluded users")
+
+            # Update the participants lists
             updated_users = set()
-            for user_id in todo_message_map:
+            for user_id in updated_todo_map:
                 member = guild.get_member(int(user_id))
-                if member and not member.bot and member.id not in config.get('excluded_users', []):
+                if member and not member.bot and str(member.id) not in excluded_users:
                     updated_users.add(member)
+
             updated_users_list = list(updated_users)
             pending_users = [member for member in guild.members 
-                            if not member.bot 
-                            and member.id not in config.get('excluded_users', [])
-                            and member not in updated_users_list]
+                           if not member.bot 
+                           and str(member.id) not in excluded_users
+                           and member not in updated_users_list]
+
+            # Update the embed
             embed = dsm_message.embeds[0]
             participants_line = f"👥 Total: {len(updated_users_list) + len(pending_users)}  ✅ Updated: {len(updated_users_list)}  ⏳ Pending: {len(pending_users)}"
+            
+            # Update the Participants field
             for i, field in enumerate(embed.fields):
                 if field.name == "Participants":
                     embed.set_field_at(i, name="Participants", value=participants_line, inline=False)
                     break
+
+            # Update the Updated and Pending fields
             updated_list = "\n".join([user.mention for user in updated_users_list]) if updated_users_list else "None"
             pending_list = "\n".join([user.mention for user in pending_users]) if pending_users else "None"
+
             for i, field in enumerate(embed.fields):
                 if field.name == "✅ Updated":
                     embed.set_field_at(i, name="✅ Updated", value=updated_list, inline=False)
                 elif field.name == "⏳ Pending":
                     embed.set_field_at(i, name="⏳ Pending", value=pending_list, inline=False)
+
             await dsm_message.edit(embed=embed)
+            logger.info(f"[DEBUG] Updated DSM embed with {len(updated_users_list)} updated users and {len(pending_users)} pending users")
+
         except Exception as e:
             print(f"[update_dsm_embed] Error updating DSM embed: {e}")
             logger.error(f"[update_dsm_embed] Error updating DSM embed: {e}")
