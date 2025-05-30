@@ -878,14 +878,25 @@ class DSM(commands.Cog):
         """List all excluded users."""
         try:
             config = await self.firebase_service.get_config(interaction.guild_id)
+            logger.info(f"[DEBUG] Config for list_excluded: {config}")
+            
             excluded_users = config.get('excluded_users', [])
+            logger.info(f"[DEBUG] Raw excluded users from config: {excluded_users}")
             
             if excluded_users:
                 excluded_members = []
                 for user_id in excluded_users:
-                    member = interaction.guild.get_member(user_id)
-                    if member:
-                        excluded_members.append(member.mention)
+                    logger.info(f"[DEBUG] Processing user_id: {user_id} (type: {type(user_id)})")
+                    try:
+                        member = interaction.guild.get_member(int(user_id))
+                        if member:
+                            excluded_members.append(member.mention)
+                            logger.info(f"[DEBUG] Found member: {member.name} ({member.id})")
+                        else:
+                            logger.info(f"[DEBUG] No member found for ID: {user_id}")
+                    except ValueError as e:
+                        logger.error(f"[DEBUG] Error converting user_id to int: {e}")
+                        continue
                 
                 embed = discord.Embed(
                     title="Excluded Users",
