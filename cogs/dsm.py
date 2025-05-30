@@ -294,7 +294,7 @@ class DSM(commands.Cog):
             end_time = current_time + datetime.timedelta(hours=8)
             deadline_time = end_time + datetime.timedelta(hours=4)
 
-            excluded_users = set(self.ensure_int_ids(config.get('excluded_users', [])))
+            excluded_users = set(self.ensure_str_ids(config.get('excluded_users', [])))
             logger.info(f"[DEBUG] Creating DSM with excluded users: {excluded_users}")
             last_dsm_time = config.get('last_dsm_time')
             if last_dsm_time:
@@ -786,6 +786,10 @@ class DSM(commands.Cog):
         """Convert all IDs in a list to integers."""
         return [int(id) for id in id_list]
 
+    def ensure_str_ids(self, id_list: List) -> List[str]:
+        """Convert all IDs in a list to strings."""
+        return [str(id) for id in id_list]
+
     async def get_excluded_users(self, guild_id: int) -> List[int]:
         """Get list of excluded user IDs, ensuring they are integers."""
         config = await self.firebase_service.get_config(guild_id)
@@ -803,10 +807,10 @@ class DSM(commands.Cog):
             if not config:
                 config = {}
 
-            excluded_users = set(self.ensure_int_ids(config.get('excluded_users', [])))
+            excluded_users = set(self.ensure_str_ids(config.get('excluded_users', [])))
             logger.info(f"[DEBUG] Current excluded users: {excluded_users}")
             
-            excluded_users.add(user.id)
+            excluded_users.add(str(user.id))
             logger.info(f"[DEBUG] Adding user {user.id} to excluded users. New set: {excluded_users}")
             
             config['excluded_users'] = list(excluded_users)
@@ -835,9 +839,9 @@ class DSM(commands.Cog):
             if not config:
                 config = {}
 
-            excluded_users = set(self.ensure_int_ids(config.get('excluded_users', [])))
-            if user.id in excluded_users:
-                excluded_users.remove(user.id)
+            excluded_users = set(self.ensure_str_ids(config.get('excluded_users', [])))
+            if str(user.id) in excluded_users:
+                excluded_users.remove(str(user.id))
                 config['excluded_users'] = list(excluded_users)
                 await self.firebase_service.update_config(interaction.guild_id, config)
                 
