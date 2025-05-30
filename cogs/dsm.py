@@ -294,7 +294,7 @@ class DSM(commands.Cog):
             end_time = current_time + datetime.timedelta(hours=8)
             deadline_time = end_time + datetime.timedelta(hours=4)
 
-            excluded_users = set(config.get('excluded_users', []))
+            excluded_users = set(self.ensure_int_ids(config.get('excluded_users', [])))
             logger.info(f"[DEBUG] Creating DSM with excluded users: {excluded_users}")
             last_dsm_time = config.get('last_dsm_time')
             if last_dsm_time:
@@ -772,6 +772,26 @@ class DSM(commands.Cog):
                 ephemeral=True
             )
 
+    async def is_admin(self, user_id: int, guild_id: int) -> bool:
+        """Check if a user is an admin in the guild."""
+        try:
+            config = await self.firebase_service.get_config(guild_id)
+            admin_users = config.get('admin_users', [])
+            return user_id in admin_users
+        except Exception as e:
+            logger.error(f"Error checking admin status: {str(e)}")
+            return False
+
+    def ensure_int_ids(self, id_list: List) -> List[int]:
+        """Convert all IDs in a list to integers."""
+        return [int(id) for id in id_list]
+
+    async def get_excluded_users(self, guild_id: int) -> List[int]:
+        """Get list of excluded user IDs, ensuring they are integers."""
+        config = await self.firebase_service.get_config(guild_id)
+        excluded_users = config.get('excluded_users', [])
+        return self.ensure_int_ids(excluded_users)
+
     @app_commands.command(name="exclude_user", description="Exclude a user from DSM")
     @app_commands.default_permissions(administrator=True)
     async def exclude_user(self, interaction: discord.Interaction, user: discord.Member):
@@ -783,7 +803,7 @@ class DSM(commands.Cog):
             if not config:
                 config = {}
 
-            excluded_users = set(config.get('excluded_users', []))
+            excluded_users = set(self.ensure_int_ids(config.get('excluded_users', [])))
             logger.info(f"[DEBUG] Current excluded users: {excluded_users}")
             
             excluded_users.add(user.id)
@@ -815,7 +835,7 @@ class DSM(commands.Cog):
             if not config:
                 config = {}
 
-            excluded_users = set(config.get('excluded_users', []))
+            excluded_users = set(self.ensure_int_ids(config.get('excluded_users', [])))
             if user.id in excluded_users:
                 excluded_users.remove(user.id)
                 config['excluded_users'] = list(excluded_users)
@@ -1003,16 +1023,6 @@ class DSM(commands.Cog):
             return
         await self.send_dsm_reminder(channel, config)
         await interaction.response.send_message("Reminder sent!", ephemeral=True)
-
-    async def is_admin(self, user_id: int, guild_id: int) -> bool:
-        """Check if a user is an admin in the guild."""
-        try:
-            config = await self.firebase_service.get_config(guild_id)
-            admin_users = config.get('admin_users', [])
-            return user_id in admin_users
-        except Exception as e:
-            logger.error(f"Error checking admin status: {str(e)}")
-            return False
 
     def admin_required():
         """Decorator to check if user is an admin."""
