@@ -285,15 +285,18 @@ class DSM(commands.Cog):
                 await msg.edit(embed=embed)
                 print(f"[update_todo_tasks_embed] Edited existing TODO embed with ID {todo_embed_id}")
                 logger.info(f"[update_todo_tasks_embed] Edited existing TODO embed with ID {todo_embed_id}")
-                return
             except Exception as e:
                 print(f"[update_todo_tasks_embed] Could not edit existing TODO embed: {e}")
                 logger.warning(f"[update_todo_tasks_embed] Could not edit existing TODO embed: {e}")
-        msg = await channel.send(embed=embed)
-        config['todo_tasks_embed_id'] = msg.id
-        await self.firebase_service.update_config(guild.id, config)
-        print(f"[update_todo_tasks_embed] Created new TODO embed with ID {msg.id}")
-        logger.info(f"[update_todo_tasks_embed] Created new TODO embed with ID {msg.id}")
+        else:
+            msg = await channel.send(embed=embed)
+            config['todo_tasks_embed_id'] = msg.id
+            await self.firebase_service.update_config(guild.id, config)
+            print(f"[update_todo_tasks_embed] Created new TODO embed with ID {msg.id}")
+            logger.info(f"[update_todo_tasks_embed] Created new TODO embed with ID {msg.id}")
+
+        # Update the main DSM embed
+        await self.update_dsm_embed(guild, channel, config)
 
     async def create_dsm(self, channel: discord.TextChannel, config: dict, is_automatic: bool = True):
         """Create a new DSM in the specified channel."""
