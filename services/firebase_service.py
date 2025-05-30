@@ -38,6 +38,9 @@ class FirebaseService:
         config_ref = guild_ref.collection('config').document('settings')
         config_doc = await asyncio.to_thread(config_ref.get)
         
+        logger.info(f"[DEBUG] Getting config for guild {guild_id}")
+        logger.info(f"[DEBUG] Config document exists: {config_doc.exists}")
+        
         if not config_doc.exists:
             logger.info(f"Creating default config for guild {guild_id}")
             default_config = DEFAULT_CONFIG.copy()
@@ -49,7 +52,9 @@ class FirebaseService:
             await asyncio.to_thread(config_ref.set, default_config)
             return default_config
         
-        return config_doc.to_dict()
+        config_data = config_doc.to_dict()
+        logger.info(f"[DEBUG] Retrieved config data: {config_data}")
+        return config_data
 
     async def save_user(self, user_data: Dict[str, Any]) -> None:
         """Save user information."""
@@ -130,10 +135,12 @@ class FirebaseService:
         
         # Get current config
         current_config = await self.get_config(guild_id)
+        logger.info(f"[DEBUG] Current config before update: {current_config}")
         
         # Update the config
         current_config.update(updates)
         current_config['last_updated'] = datetime.datetime.now().isoformat()
+        logger.info(f"[DEBUG] Updated config: {current_config}")
         
         # Save the updated config
         await asyncio.to_thread(config_ref.set, current_config)
