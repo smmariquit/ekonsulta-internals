@@ -936,16 +936,16 @@ class DSM(commands.Cog):
 
         # Get users who haven't updated
         todo_message_map = config.get('todo_message_map', {})
-        excluded_users = set(config.get('excluded_users', []))
+        excluded_users = set(self.ensure_str_ids(config.get('excluded_users', [])))
         updated_users = set()
         for user_id in todo_message_map:
-            if int(user_id) not in excluded_users:
+            if str(user_id) not in excluded_users:
                 updated_users.add(int(user_id))
 
-        # Only ping users who haven't updated
+        # Only ping users who haven't updated and are not excluded
         pending_mentions = []
         for member in channel.guild.members:
-            if not member.bot and member.id not in excluded_users and member.id not in updated_users:
+            if not member.bot and str(member.id) not in excluded_users and member.id not in updated_users:
                 pending_mentions.append(member.mention)
 
         if not pending_mentions:
