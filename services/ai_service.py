@@ -1,11 +1,15 @@
 """AI service for the bot."""
 import os
-import json
-import aiohttp
-import logging
+from dotenv import load_dotenv
+import json # For JSON operations
+import aiohttp # Async HTTP client
 from typing import Optional, Dict, Any
 
-logger = logging.getLogger(__name__)
+from utils.logger import get_logger
+
+load_dotenv()
+
+logger = get_logger("ai_service")
 
 class AIService:
     """Service for handling AI-related functionality."""
@@ -18,7 +22,7 @@ class AIService:
     
     def set_api_key(self, api_key: str):
         """Set the API key for Google AI Studio."""
-        self.api_key = api_key
+        self.api_key = os.getenv("GEMINI_API_KEY")
     
     async def generate_response(self, prompt: str, context: Optional[Dict[str, Any]] = None) -> str:
         """Generate a response using Google AI Studio."""

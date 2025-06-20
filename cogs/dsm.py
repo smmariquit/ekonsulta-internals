@@ -36,7 +36,16 @@ class DSM(commands.Cog):
 
     def extract_tasks_from_message(self, content: str) -> List[str]:
         # Accept 'todo', 'to do', 'to-do' (with or without colon, any case)
-        task_indicators = ['todo', 'to do', 'to-do']
+        task_indicators = ['todo', 'to do', 'to-do',
+                            '**todo**', '**to do**', '**to-do**', # bold
+                              '*todo*', '*to do*', '*to-do*', # italic
+                                '__todo__', '__to do__', '__to-do__', # underline
+                                  '***todo***', '***to do***', '***to-do***' # bold italic
+                                  '__*todo*__', '__*to do*__', '__*to-do*__', # underline italic
+                                  '**_todo_**', '**_to do_**', '**_to-do_**', # bold underline
+                                  '*__todo__*', '*__to do__*', '*__to-do__*', # italic underline
+                                  '***__todo__***', '***__to do__***', '***__to-do__***' # bold italic underline
+                                  ]
         lines = content.splitlines()
         tasks = []
         capture = False
@@ -65,8 +74,14 @@ class DSM(commands.Cog):
         if not last_dsm_time:
             last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
         
-        # Get messages after last DSM
-        async for message in channel.history(after=last_dsm_time, limit=None):
+        # Calculate the lookback time (2 hours before DSM by default)
+        lookback_hours = config.get('dsm_lookback_hours', 2)
+        lookback_time = last_dsm_time - datetime.timedelta(hours=lookback_hours)
+        
+        logger.info(f"[get_user_tasks] Looking for messages from {lookback_time} to now for user {user.display_name}")
+        
+        # Get messages after lookback time (2 hours before last DSM)
+        async for message in channel.history(after=lookback_time, limit=None):
             if message.author.id == user.id:
                 message_tasks = self.extract_tasks_from_message(message.content)
                 tasks.extend(message_tasks)
@@ -199,10 +214,21 @@ class DSM(commands.Cog):
             last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
         else:
             last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
+        
+        # Calculate the lookback time (2 hours before DSM by default)
+        lookback_hours = config.get('dsm_lookback_hours', 2)
+        lookback_time = last_dsm_time - datetime.timedelta(hours=lookback_hours)
+        
         # Use a mapping: {user_id: [tasks]} for today
         todo_message_map = config.get('todo_message_map', {})
         user_id = str(message.author.id)
         message_id = str(message.id)
+        
+        # Only process messages that are within the lookback period
+        if message.created_at < lookback_time:
+            logger.info(f"[update_todo_tasks_for_today] Ignoring message {message_id} from {message.created_at} (before lookback time {lookback_time})")
+            return
+            
         if deleted:
             # Remove tasks for this message
             if user_id in todo_message_map and message_id in todo_message_map[user_id]:
@@ -234,8 +260,16 @@ class DSM(commands.Cog):
             last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
         else:
             last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
+        
+        # Calculate the lookback time (2 hours before DSM by default)
+        lookback_hours = config.get('dsm_lookback_hours', 2)
+        lookback_time = last_dsm_time - datetime.timedelta(hours=lookback_hours)
+        
         print(f"[update_todo_tasks_embed] last_dsm_time: {last_dsm_time}")
+        print(f"[update_todo_tasks_embed] lookback_time: {lookback_time}")
         logger.info(f"[update_todo_tasks_embed] last_dsm_time: {last_dsm_time}")
+        logger.info(f"[update_todo_tasks_embed] lookback_time: {lookback_time}")
+        
         embed = discord.Embed(
             title="🚀 Tasks To Do for Today",
             description=(
@@ -250,7 +284,7 @@ class DSM(commands.Cog):
         for user_id, messages in todo_message_map.items():
             member = guild.get_member(int(user_id))
             if member:
-                # Only show TODOs for today (after DSM creation)
+                # Only show TODOs within the lookback period
                 all_tasks = []
                 latest_msg = None
                 for msg_id in messages:
@@ -258,7 +292,7 @@ class DSM(commands.Cog):
                         msg = await channel.fetch_message(int(msg_id))
                         print(f"[update_todo_tasks_embed] Message {msg_id} created at: {msg.created_at}")
                         logger.info(f"[update_todo_tasks_embed] Message {msg_id} created at: {msg.created_at}")
-                        if msg.created_at >= last_dsm_time:
+                        if msg.created_at >= lookback_time:
                             all_tasks.extend(messages[msg_id])
                             if not latest_msg or msg.created_at > latest_msg.created_at:
                                 latest_msg = msg
@@ -314,10 +348,16 @@ class DSM(commands.Cog):
             else:
                 last_dsm_time = current_time - datetime.timedelta(days=1)
 
-            # Gather yesterday's TODOs (before DSM creation)
+            # Calculate the lookback time (2 hours before last DSM by default)
+            lookback_hours = config.get('dsm_lookback_hours', 2)
+            lookback_time = last_dsm_time - datetime.timedelta(hours=lookback_hours)
+            
+            logger.info(f"[create_dsm] Gathering TODOs from {lookback_time} to {current_time}")
+
+            # Gather yesterday's TODOs (from lookback time to DSM creation)
             user_todos_yesterday = {}
             user_last_dsm_msg = {}
-            async for message in channel.history(after=last_dsm_time, before=current_time, limit=None):
+            async for message in channel.history(after=lookback_time, before=current_time, limit=None):
                 if message.author.bot or message.author.id in excluded_users:
                     continue
                 extracted = self.extract_tasks_from_message(message.content)
@@ -544,7 +584,8 @@ class DSM(commands.Cog):
     async def configure(self, interaction: discord.Interaction,
                        timezone: str = None,
                        dsm_time: str = None,
-                       dsm_channel: discord.TextChannel = None):
+                       dsm_channel: discord.TextChannel = None,
+                       dsm_lookback_hours: int = None):
         """Configure standup settings"""
         try:
             # Get current config
@@ -587,6 +628,17 @@ class DSM(commands.Cog):
                 config['dsm_channel_id'] = dsm_channel.id
                 changes.append(f"DSM Channel: {dsm_channel.mention}")
 
+            # Handle DSM lookback hours
+            if dsm_lookback_hours is not None:
+                if not (0 <= dsm_lookback_hours <= 24):
+                    await interaction.response.send_message(
+                        "Invalid lookback hours. Please use a value between 0 and 24 hours.",
+                        ephemeral=True
+                    )
+                    return
+                config['dsm_lookback_hours'] = dsm_lookback_hours
+                changes.append(f"DSM Lookback Hours: {dsm_lookback_hours}")
+
             # Update config
             await self.firebase_service.update_config(interaction.guild_id, config)
 
@@ -620,6 +672,8 @@ class DSM(commands.Cog):
                 channel = interaction.guild.get_channel(config['dsm_channel_id'])
                 if channel:
                     current_config.append(f"DSM Channel: {channel.mention}")
+            if config.get('dsm_lookback_hours'):
+                current_config.append(f"DSM Lookback Hours: {config['dsm_lookback_hours']}")
 
             if current_config:
                 embed.add_field(
@@ -951,14 +1005,14 @@ class DSM(commands.Cog):
         if not pending_mentions:
             reminder_msg = (
                 f"⏰ **DSM Reminder!**\n"
-                f"The deadline for today's DSM is approaching or has just passed.\n"
+                f"The deadline for today's DSM has just passed.\n"
                 f"Deadline: {deadline_str}\n"
                 f"Everyone has already updated their tasks! 🎉"
             )
         else:
             reminder_msg = (
                 f"⏰ **DSM Reminder!**\n"
-                f"The deadline for today's DSM is approaching or has just passed. Please update your tasks if you haven't yet!\n"
+                f"The deadline for today's DSM has just passed.\n"
                 f"Deadline: {deadline_str}\n"
                 f"{' '.join(pending_mentions)}"
             )
@@ -978,17 +1032,10 @@ class DSM(commands.Cog):
                 continue
             timezone = await self.get_guild_timezone(guild.id)
             dsm_time = datetime.datetime.fromisoformat(last_dsm_time).astimezone(timezone)
-            deadline_time = dsm_time + datetime.timedelta(hours=12)
             now = datetime.datetime.now(timezone)
             
-            # Reminder 1 hour after DSM
-            if (dsm_time + datetime.timedelta(hours=1)) <= now < (dsm_time + datetime.timedelta(hours=1, minutes=1)):
-                await self.send_dsm_reminder(channel, config)
-                # Also update DSM embed
-                await self.update_dsm_embed(guild, channel, config)
-            
-            # Reminder 1 hour before deadline
-            if (deadline_time - datetime.timedelta(hours=1)) <= now < (deadline_time - datetime.timedelta(hours=1) + datetime.timedelta(minutes=1)):
+            # Reminder 1 minute after DSM
+            if (dsm_time + datetime.timedelta(minutes=1)) <= now < (dsm_time + datetime.timedelta(minutes=2)):
                 await self.send_dsm_reminder(channel, config)
                 # Also update DSM embed
                 await self.update_dsm_embed(guild, channel, config)
@@ -1179,6 +1226,77 @@ class DSM(commands.Cog):
             logger.error(f"Error listing admin users: {str(e)}")
             await interaction.response.send_message(
                 "Failed to list admin users. Please try again.",
+                ephemeral=True
+            )
+
+    @app_commands.command(name="show_lookback", description="Show current DSM lookback configuration")
+    @app_commands.default_permissions(administrator=True)
+    async def show_lookback(self, interaction: discord.Interaction):
+        """Show the current DSM lookback configuration."""
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You need administrator permissions to use this command!", ephemeral=True)
+            return
+        
+        try:
+            config = await self.firebase_service.get_config(interaction.guild_id)
+            if not config:
+                config = {}
+            
+            lookback_hours = config.get('dsm_lookback_hours', 2)
+            last_dsm_time = config.get('last_dsm_time')
+            
+            embed = discord.Embed(
+                title="🔍 DSM Lookback Configuration",
+                description="Current settings for message collection before DSM",
+                color=discord.Color.blue()
+            )
+            
+            embed.add_field(
+                name="Lookback Hours",
+                value=f"**{lookback_hours} hours** before DSM",
+                inline=False
+            )
+            
+            if last_dsm_time:
+                last_dsm_dt = datetime.datetime.fromisoformat(last_dsm_time)
+                lookback_time = last_dsm_dt - datetime.timedelta(hours=lookback_hours)
+                
+                embed.add_field(
+                    name="Last DSM Time",
+                    value=f"**{last_dsm_dt.strftime('%Y-%m-%d %H:%M:%S')}**",
+                    inline=True
+                )
+                
+                embed.add_field(
+                    name="Message Collection From",
+                    value=f"**{lookback_time.strftime('%Y-%m-%d %H:%M:%S')}**",
+                    inline=True
+                )
+                
+                embed.add_field(
+                    name="Time Window",
+                    value=f"Messages from **{lookback_hours} hours** before the last DSM are included in task collection",
+                    inline=False
+                )
+            else:
+                embed.add_field(
+                    name="Last DSM",
+                    value="No previous DSM found",
+                    inline=False
+                )
+            
+            embed.add_field(
+                name="How to Change",
+                value="Use `/configure dsm_lookback_hours:<hours>` to modify this setting",
+                inline=False
+            )
+            
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            
+        except Exception as e:
+            logger.error(f"Error in show_lookback: {str(e)}")
+            await interaction.response.send_message(
+                f"Failed to show lookback configuration: {str(e)}",
                 ephemeral=True
             )
 

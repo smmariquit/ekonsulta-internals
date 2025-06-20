@@ -32,6 +32,26 @@
   }
   ```
 
+### DSM Lookback Feature
+- **Purpose**: Include messages from a configurable time period before DSM in task collection
+- **Default**: 2 hours before DSM time
+- **Configuration**: Set via `dsm_lookback_hours` in bot configuration
+- **Range**: 0-24 hours
+- **Usage**: 
+  - Messages sent within the lookback period are included in the current DSM's task collection
+  - This allows for early task planning and updates before the official DSM time
+  - Useful for teams that start planning their day before the scheduled DSM
+
+#### Commands for Lookback Configuration
+- `/configure dsm_lookback_hours:<hours>` - Set the lookback period (0-24 hours)
+- `/show_lookback` - Display current lookback configuration and time windows
+
+#### Implementation Details
+- Lookback time is calculated as: `last_dsm_time - timedelta(hours=lookback_hours)`
+- Affects `get_user_tasks()`, `update_todo_tasks_for_today()`, `update_todo_tasks_embed()`, and `create_dsm()` methods
+- Messages outside the lookback window are ignored for task collection
+- Logging includes lookback time calculations for debugging
+
 ## Common Issues and Solutions
 
 ### Message Finding
@@ -47,4 +67,9 @@
 ### Message Updates
 - Problem: Messages not updating correctly
 - Solution: Ensure both completed and pending messages are found and updated
-- Implementation: Search for both message types independently and update together 
+- Implementation: Search for both message types independently and update together
+
+### Lookback Configuration
+- Problem: Tasks not being collected from expected time period
+- Solution: Check lookback configuration with `/show_lookback` command
+- Implementation: Verify `dsm_lookback_hours` setting and recalculate time windows 
