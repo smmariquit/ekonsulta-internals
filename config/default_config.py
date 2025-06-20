@@ -10,5 +10,6 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     'admins': [],
     'dsm_messages': {},
     'updated_participants': [],
-    'pending_participants': []
+    'pending_participants': [],
+    'dsm_lookback_hours': 2,  # Hours before DSM to include in task collection
 }

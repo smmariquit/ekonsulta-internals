@@ -1,8 +1,7 @@
 """Logging configuration for the bot."""
 import sys
-from loguru import logger
+import logger
 import os
-from datetime import datetime
 
 # Create logs directory if it doesn't exist
 os.makedirs("logs", exist_ok=True)
@@ -10,14 +9,14 @@ os.makedirs("logs", exist_ok=True)
 # Configure logger
 logger.remove()  # Remove default handler
 
-# Add console handler with color
+# For logging to the console
 logger.add(
     sys.stderr,
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
     level="INFO"
 )
 
-# Add file handler
+# For logging to a file
 logger.add(
     "logs/bot_{time}.log",
     rotation="1 day",
