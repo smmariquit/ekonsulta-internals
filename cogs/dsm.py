@@ -137,6 +137,8 @@ class DSM(commands.Cog):
         current_dsm_message_id = config.get('current_dsm_message_id')
         if current_dsm_message_id:
             try:
+                # Convert string message ID to int
+                current_dsm_message_id = int(current_dsm_message_id)
                 dsm_message = await message.channel.fetch_message(current_dsm_message_id)
                 print(f"[on_message] Found current DSM message: {current_dsm_message_id}")
                 logger.info(f"[on_message] Found current DSM message: {current_dsm_message_id}")
@@ -189,6 +191,9 @@ class DSM(commands.Cog):
                 logger.info(f"[on_message] Updating DSM embed with {len(updated_users_list)} updated users and {len(pending_users)} pending users")
                 await dsm_message.edit(embed=embed)
 
+            except (ValueError, TypeError) as e:
+                print(f"[on_message] Invalid DSM message ID format: {current_dsm_message_id}")
+                logger.error(f"[on_message] Invalid DSM message ID format: {current_dsm_message_id}")
             except Exception as e:
                 print(f"[on_message] Error updating DSM embed: {e}")
                 logger.error(f"[on_message] Error updating DSM embed: {e}")
@@ -337,16 +342,21 @@ class DSM(commands.Cog):
             embed.description += "\nNo tasks yet."
         if todo_embed_id:
             try:
+                # Convert string embed ID to int
+                todo_embed_id = int(todo_embed_id)
                 msg = await channel.fetch_message(todo_embed_id)
                 await msg.edit(embed=embed)
                 print(f"[update_todo_tasks_embed] Edited existing TODO embed with ID {todo_embed_id}")
                 logger.info(f"[update_todo_tasks_embed] Edited existing TODO embed with ID {todo_embed_id}")
+            except (ValueError, TypeError) as e:
+                print(f"[update_todo_tasks_embed] Invalid TODO embed ID format: {todo_embed_id}")
+                logger.error(f"[update_todo_tasks_embed] Invalid TODO embed ID format: {todo_embed_id}")
             except Exception as e:
                 print(f"[update_todo_tasks_embed] Could not edit existing TODO embed: {e}")
                 logger.warning(f"[update_todo_tasks_embed] Could not edit existing TODO embed: {e}")
         else:
             msg = await channel.send(embed=embed)
-            config['todo_tasks_embed_id'] = msg.id
+            config['todo_tasks_embed_id'] = str(msg.id)
             await self.firebase_service.update_config(guild.id, config)
             print(f"[update_todo_tasks_embed] Created new TODO embed with ID {msg.id}")
             logger.info(f"[update_todo_tasks_embed] Created new TODO embed with ID {msg.id}")
@@ -508,15 +518,362 @@ class DSM(commands.Cog):
                         inline=False
                     )
             todo_msg = await channel.send(embed=todo_embed)
-            config['todo_tasks_embed_id'] = todo_msg.id
+            config['todo_tasks_embed_id'] = str(todo_msg.id)
 
-            config['current_dsm_message_id'] = dsm_message.id
-            config['current_dsm_channel_id'] = channel.id
+            config['current_dsm_message_id'] = str(dsm_message.id)
+            config['current_dsm_channel_id'] = str(channel.id)
             config['todo_message_map'] = {}  # Reset for new DSM
             await self.firebase_service.update_config(channel.guild.id, config)
             logger.info(f"Created DSM in channel {channel.name}")
         except Exception as e:
             logger.error(f"Error creating DSM: {str(e)}")
+
+    @tasks.loop(minutes=1)
+    async def dsm_reminder_task(self):
+        # Check every minute if it's time to send a reminder and update the DSM embed
+        for guild in self.bot.guilds:
+            config = await self.firebase_service.get_config(guild.id)
+            if not config:
+                continue
+                
+            # Get current DSM channel ID from config (as string) and convert to int
+            current_dsm_channel_id = config.get('current_dsm_channel_id')
+            if not current_dsm_channel_id:
+                continue
+                
+            try:
+                current_dsm_channel_id = int(current_dsm_channel_id)
+            except (ValueError, TypeError):
+                logger.error(f"Invalid current DSM channel ID format: {current_dsm_channel_id}")
+                continue
+                
+            last_dsm_time = config.get('last_dsm_time')
+            if not last_dsm_time:
+                continue
+                
+            channel = guild.get_channel(current_dsm_channel_id)
+            if not channel: #tes
+                continue
+            timezone = await self.get_guild_timezone(guild.id)
+            dsm_time = datetime.datetime.fromisoformat(last_dsm_time).astimezone(timezone)
+            now = datetime.datetime.now(timezone)
+            dsm_deadline = dsm_time + datetime.timedelta(hours=12)
+            
+            # Reminder 1 minute after DSM deadline
+            if (dsm_deadline + datetime.timedelta(minutes=1)) <= now < (dsm_deadline + datetime.timedelta(minutes=2)):
+                await self.send_dsm_reminder(channel, config)
+                # Also update DSM embed
+                await self.update_dsm_embed(guild, channel, config)
+
+    async def update_dsm_embed(self, guild, channel, config=None):
+        # Update the DSM embed (participants/updated/pending) for the current DSM
+        if config is None:
+            config = await self.firebase_service.get_config(guild.id)
+        current_dsm_message_id = config.get('current_dsm_message_id')
+        if not current_dsm_message_id:
+            return
+        try:
+            # Convert string message ID to int
+            current_dsm_message_id = int(current_dsm_message_id)
+            dsm_message = await channel.fetch_message(current_dsm_message_id)
+            last_dsm_time = config.get('last_dsm_time')
+            if last_dsm_time:
+                last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
+            else:
+                last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
+
+            # Get current excluded users
+            excluded_users = set(self.ensure_str_ids(config.get('excluded_users', [])))
+            logger.info(f"[DEBUG] Current excluded users in update_dsm_embed: {excluded_users}")
+
+            # Check todo_message_map and remove any messages from excluded users
+            todo_message_map = config.get('todo_message_map', {})
+            updated_todo_map = {}
+            for user_id, messages in todo_message_map.items():
+                if str(user_id) not in excluded_users:
+                    updated_todo_map[user_id] = messages
+                else:
+                    logger.info(f"[DEBUG] Removing excluded user {user_id} from todo_message_map")
+            
+            if updated_todo_map != todo_message_map:
+                config['todo_message_map'] = updated_todo_map
+                await self.firebase_service.update_config(guild.id, config)
+                logger.info(f"[DEBUG] Updated todo_message_map after removing excluded users")
+
+            # Update the participants lists
+            updated_users = set()
+            for user_id in updated_todo_map:
+                member = guild.get_member(int(user_id))
+                if member and not member.bot and str(member.id) not in excluded_users:
+                    updated_users.add(member)
+
+            updated_users_list = list(updated_users)
+            pending_users = [member for member in guild.members 
+                           if not member.bot 
+                           and str(member.id) not in excluded_users
+                           and member not in updated_users_list]
+
+            # Update the embed
+            embed = dsm_message.embeds[0]
+            participants_line = f"👥 Total: {len(updated_users_list) + len(pending_users)}  ✅ Updated: {len(updated_users_list)}  ⏳ Pending: {len(pending_users)}"
+            
+            # Update the Participants field
+            for i, field in enumerate(embed.fields):
+                if field.name == "Participants":
+                    embed.set_field_at(i, name="Participants", value=participants_line, inline=False)
+                    break
+
+            # Update the Updated and Pending fields
+            updated_list = "\n".join([user.mention for user in updated_users_list]) if updated_users_list else "None"
+            pending_list = "\n".join([user.mention for user in pending_users]) if pending_users else "None"
+
+            for i, field in enumerate(embed.fields):
+                if field.name == "✅ Updated":
+                    embed.set_field_at(i, name="✅ Updated", value=updated_list, inline=False)
+                elif field.name == "⏳ Pending":
+                    embed.set_field_at(i, name="⏳ Pending", value=pending_list, inline=False)
+
+            await dsm_message.edit(embed=embed)
+            logger.info(f"[DEBUG] Updated DSM embed with {len(updated_users_list)} updated users and {len(pending_users)} pending users")
+
+        except (ValueError, TypeError) as e:
+            print(f"[update_dsm_embed] Invalid DSM message ID format: {current_dsm_message_id}")
+            logger.error(f"[update_dsm_embed] Invalid DSM message ID format: {current_dsm_message_id}")
+        except Exception as e:
+            print(f"[update_dsm_embed] Error updating DSM embed: {e}")
+            logger.error(f"[update_dsm_embed] Error updating DSM embed: {e}")
+
+    @app_commands.command(name="remind", description="Manually send a DSM reminder to everyone")
+    @app_commands.default_permissions(administrator=True)
+    async def remind(self, interaction: discord.Interaction):
+        config = await self.firebase_service.get_config(interaction.guild_id)
+        current_dsm_channel_id = config.get('current_dsm_channel_id')
+        if not current_dsm_channel_id:
+            await interaction.response.send_message("No DSM channel is set.", ephemeral=True)
+            return
+            
+        try:
+            current_dsm_channel_id = int(current_dsm_channel_id)
+        except (ValueError, TypeError):
+            await interaction.response.send_message("Invalid DSM channel ID format.", ephemeral=True)
+            return
+            
+        channel = interaction.guild.get_channel(current_dsm_channel_id)
+        if not channel:
+            await interaction.response.send_message("DSM channel not found.", ephemeral=True)
+            return
+        await self.send_dsm_reminder(channel, config)
+        await interaction.response.send_message("Reminder sent!", ephemeral=True)
+
+    @app_commands.command(name="add_admin", description="Add an admin user to the bot")
+    @app_commands.default_permissions(administrator=True)
+    async def add_admin(self, interaction: discord.Interaction, user: discord.Member):
+        """Add an admin user to the bot."""
+        try:
+            config = await self.firebase_service.get_config(interaction.guild_id)
+            if not config:
+                config = {}
+
+            admin_users = set(config.get('admin_users', []))
+            admin_users.add(user.id)
+            
+            config['admin_users'] = list(admin_users)
+            await self.firebase_service.update_config(interaction.guild_id, config)
+            
+            await interaction.response.send_message(
+                f"{user.mention} has been added as an admin.",
+                ephemeral=True
+            )
+            logger.info(f"Added admin user {user.name} ({user.id})")
+            
+        except Exception as e:
+            logger.error(f"Error adding admin user: {str(e)}")
+            await interaction.response.send_message(
+                "Failed to add admin user. Please try again.",
+                ephemeral=True
+            )
+
+    @app_commands.command(name="remove_admin", description="Remove an admin user from the bot")
+    @app_commands.default_permissions(administrator=True)
+    async def remove_admin(self, interaction: discord.Interaction, user: discord.Member):
+        """Remove an admin user from the bot."""
+        try:
+            config = await self.firebase_service.get_config(interaction.guild_id)
+            if not config:
+                config = {}
+
+            admin_users = set(config.get('admin_users', []))
+            if user.id in admin_users:
+                admin_users.remove(user.id)
+                config['admin_users'] = list(admin_users)
+                await self.firebase_service.update_config(interaction.guild_id, config)
+                
+                await interaction.response.send_message(
+                    f"{user.mention} has been removed as an admin.",
+                    ephemeral=True
+                )
+                logger.info(f"Removed admin user {user.name} ({user.id})")
+            else:
+                await interaction.response.send_message(
+                    f"{user.mention} is not an admin.",
+                    ephemeral=True
+                )
+            
+        except Exception as e:
+            logger.error(f"Error removing admin user: {str(e)}")
+            await interaction.response.send_message(
+                "Failed to remove admin user. Please try again.",
+                ephemeral=True
+            )
+
+    @app_commands.command(name="list_admins", description="List all admin users")
+    @app_commands.default_permissions(administrator=True)
+    async def list_admins(self, interaction: discord.Interaction):
+        """List all admin users."""
+        try:
+            config = await self.firebase_service.get_config(interaction.guild_id)
+            admin_users = config.get('admin_users', [])
+            
+            if admin_users:
+                admin_members = []
+                for user_id in admin_users:
+                    member = interaction.guild.get_member(user_id)
+                    if member:
+                        admin_members.append(member.mention)
+                
+                embed = discord.Embed(
+                    title="Admin Users",
+                    description="The following users are admins:",
+                    color=discord.Color.blue()
+                )
+                embed.add_field(
+                    name="Users",
+                    value="\n".join(admin_members) if admin_members else "None",
+                    inline=False
+                )
+                
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+            else:
+                await interaction.response.send_message(
+                    "No users are currently set as admins.",
+                    ephemeral=True
+                )
+            
+        except Exception as e:
+            logger.error(f"Error listing admin users: {str(e)}")
+            await interaction.response.send_message(
+                "Failed to list admin users. Please try again.",
+                ephemeral=True
+            )
+
+    @app_commands.command(name="show_lookback", description="Show current DSM lookback configuration")
+    @app_commands.default_permissions(administrator=True)
+    async def show_lookback(self, interaction: discord.Interaction):
+        """Show the current DSM lookback configuration."""
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You need administrator permissions to use this command!", ephemeral=True)
+            return
+        
+        try:
+            config = await self.firebase_service.get_config(interaction.guild_id)
+            if not config:
+                config = {}
+            
+            lookback_hours = config.get('dsm_lookback_hours', 2)
+            last_dsm_time = config.get('last_dsm_time')
+            
+            embed = discord.Embed(
+                title="🔍 DSM Lookback Configuration",
+                description="Current settings for message collection before DSM",
+                color=discord.Color.blue()
+            )
+            
+            embed.add_field(
+                name="Lookback Hours",
+                value=f"**{lookback_hours} hours** before DSM",
+                inline=False
+            )
+            
+            if last_dsm_time:
+                last_dsm_dt = datetime.datetime.fromisoformat(last_dsm_time)
+                lookback_time = last_dsm_dt - datetime.timedelta(hours=lookback_hours)
+                
+                embed.add_field(
+                    name="Last DSM Time",
+                    value=f"**{last_dsm_dt.strftime('%Y-%m-%d %H:%M:%S')}**",
+                    inline=True
+                )
+                
+                embed.add_field(
+                    name="Message Collection From",
+                    value=f"**{lookback_time.strftime('%Y-%m-%d %H:%M:%S')}**",
+                    inline=True
+                )
+                
+                embed.add_field(
+                    name="Time Window",
+                    value=f"Messages from **{lookback_hours} hours** before the last DSM are included in task collection",
+                    inline=False
+                )
+            else:
+                embed.add_field(
+                    name="Last DSM",
+                    value="No previous DSM found",
+                    inline=False
+                )
+            
+            embed.add_field(
+                name="How to Change",
+                value="Use `/configure dsm_lookback_hours:<hours>` to modify this setting",
+                inline=False
+            )
+            
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            
+        except Exception as e:
+            logger.error(f"Error in show_lookback: {str(e)}")
+            await interaction.response.send_message(
+                f"Failed to show lookback configuration: {str(e)}",
+                ephemeral=True
+            )
+
+    async def send_dsm_reminder(self, channel, config):
+        # Compose the reminder message
+        timezone = await self.get_guild_timezone(channel.guild.id)
+        last_dsm_time = config['last_dsm_time']
+        dsm_time = datetime.datetime.fromisoformat(last_dsm_time).astimezone(timezone)
+        deadline_time = dsm_time + datetime.timedelta(hours=12)
+        deadline_str = deadline_time.strftime('%B %d, %Y %I:%M %p')
+
+        # Get users who haven't updated
+        todo_message_map = config.get('todo_message_map', {})
+        excluded_users = set(self.ensure_str_ids(config.get('excluded_users', [])))
+        updated_users = set()
+        for user_id in todo_message_map:
+            if str(user_id) not in excluded_users:
+                updated_users.add(int(user_id))
+
+        # Only ping users who haven't updated and are not excluded
+        pending_mentions = []
+        for member in channel.guild.members:
+            if not member.bot and str(member.id) not in excluded_users and member.id not in updated_users:
+                pending_mentions.append(member.mention)
+
+        if not pending_mentions:
+            reminder_msg = (
+                f"⏰ **DSM Reminder!**\n"
+                f"The deadline for today's DSM has just passed.\n"
+                f"Deadline: {deadline_str}\n"
+                f"Everyone has already updated their tasks! 🎉"
+            )
+        else:
+            reminder_msg = (
+                f"⏰ **DSM Reminder!**\n"
+                f"The deadline for today's DSM has just passed.\n"
+                f"Deadline: {deadline_str}\n"
+                f"{' '.join(pending_mentions)}"
+            )
+        await channel.send(reminder_msg)
 
     @tasks.loop(minutes=1)
     async def auto_dsm_task(self):
@@ -1005,327 +1362,6 @@ class DSM(commands.Cog):
             logger.error(f"Error listing excluded users: {str(e)}")
             await interaction.response.send_message(
                 "Failed to list excluded users. Please try again.",
-                ephemeral=True
-            )
-
-    async def send_dsm_reminder(self, channel, config):
-        # Compose the reminder message
-        timezone = await self.get_guild_timezone(channel.guild.id)
-        last_dsm_time = config['last_dsm_time']
-        dsm_time = datetime.datetime.fromisoformat(last_dsm_time).astimezone(timezone)
-        deadline_time = dsm_time + datetime.timedelta(hours=12)
-        deadline_str = deadline_time.strftime('%B %d, %Y %I:%M %p')
-
-        # Get users who haven't updated
-        todo_message_map = config.get('todo_message_map', {})
-        excluded_users = set(self.ensure_str_ids(config.get('excluded_users', [])))
-        updated_users = set()
-        for user_id in todo_message_map:
-            if str(user_id) not in excluded_users:
-                updated_users.add(int(user_id))
-
-        # Only ping users who haven't updated and are not excluded
-        pending_mentions = []
-        for member in channel.guild.members:
-            if not member.bot and str(member.id) not in excluded_users and member.id not in updated_users:
-                pending_mentions.append(member.mention)
-
-        if not pending_mentions:
-            reminder_msg = (
-                f"⏰ **DSM Reminder!**\n"
-                f"The deadline for today's DSM has just passed.\n"
-                f"Deadline: {deadline_str}\n"
-                f"Everyone has already updated their tasks! 🎉"
-            )
-        else:
-            reminder_msg = (
-                f"⏰ **DSM Reminder!**\n"
-                f"The deadline for today's DSM has just passed.\n"
-                f"Deadline: {deadline_str}\n"
-                f"{' '.join(pending_mentions)}"
-            )
-        await channel.send(reminder_msg)
-
-    @tasks.loop(minutes=1)
-    async def dsm_reminder_task(self):
-        # Check every minute if it's time to send a reminder and update the DSM embed
-        for guild in self.bot.guilds:
-            config = await self.firebase_service.get_config(guild.id)
-            channel_id = config.get('current_dsm_channel_id')
-            last_dsm_time = config.get('last_dsm_time')
-            if not channel_id or not last_dsm_time:
-                continue
-            channel = guild.get_channel(channel_id)
-            if not channel: #tes
-                continue
-            timezone = await self.get_guild_timezone(guild.id)
-            dsm_time = datetime.datetime.fromisoformat(last_dsm_time).astimezone(timezone)
-            now = datetime.datetime.now(timezone)
-            dsm_deadline = dsm_time + datetime.timedelta(hours=12)
-            
-            # Reminder 1 minute after DSM deadline
-            if (dsm_deadline + datetime.timedelta(minutes=1)) <= now < (dsm_deadline + datetime.timedelta(minutes=2)):
-                await self.send_dsm_reminder(channel, config)
-                # Also update DSM embed
-                await self.update_dsm_embed(guild, channel, config)
-
-    async def update_dsm_embed(self, guild, channel, config=None):
-        # Update the DSM embed (participants/updated/pending) for the current DSM
-        if config is None:
-            config = await self.firebase_service.get_config(guild.id)
-        current_dsm_message_id = config.get('current_dsm_message_id')
-        if not current_dsm_message_id:
-            return
-        try:
-            dsm_message = await channel.fetch_message(current_dsm_message_id)
-            last_dsm_time = config.get('last_dsm_time')
-            if last_dsm_time:
-                last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
-            else:
-                last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
-
-            # Get current excluded users
-            excluded_users = set(self.ensure_str_ids(config.get('excluded_users', [])))
-            logger.info(f"[DEBUG] Current excluded users in update_dsm_embed: {excluded_users}")
-
-            # Check todo_message_map and remove any messages from excluded users
-            todo_message_map = config.get('todo_message_map', {})
-            updated_todo_map = {}
-            for user_id, messages in todo_message_map.items():
-                if str(user_id) not in excluded_users:
-                    updated_todo_map[user_id] = messages
-                else:
-                    logger.info(f"[DEBUG] Removing excluded user {user_id} from todo_message_map")
-            
-            if updated_todo_map != todo_message_map:
-                config['todo_message_map'] = updated_todo_map
-                await self.firebase_service.update_config(guild.id, config)
-                logger.info(f"[DEBUG] Updated todo_message_map after removing excluded users")
-
-            # Update the participants lists
-            updated_users = set()
-            for user_id in updated_todo_map:
-                member = guild.get_member(int(user_id))
-                if member and not member.bot and str(member.id) not in excluded_users:
-                    updated_users.add(member)
-
-            updated_users_list = list(updated_users)
-            pending_users = [member for member in guild.members 
-                           if not member.bot 
-                           and str(member.id) not in excluded_users
-                           and member not in updated_users_list]
-
-            # Update the embed
-            embed = dsm_message.embeds[0]
-            participants_line = f"👥 Total: {len(updated_users_list) + len(pending_users)}  ✅ Updated: {len(updated_users_list)}  ⏳ Pending: {len(pending_users)}"
-            
-            # Update the Participants field
-            for i, field in enumerate(embed.fields):
-                if field.name == "Participants":
-                    embed.set_field_at(i, name="Participants", value=participants_line, inline=False)
-                    break
-
-            # Update the Updated and Pending fields
-            updated_list = "\n".join([user.mention for user in updated_users_list]) if updated_users_list else "None"
-            pending_list = "\n".join([user.mention for user in pending_users]) if pending_users else "None"
-
-            for i, field in enumerate(embed.fields):
-                if field.name == "✅ Updated":
-                    embed.set_field_at(i, name="✅ Updated", value=updated_list, inline=False)
-                elif field.name == "⏳ Pending":
-                    embed.set_field_at(i, name="⏳ Pending", value=pending_list, inline=False)
-
-            await dsm_message.edit(embed=embed)
-            logger.info(f"[DEBUG] Updated DSM embed with {len(updated_users_list)} updated users and {len(pending_users)} pending users")
-
-        except Exception as e:
-            print(f"[update_dsm_embed] Error updating DSM embed: {e}")
-            logger.error(f"[update_dsm_embed] Error updating DSM embed: {e}")
-
-    @app_commands.command(name="remind", description="Manually send a DSM reminder to everyone")
-    @app_commands.default_permissions(administrator=True)
-    async def remind(self, interaction: discord.Interaction):
-        config = await self.firebase_service.get_config(interaction.guild_id)
-        channel_id = config.get('current_dsm_channel_id')
-        if not channel_id:
-            await interaction.response.send_message("No DSM channel is set.", ephemeral=True)
-            return
-        channel = interaction.guild.get_channel(channel_id)
-        if not channel:
-            await interaction.response.send_message("DSM channel not found.", ephemeral=True)
-            return
-        await self.send_dsm_reminder(channel, config)
-        await interaction.response.send_message("Reminder sent!", ephemeral=True)
-
-    @app_commands.command(name="add_admin", description="Add an admin user to the bot")
-    @app_commands.default_permissions(administrator=True)
-    async def add_admin(self, interaction: discord.Interaction, user: discord.Member):
-        """Add an admin user to the bot."""
-        try:
-            config = await self.firebase_service.get_config(interaction.guild_id)
-            if not config:
-                config = {}
-
-            admin_users = set(config.get('admin_users', []))
-            admin_users.add(user.id)
-            
-            config['admin_users'] = list(admin_users)
-            await self.firebase_service.update_config(interaction.guild_id, config)
-            
-            await interaction.response.send_message(
-                f"{user.mention} has been added as an admin.",
-                ephemeral=True
-            )
-            logger.info(f"Added admin user {user.name} ({user.id})")
-            
-        except Exception as e:
-            logger.error(f"Error adding admin user: {str(e)}")
-            await interaction.response.send_message(
-                "Failed to add admin user. Please try again.",
-                ephemeral=True
-            )
-
-    @app_commands.command(name="remove_admin", description="Remove an admin user from the bot")
-    @app_commands.default_permissions(administrator=True)
-    async def remove_admin(self, interaction: discord.Interaction, user: discord.Member):
-        """Remove an admin user from the bot."""
-        try:
-            config = await self.firebase_service.get_config(interaction.guild_id)
-            if not config:
-                config = {}
-
-            admin_users = set(config.get('admin_users', []))
-            if user.id in admin_users:
-                admin_users.remove(user.id)
-                config['admin_users'] = list(admin_users)
-                await self.firebase_service.update_config(interaction.guild_id, config)
-                
-                await interaction.response.send_message(
-                    f"{user.mention} has been removed as an admin.",
-                    ephemeral=True
-                )
-                logger.info(f"Removed admin user {user.name} ({user.id})")
-            else:
-                await interaction.response.send_message(
-                    f"{user.mention} is not an admin.",
-                    ephemeral=True
-                )
-            
-        except Exception as e:
-            logger.error(f"Error removing admin user: {str(e)}")
-            await interaction.response.send_message(
-                "Failed to remove admin user. Please try again.",
-                ephemeral=True
-            )
-
-    @app_commands.command(name="list_admins", description="List all admin users")
-    @app_commands.default_permissions(administrator=True)
-    async def list_admins(self, interaction: discord.Interaction):
-        """List all admin users."""
-        try:
-            config = await self.firebase_service.get_config(interaction.guild_id)
-            admin_users = config.get('admin_users', [])
-            
-            if admin_users:
-                admin_members = []
-                for user_id in admin_users:
-                    member = interaction.guild.get_member(user_id)
-                    if member:
-                        admin_members.append(member.mention)
-                
-                embed = discord.Embed(
-                    title="Admin Users",
-                    description="The following users are admins:",
-                    color=discord.Color.blue()
-                )
-                embed.add_field(
-                    name="Users",
-                    value="\n".join(admin_members) if admin_members else "None",
-                    inline=False
-                )
-                
-                await interaction.response.send_message(embed=embed, ephemeral=True)
-            else:
-                await interaction.response.send_message(
-                    "No users are currently set as admins.",
-                    ephemeral=True
-                )
-            
-        except Exception as e:
-            logger.error(f"Error listing admin users: {str(e)}")
-            await interaction.response.send_message(
-                "Failed to list admin users. Please try again.",
-                ephemeral=True
-            )
-
-    @app_commands.command(name="show_lookback", description="Show current DSM lookback configuration")
-    @app_commands.default_permissions(administrator=True)
-    async def show_lookback(self, interaction: discord.Interaction):
-        """Show the current DSM lookback configuration."""
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message("You need administrator permissions to use this command!", ephemeral=True)
-            return
-        
-        try:
-            config = await self.firebase_service.get_config(interaction.guild_id)
-            if not config:
-                config = {}
-            
-            lookback_hours = config.get('dsm_lookback_hours', 2)
-            last_dsm_time = config.get('last_dsm_time')
-            
-            embed = discord.Embed(
-                title="🔍 DSM Lookback Configuration",
-                description="Current settings for message collection before DSM",
-                color=discord.Color.blue()
-            )
-            
-            embed.add_field(
-                name="Lookback Hours",
-                value=f"**{lookback_hours} hours** before DSM",
-                inline=False
-            )
-            
-            if last_dsm_time:
-                last_dsm_dt = datetime.datetime.fromisoformat(last_dsm_time)
-                lookback_time = last_dsm_dt - datetime.timedelta(hours=lookback_hours)
-                
-                embed.add_field(
-                    name="Last DSM Time",
-                    value=f"**{last_dsm_dt.strftime('%Y-%m-%d %H:%M:%S')}**",
-                    inline=True
-                )
-                
-                embed.add_field(
-                    name="Message Collection From",
-                    value=f"**{lookback_time.strftime('%Y-%m-%d %H:%M:%S')}**",
-                    inline=True
-                )
-                
-                embed.add_field(
-                    name="Time Window",
-                    value=f"Messages from **{lookback_hours} hours** before the last DSM are included in task collection",
-                    inline=False
-                )
-            else:
-                embed.add_field(
-                    name="Last DSM",
-                    value="No previous DSM found",
-                    inline=False
-                )
-            
-            embed.add_field(
-                name="How to Change",
-                value="Use `/configure dsm_lookback_hours:<hours>` to modify this setting",
-                inline=False
-            )
-            
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-            
-        except Exception as e:
-            logger.error(f"Error in show_lookback: {str(e)}")
-            await interaction.response.send_message(
-                f"Failed to show lookback configuration: {str(e)}",
                 ephemeral=True
             )
 
