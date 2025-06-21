@@ -48,6 +48,9 @@ class StandupBot(commands.Bot): # Not discord.Client--that's for more basic bots
         # Configure Discord intents
         intents = self._setup_intents()
         
+        # Set Watching status
+        self.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="over patients :D"))
+        
         # Validate and get bot token
         token = self._get_bot_token()
         
