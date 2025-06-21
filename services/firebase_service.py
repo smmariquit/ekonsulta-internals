@@ -5,7 +5,7 @@ import asyncio
 from typing import Dict, Any, Optional, List
 from models.task import Task
 from config.default_config import DEFAULT_CONFIG
-from utils.logger import get_logger
+from utils.logging_util import get_logger
 import datetime
 from models.dsm_session import DSMSession
 
