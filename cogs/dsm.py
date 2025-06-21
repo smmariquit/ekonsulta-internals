@@ -1056,7 +1056,7 @@ class DSM(commands.Cog):
             if not channel_id or not last_dsm_time:
                 continue
             channel = guild.get_channel(channel_id)
-            if not channel: #test
+            if not channel: #tes
                 continue
             timezone = await self.get_guild_timezone(guild.id)
             dsm_time = datetime.datetime.fromisoformat(last_dsm_time).astimezone(timezone)
