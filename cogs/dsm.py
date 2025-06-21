@@ -100,13 +100,24 @@ class DSM(commands.Cog):
         lookback_hours = config.get('dsm_lookback_hours', 2)
         lookback_time = last_dsm_time - datetime.timedelta(hours=lookback_hours)
         
-        logger.info(f"[get_user_tasks] Looking for messages from {lookback_time} to now for user {user.display_name}")
+        # Calculate the DSM deadline (12 hours after DSM creation)
+        dsm_deadline = last_dsm_time + datetime.timedelta(hours=12)
         
-        # Get messages after lookback time (2 hours before last DSM)
-        async for message in channel.history(after=lookback_time, limit=None):
+        logger.info(f"[get_user_tasks] Looking for messages from {lookback_time} to {dsm_deadline} for user {user.display_name}")
+        logger.info(f"[get_user_tasks] Lookback period: {lookback_time} to {last_dsm_time}")
+        logger.info(f"[get_user_tasks] DSM period: {last_dsm_time} to {dsm_deadline}")
+        
+        # Get messages from both lookback period and DSM period
+        async for message in channel.history(after=lookback_time, before=dsm_deadline + datetime.timedelta(seconds=1), limit=None):
             if message.author.id == user.id:
-                message_tasks = self.extract_tasks_from_message(message.content)
-                tasks.extend(message_tasks)
+                # Check if message is within acceptable time windows
+                in_lookback_period = lookback_time <= message.created_at < last_dsm_time
+                in_dsm_period = last_dsm_time <= message.created_at <= dsm_deadline
+                
+                if in_lookback_period or in_dsm_period:
+                    message_tasks = self.extract_tasks_from_message(message.content)
+                    tasks.extend(message_tasks)
+                    logger.info(f"[get_user_tasks] Found {len(message_tasks)} tasks in message {message.id} (lookback: {in_lookback_period}, DSM: {in_dsm_period})")
         
         return list(set(tasks))  # Remove duplicates
 
@@ -118,6 +129,13 @@ class DSM(commands.Cog):
             return
         config = await self.firebase_service.get_config(message.guild.id)
         dsm_channel_id = config.get('dsm_channel_id')
+        if dsm_channel_id:
+            try:
+                dsm_channel_id = int(dsm_channel_id)
+            except (ValueError, TypeError):
+                logger.error(f"Invalid DSM channel ID format: {dsm_channel_id}")
+                return
+                
         if dsm_channel_id and message.channel.id != dsm_channel_id:
             logger.info(f"[on_message] Ignored message not in DSM channel (expected {dsm_channel_id}).")
             return
@@ -208,6 +226,13 @@ class DSM(commands.Cog):
             return
         config = await self.firebase_service.get_config(after.guild.id)
         dsm_channel_id = config.get('dsm_channel_id')
+        if dsm_channel_id:
+            try:
+                dsm_channel_id = int(dsm_channel_id)
+            except (ValueError, TypeError):
+                logger.error(f"Invalid DSM channel ID format: {dsm_channel_id}")
+                return
+                
         if dsm_channel_id and after.channel.id != dsm_channel_id:
             logger.info(f"[on_message_edit] Ignored message not in DSM channel (expected {dsm_channel_id}).")
             return
@@ -229,6 +254,13 @@ class DSM(commands.Cog):
             return
         config = await self.firebase_service.get_config(message.guild.id)
         dsm_channel_id = config.get('dsm_channel_id')
+        if dsm_channel_id:
+            try:
+                dsm_channel_id = int(dsm_channel_id)
+            except (ValueError, TypeError):
+                logger.error(f"Invalid DSM channel ID format: {dsm_channel_id}")
+                return
+                
         if dsm_channel_id and message.channel.id != dsm_channel_id:
             return
         # Only update the TODO TASKS for Today embed
@@ -246,14 +278,27 @@ class DSM(commands.Cog):
         lookback_hours = config.get('dsm_lookback_hours', 2)
         lookback_time = last_dsm_time - datetime.timedelta(hours=lookback_hours)
         
+        # Calculate the DSM deadline (12 hours after DSM creation)
+        dsm_deadline = last_dsm_time + datetime.timedelta(hours=12)
+        
         # Use a mapping: {user_id: [tasks]} for today
         todo_message_map = config.get('todo_message_map', {})
         user_id = str(message.author.id)
         message_id = str(message.id)
         
-        # Only process messages that are within the lookback period
-        if message.created_at < lookback_time:
-            logger.info(f"[update_todo_tasks_for_today] Ignoring message {message_id} from {message.created_at} (before lookback time {lookback_time})")
+        # Process messages that are within EITHER the lookback period OR the DSM period
+        # Lookback period: from 2 hours before DSM to DSM creation
+        # DSM period: from DSM creation to 12 hours after (deadline)
+        message_time = message.created_at
+        
+        # Check if message is within acceptable time windows
+        in_lookback_period = lookback_time <= message_time < last_dsm_time
+        in_dsm_period = last_dsm_time <= message_time <= dsm_deadline
+        
+        if not (in_lookback_period or in_dsm_period):
+            logger.info(f"[update_todo_tasks_for_today] Ignoring message {message_id} from {message_time}")
+            logger.info(f"[update_todo_tasks_for_today] Lookback period: {lookback_time} to {last_dsm_time}")
+            logger.info(f"[update_todo_tasks_for_today] DSM period: {last_dsm_time} to {dsm_deadline}")
             return
             
         if deleted:
@@ -268,6 +313,8 @@ class DSM(commands.Cog):
                 if user_id not in todo_message_map:
                     todo_message_map[user_id] = {}
                 todo_message_map[user_id][message_id] = tasks
+                logger.info(f"[update_todo_tasks_for_today] Added {len(tasks)} tasks for user {user_id} from message {message_id}")
+                logger.info(f"[update_todo_tasks_for_today] Message time: {message_time}, in lookback: {in_lookback_period}, in DSM: {in_dsm_period}")
             else:
                 # If the message was edited to remove tasks
                 if user_id in todo_message_map and message_id in todo_message_map[user_id]:
@@ -292,10 +339,15 @@ class DSM(commands.Cog):
         lookback_hours = config.get('dsm_lookback_hours', 2)
         lookback_time = last_dsm_time - datetime.timedelta(hours=lookback_hours)
         
+        # Calculate the DSM deadline (12 hours after DSM creation)
+        dsm_deadline = last_dsm_time + datetime.timedelta(hours=12)
+        
         print(f"[update_todo_tasks_embed] last_dsm_time: {last_dsm_time}")
         print(f"[update_todo_tasks_embed] lookback_time: {lookback_time}")
+        print(f"[update_todo_tasks_embed] dsm_deadline: {dsm_deadline}")
         logger.info(f"[update_todo_tasks_embed] last_dsm_time: {last_dsm_time}")
         logger.info(f"[update_todo_tasks_embed] lookback_time: {lookback_time}")
+        logger.info(f"[update_todo_tasks_embed] dsm_deadline: {dsm_deadline}")
         
         embed = discord.Embed(
             title="🚀 Tasks To Do for Today",
@@ -311,7 +363,7 @@ class DSM(commands.Cog):
         for user_id, messages in todo_message_map.items():
             member = guild.get_member(int(user_id))
             if member:
-                # Only show TODOs within the lookback period
+                # Show TODOs from both lookback period and DSM period
                 all_tasks = []
                 latest_msg = None
                 for msg_id in messages:
@@ -319,10 +371,18 @@ class DSM(commands.Cog):
                         msg = await channel.fetch_message(int(msg_id))
                         print(f"[update_todo_tasks_embed] Message {msg_id} created at: {msg.created_at}")
                         logger.info(f"[update_todo_tasks_embed] Message {msg_id} created at: {msg.created_at}")
-                        if msg.created_at >= lookback_time:
+                        
+                        # Check if message is within acceptable time windows
+                        in_lookback_period = lookback_time <= msg.created_at < last_dsm_time
+                        in_dsm_period = last_dsm_time <= msg.created_at <= dsm_deadline
+                        
+                        if in_lookback_period or in_dsm_period:
                             all_tasks.extend(messages[msg_id])
                             if not latest_msg or msg.created_at > latest_msg.created_at:
                                 latest_msg = msg
+                            logger.info(f"[update_todo_tasks_embed] Including message {msg_id} (lookback: {in_lookback_period}, DSM: {in_dsm_period})")
+                        else:
+                            logger.info(f"[update_todo_tasks_embed] Excluding message {msg_id} (outside time windows)")
                     except Exception as e:
                         print(f"[update_todo_tasks_embed] Error fetching message {msg_id}: {e}")
                         logger.error(f"[update_todo_tasks_embed] Error fetching message {msg_id}: {e}")
@@ -783,20 +843,21 @@ class DSM(commands.Cog):
             last_dsm_time = config.get('last_dsm_time')
             
             embed = discord.Embed(
-                title="🔍 DSM Lookback Configuration",
-                description="Current settings for message collection before DSM",
+                title="🔍 DSM Time Window Configuration",
+                description="Current settings for message collection periods",
                 color=discord.Color.blue()
             )
             
             embed.add_field(
                 name="Lookback Hours",
-                value=f"**{lookback_hours} hours** before DSM",
+                value=f"**{lookback_hours} hours** before DSM creation",
                 inline=False
             )
             
             if last_dsm_time:
                 last_dsm_dt = datetime.datetime.fromisoformat(last_dsm_time)
                 lookback_time = last_dsm_dt - datetime.timedelta(hours=lookback_hours)
+                dsm_deadline = last_dsm_dt + datetime.timedelta(hours=12)
                 
                 embed.add_field(
                     name="Last DSM Time",
@@ -805,14 +866,20 @@ class DSM(commands.Cog):
                 )
                 
                 embed.add_field(
-                    name="Message Collection From",
-                    value=f"**{lookback_time.strftime('%Y-%m-%d %H:%M:%S')}**",
+                    name="Lookback Period",
+                    value=f"**{lookback_time.strftime('%Y-%m-%d %H:%M:%S')}** to **{last_dsm_dt.strftime('%Y-%m-%d %H:%M:%S')}**\n(Early submissions)",
                     inline=True
                 )
                 
                 embed.add_field(
-                    name="Time Window",
-                    value=f"Messages from **{lookback_hours} hours** before the last DSM are included in task collection",
+                    name="DSM Period",
+                    value=f"**{last_dsm_dt.strftime('%Y-%m-%d %H:%M:%S')}** to **{dsm_deadline.strftime('%Y-%m-%d %H:%M:%S')}**\n(During DSM)",
+                    inline=True
+                )
+                
+                embed.add_field(
+                    name="Total Collection Window",
+                    value=f"Messages are collected from **{lookback_hours} hours before** DSM creation until **12 hours after** DSM creation",
                     inline=False
                 )
             else:
@@ -824,7 +891,7 @@ class DSM(commands.Cog):
             
             embed.add_field(
                 name="How to Change",
-                value="Use `/configure dsm_lookback_hours:<hours>` to modify this setting",
+                value="Use `/configure dsm_lookback_hours:<hours>` to modify the lookback period",
                 inline=False
             )
             
@@ -931,6 +998,12 @@ class DSM(commands.Cog):
                 await interaction.response.send_message("Please set a DSM channel first using `/set_channel`.", ephemeral=True)
                 return
 
+            try:
+                channel_id = int(channel_id)
+            except (ValueError, TypeError):
+                await interaction.response.send_message("Invalid DSM channel ID format.", ephemeral=True)
+                return
+
             channel = interaction.guild.get_channel(channel_id)
             if not channel:
                 await interaction.response.send_message("The configured DSM channel no longer exists.", ephemeral=True)
@@ -1010,7 +1083,7 @@ class DSM(commands.Cog):
 
             # Handle DSM channel
             if dsm_channel is not None:
-                config['dsm_channel_id'] = dsm_channel.id
+                config['dsm_channel_id'] = str(dsm_channel.id)
                 changes.append(f"DSM Channel: {dsm_channel.mention}")
 
             # Handle DSM lookback hours
@@ -1054,9 +1127,13 @@ class DSM(commands.Cog):
             if config.get('dsm_time'):
                 current_config.append(f"DSM Time: {config['dsm_time']}")
             if config.get('dsm_channel_id'):
-                channel = interaction.guild.get_channel(config['dsm_channel_id'])
-                if channel:
-                    current_config.append(f"DSM Channel: {channel.mention}")
+                try:
+                    channel_id = int(config['dsm_channel_id'])
+                    channel = interaction.guild.get_channel(channel_id)
+                    if channel:
+                        current_config.append(f"DSM Channel: {channel.mention}")
+                except (ValueError, TypeError):
+                    current_config.append(f"DSM Channel: Invalid ID format")
             if config.get('dsm_lookback_hours'):
                 current_config.append(f"DSM Lookback Hours: {config['dsm_lookback_hours']}")
 
@@ -1088,7 +1165,7 @@ class DSM(commands.Cog):
         
         try:
             # Update the config with the new channel ID
-            await self.firebase_service.update_config(interaction.guild_id, {'dsm_channel_id': channel.id})
+            await self.firebase_service.update_config(interaction.guild_id, {'dsm_channel_id': str(channel.id)})
             
             # Create confirmation embed
             embed = discord.Embed(
@@ -1365,8 +1442,113 @@ class DSM(commands.Cog):
                 ephemeral=True
             )
 
+    @app_commands.command(name="debug_todo", description="Debug TODO message processing")
+    @admin_required()
+    async def debug_todo(self, interaction: discord.Interaction, test_message: str = None):
+        """Debug TODO message processing to help identify issues."""
+        try:
+            config = await self.firebase_service.get_config(interaction.guild_id)
+            
+            # Test the extract_tasks_from_message function
+            if test_message:
+                tasks = self.extract_tasks_from_message(test_message)
+                embed = discord.Embed(
+                    title="🔍 TODO Debug Results",
+                    description=f"Testing message: `{test_message}`",
+                    color=discord.Color.blue()
+                )
+                embed.add_field(
+                    name="Extracted Tasks",
+                    value="\n".join(tasks) if tasks else "No tasks found",
+                    inline=False
+                )
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+                return
+            
+            # Show current configuration
+            embed = discord.Embed(
+                title="🔍 TODO Debug Information",
+                color=discord.Color.blue()
+            )
+            
+            # DSM Channel
+            dsm_channel_id = config.get('dsm_channel_id')
+            dsm_channel = interaction.guild.get_channel(int(dsm_channel_id)) if dsm_channel_id else None
+            embed.add_field(
+                name="DSM Channel",
+                value=f"ID: {dsm_channel_id}\nChannel: {dsm_channel.mention if dsm_channel else 'Not found'}",
+                inline=False
+            )
+            
+            # Current channel
+            embed.add_field(
+                name="Current Channel",
+                value=f"ID: {interaction.channel_id}\nChannel: {interaction.channel.mention}",
+                inline=False
+            )
+            
+            # Last DSM time and lookback
+            last_dsm_time = config.get('last_dsm_time')
+            if last_dsm_time:
+                last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
+                lookback_hours = config.get('dsm_lookback_hours', 2)
+                lookback_time = last_dsm_time - datetime.timedelta(hours=lookback_hours)
+                dsm_deadline = last_dsm_time + datetime.timedelta(hours=12)
+                embed.add_field(
+                    name="Time Windows",
+                    value=f"Last DSM: {last_dsm_time}\nLookback: {lookback_hours} hours\nLookback Period: {lookback_time} to {last_dsm_time}\nDSM Period: {last_dsm_time} to {dsm_deadline}",
+                    inline=False
+                )
+            else:
+                embed.add_field(
+                    name="Time Windows",
+                    value="No last DSM time found",
+                    inline=False
+                )
+            
+            # TODO message map
+            todo_message_map = config.get('todo_message_map', {})
+            embed.add_field(
+                name="TODO Message Map",
+                value=f"Users with TODOs: {len(todo_message_map)}\nTotal messages: {sum(len(messages) for messages in todo_message_map.values())}",
+                inline=False
+            )
+            
+            # Excluded users
+            excluded_users = config.get('excluded_users', [])
+            excluded_mentions = []
+            for user_id in excluded_users:
+                member = interaction.guild.get_member(int(user_id))
+                excluded_mentions.append(member.mention if member else f"<@{user_id}>")
+            embed.add_field(
+                name="Excluded Users",
+                value="\n".join(excluded_mentions) if excluded_mentions else "None",
+                inline=False
+            )
+            
+            # Test message processing
+            test_content = """TODO
+Task 1: Test task
+Task 2: Another test task
+
+Regular message content"""
+            
+            tasks = self.extract_tasks_from_message(test_content)
+            embed.add_field(
+                name="Test Message Processing",
+                value=f"Test content:\n```\n{test_content}\n```\nExtracted tasks:\n" + "\n".join([f"• {task}" for task in tasks]),
+                inline=False
+            )
+            
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            
+        except Exception as e:
+            logger.error(f"Error in debug_todo: {e}")
+            await interaction.response.send_message(f"Error during debug: {e}", ephemeral=True)
+
 # Move setup function outside of the class, at module level
 async def setup(bot: commands.Bot):
-    """Set up the DSM cog."""
-    firebase_service = FirebaseService('firebase-credentials.json')
+    """Setup function for the DSM cog."""
+    from services.firebase_service import FirebaseService
+    firebase_service = FirebaseService()
     await bot.add_cog(DSM(bot, firebase_service))
