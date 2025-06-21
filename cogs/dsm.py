@@ -1550,5 +1550,5 @@ Regular message content"""
 async def setup(bot: commands.Bot):
     """Setup function for the DSM cog."""
     from services.firebase_service import FirebaseService
-    firebase_service = FirebaseService()
+    firebase_service = FirebaseService('firebase-credentials.json')
     await bot.add_cog(DSM(bot, firebase_service))
