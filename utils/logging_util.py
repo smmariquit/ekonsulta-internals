@@ -1,6 +1,6 @@
 """Logging configuration for the bot."""
 import sys
-import logger
+from loguru import logger
 import os
 
 # Create logs directory if it doesn't exist
