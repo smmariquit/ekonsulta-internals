@@ -32,18 +32,29 @@ class DSM(commands.Cog):
         self.firebase_service = firebase_service
         self.auto_dsm_task.start()
         self.dsm_reminder_task.start()
-        self.log_config.start()
+        self.log_config_task.start()
         logger.info("DSM cog initialized")
 
-    async def log_config(self):
-        for guild in self.bot.guilds:
-            config = await self.firebase_service.get_config(guild.id)
-            channel_id = config.get('test_channel_id')
-            channel = guild.get_channel(channel_id)
-            if channel:
-                channel.send(f"Config: {config}")
-            else:
-                channel.send(f"Channel not found for guild {guild.id}")
+    @tasks.loop(minutes=5)
+    async def log_config_task(self):
+        """Log configuration to test channel for debugging."""
+        try:
+            for guild in self.bot.guilds:
+                config = await self.firebase_service.get_config(guild.id)
+                if not config:
+                    continue
+                    
+                channel_id = config.get('test_channel_id')
+                if not channel_id:
+                    continue
+                    
+                channel = guild.get_channel(int(channel_id))
+                if channel:
+                    await channel.send(f"Config: {config}")
+                else:
+                    logger.warning(f"Channel not found for guild {guild.id}")
+        except Exception as e:
+            logger.error(f"Error in log_config_task: {e}")
 
     def extract_tasks_from_message(self, content: str) -> List[str]:
         # Accept 'todo', 'to do', 'to-do' (with or without colon, any case)
@@ -522,8 +533,14 @@ class DSM(commands.Cog):
                 # Check if it's DSM time
                 dsm_time = datetime.datetime.strptime(config.get('dsm_time', '09:00'), '%H:%M').time()
                 if current_time.hour == dsm_time.hour and current_time.minute == dsm_time.minute:
-                    channel_id = int(config.get('dsm_channel_id'))
+                    channel_id = config.get('dsm_channel_id')
                     if not channel_id:
+                        continue
+                    
+                    try:
+                        channel_id = int(channel_id)
+                    except (ValueError, TypeError):
+                        logger.error(f"Invalid channel ID format: {channel_id}")
                         continue
                     
                     channel = guild.get_channel(channel_id)
