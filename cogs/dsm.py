@@ -1061,9 +1061,10 @@ class DSM(commands.Cog):
             timezone = await self.get_guild_timezone(guild.id)
             dsm_time = datetime.datetime.fromisoformat(last_dsm_time).astimezone(timezone)
             now = datetime.datetime.now(timezone)
+            dsm_deadline = dsm_time + datetime.timedelta(hours=12)
             
-            # Reminder 1 minute after DSM
-            if (dsm_time + datetime.timedelta(minutes=1)) <= now < (dsm_time + datetime.timedelta(minutes=2)):
+            # Reminder 1 minute after DSM deadline
+            if (dsm_deadline + datetime.timedelta(minutes=1)) <= now < (dsm_deadline + datetime.timedelta(minutes=2)):
                 await self.send_dsm_reminder(channel, config)
                 # Also update DSM embed
                 await self.update_dsm_embed(guild, channel, config)
