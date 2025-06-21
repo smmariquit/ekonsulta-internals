@@ -17,7 +17,7 @@ from discord.ext import commands
 
 # Local imports go last
 from config.config import DISCORD_BOT_TOKEN, LOG_FILE
-from utils.logger import get_logger
+from utils.logging_util import get_logger
 
 # Configure logging
 logger = get_logger("bot")
