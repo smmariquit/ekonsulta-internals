@@ -7,7 +7,7 @@ import asyncio
 import re
 from typing import Dict, Any, Optional, List
 from services.firebase_service import FirebaseService
-from utils.logger import get_logger
+from utils.logging_util import get_logger
 from config.default_config import DEFAULT_CONFIG
 import pytz
 import logging
