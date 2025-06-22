@@ -134,6 +134,7 @@ class StandupBot(commands.Bot): # Not discord.Client--that's for more basic bots
         """
         extensions = [
             'cogs.dsm',  # Daily Standup Meeting functionality
+            'cogs.translator' # Translator functionality
             # Add more extensions here as needed
         ]
         
