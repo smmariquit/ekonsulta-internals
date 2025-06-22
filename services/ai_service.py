@@ -5,19 +5,17 @@ import json # For JSON operations
 import aiohttp # Async HTTP client
 from typing import Optional, Dict, Any
 
-from utils.logger import get_logger
-
+from utils.logging_util import get_logger
 load_dotenv()
 
 logger = get_logger("ai_service")
 
 class AIService:
     """Service for handling AI-related functionality."""
-    
     def __init__(self):
         """Initialize the AI service."""
         self.base_url = "https://generativelanguage.googleapis.com/v1beta/models"
-        self.model = "gemini-pro"
+        self.model = "gemini-2.5-flash"
         self.api_key = None
     
     def set_api_key(self, api_key: str):
