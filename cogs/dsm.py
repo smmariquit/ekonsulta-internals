@@ -101,7 +101,7 @@ class DSM(commands.Cog):
         lookback_time = last_dsm_time - datetime.timedelta(hours=lookback_hours)
         
         # Calculate the DSM deadline (12 hours after DSM creation)
-        dsm_deadline = last_dsm_time + datetime.timedelta(hours=12)
+        dsm_deadline = last_dsm_time + datetime.timedelta(hours=14)
         
         logger.info(f"[get_user_tasks] Looking for messages from {lookback_time} to {dsm_deadline} for user {user.display_name}")
         logger.info(f"[get_user_tasks] Lookback period: {lookback_time} to {last_dsm_time}")
