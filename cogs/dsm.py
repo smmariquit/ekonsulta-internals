@@ -94,8 +94,8 @@ class DSM(commands.Cog):
         lookback_hours = config.get('dsm_lookback_hours', 2)
         lookback_time = last_dsm_time - datetime.timedelta(hours=lookback_hours)
         
-        # Calculate the DSM deadline (12 hours 15 minutes after DSM creation - 9:15 PM)
-        dsm_deadline = last_dsm_time + datetime.timedelta(hours=12, minutes=15)
+        # Calculate the DSM deadline (14 hours 15 minutes after DSM creation - 11:15 PM)
+        dsm_deadline = last_dsm_time + datetime.timedelta(hours=14, minutes=15)
         
         logger.info(f"[get_user_tasks] Looking for messages from {lookback_time} to {dsm_deadline} for user {user.display_name}")
         logger.info(f"[get_user_tasks] Lookback period: {lookback_time} to {last_dsm_time}")
@@ -270,7 +270,7 @@ class DSM(commands.Cog):
             last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
         
         # Calculate the DSM deadline
-        dsm_deadline = last_dsm_time + datetime.timedelta(hours=12, minutes=15)
+        dsm_deadline = last_dsm_time + datetime.timedelta(hours=14, minutes=15)
         
         user_id = str(message.author.id)
         message_time = message.created_at
@@ -325,7 +325,7 @@ class DSM(commands.Cog):
             timezone = await self.get_guild_timezone(channel.guild.id)
             current_time = datetime.datetime.now(timezone)
             end_time = current_time + datetime.timedelta(hours=8)
-            deadline_time = current_time + datetime.timedelta(hours=12, minutes=15)  # 9:15 PM for 9:00 AM start
+            deadline_time = current_time + datetime.timedelta(hours=14, minutes=15)  # 11:15 PM for 9:00 AM start
 
             excluded_users = set(self.ensure_str_ids(config.get('excluded_users', [])))
             logger.info(f"[DEBUG] Creating DSM with excluded users: {excluded_users}")
@@ -487,7 +487,7 @@ class DSM(commands.Cog):
                         last_dsm_time = config.get('last_dsm_time')
                         if last_dsm_time:
                             dsm_time = datetime.datetime.fromisoformat(last_dsm_time).astimezone(timezone)
-                            dsm_deadline = dsm_time + datetime.timedelta(hours=12, minutes=15)
+                            dsm_deadline = dsm_time + datetime.timedelta(hours=14, minutes=15)
                             
                             # Update DSM embed 1 minute after deadline
                             if (dsm_deadline + datetime.timedelta(minutes=1)) <= now < (dsm_deadline + datetime.timedelta(minutes=2)):
@@ -818,7 +818,7 @@ class DSM(commands.Cog):
             if last_dsm_time:
                 last_dsm_dt = datetime.datetime.fromisoformat(last_dsm_time)
                 lookback_time = last_dsm_dt - datetime.timedelta(hours=lookback_hours)
-                dsm_deadline = last_dsm_dt + datetime.timedelta(hours=12)
+                dsm_deadline = last_dsm_dt + datetime.timedelta(hours=14, minutes=15)
                 
                 embed.add_field(
                     name="Last DSM Time",
@@ -880,7 +880,7 @@ class DSM(commands.Cog):
         # Create today's DSM time
         now = datetime.datetime.now(timezone)
         dsm_start_time = now.replace(hour=dsm_hour, minute=dsm_minute, second=0, microsecond=0)
-        deadline_time = dsm_start_time + datetime.timedelta(hours=12, minutes=15)
+        deadline_time = dsm_start_time + datetime.timedelta(hours=14, minutes=15)
         
         dsm_start_str = dsm_start_time.strftime('%I:%M %p')
         deadline_str = deadline_time.strftime('%I:%M %p')
@@ -894,8 +894,8 @@ class DSM(commands.Cog):
 
         reminder_msg = (
             f"Good morning, team!\n\n"
-            f"DSM starts in 15 minutes at {dsm_start_str}.\n"
-            f"Deadline is at {deadline_str}!\n\n"
+            f"Send your tasks for today here in the chat.\n"
+            f"Deadline is at {deadline_str}!"
         )
         await channel.send(reminder_msg)
 
@@ -1431,7 +1431,7 @@ class DSM(commands.Cog):
                 last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
                 lookback_hours = config.get('dsm_lookback_hours', 2)
                 lookback_time = last_dsm_time - datetime.timedelta(hours=lookback_hours)
-                dsm_deadline = last_dsm_time + datetime.timedelta(hours=12)
+                dsm_deadline = last_dsm_time + datetime.timedelta(hours=14, minutes=15)
                 embed.add_field(
                     name="Time Windows",
                     value=f"Last DSM: {last_dsm_time}\nLookback: {lookback_hours} hours\nLookback Period: {lookback_time} to {last_dsm_time}\nDSM Period: {last_dsm_time} to {dsm_deadline}",
