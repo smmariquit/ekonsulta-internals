@@ -48,8 +48,8 @@ class StandupBot(commands.Bot): # Not discord.Client--that's for more basic bots
         # Configure Discord intents
         intents = self._setup_intents()
         
-        # Set Watching status
-        self.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="over patients :D"))
+        # Store the activity to set later (can't use async in __init__)
+        self._desired_activity = discord.Activity(type=discord.ActivityType.watching, name="over patients :D")
         
         # Validate and get bot token
         token = self._get_bot_token()
@@ -113,16 +113,24 @@ class StandupBot(commands.Bot): # Not discord.Client--that's for more basic bots
             This is a lifecycle method called by Discord.py, not directly by user code.
         """
         try:
+            logger.info("Starting bot setup...")
+            
             # Load bot extensions (cogs)
             await self._load_extensions()
             
             # Sync slash commands with Discord API
-            await self.tree.sync()
+            logger.info("Syncing slash commands with Discord...")
+            synced = await self.tree.sync()
+            logger.info(f"Synced {len(synced)} command(s) with Discord")
+            
+            # Log all registered commands
+            for command in self.tree.get_commands():
+                logger.info(f"Registered command: /{command.name}")
             
             logger.info("Bot setup completed successfully")
             
         except Exception as e:
-            logger.error(f"Error during bot setup: {e}")
+            logger.error(f"Error during bot setup: {e}", exc_info=True)
             raise
     
     async def _load_extensions(self) -> None:
@@ -138,12 +146,22 @@ class StandupBot(commands.Bot): # Not discord.Client--that's for more basic bots
             # Add more extensions here as needed
         ]
         
+        logger.info(f"Attempting to load {len(extensions)} extensions: {extensions}")
+        
         for extension in extensions:
             try:
+                logger.info(f"Loading extension: {extension}")
                 await self.load_extension(extension)
-                logger.info(f"Loaded extension: {extension}")
+                logger.info(f"Successfully loaded extension: {extension}")
+                
+                # Log commands from this extension
+                cog = self.get_cog(extension.split('.')[-1])
+                if cog:
+                    commands = [cmd for cmd in self.tree.get_commands() if hasattr(cmd, 'callback') and cmd.callback.__module__.startswith(extension)]
+                    logger.info(f"Extension {extension} added {len(commands)} commands")
+                
             except Exception as e:
-                logger.error(f"Failed to load extension {extension}: {e}")
+                logger.error(f"Failed to load extension {extension}: {e}", exc_info=True)
                 raise
     
     async def on_ready(self) -> None:
@@ -151,11 +169,16 @@ class StandupBot(commands.Bot): # Not discord.Client--that's for more basic bots
         Handle the bot ready event.
         
         This method is called when the bot successfully connects to Discord.
-        It logs the successful connection and syncs commands.
+        It logs the successful connection and sets the bot's presence.
         
         Note:
             This is a lifecycle method called by Discord.py when the bot is ready.
         """
+        # Set the bot's presence/activity
+        if hasattr(self, '_desired_activity'):
+            await self.change_presence(activity=self._desired_activity)
+            logger.info(f"Bot presence set to: {self._desired_activity.name}")
+        
         logger.info(f"Bot logged in successfully as: {self.user.name}")
         logger.info(f"Bot ID: {self.user.id}")
         logger.info(f"Connected to {len(self.guilds)} guild(s)")

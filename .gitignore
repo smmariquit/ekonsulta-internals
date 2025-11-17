@@ -5,11 +5,14 @@
 .env.test
 .env.production
 *.env
+.env
 
 # Firebase credentials
 firebase-credentials.json
 firebase_credentials.json
 firebase-service-account*.json
+*firebase-adminsdk*.json
+internals-bot-firebase-adminsdk-*.json
 
 # Python
 __pycache__/
@@ -129,7 +132,6 @@ deploy.bash
 deploy.bat
 
 # Configuration files with sensitive data
-config/default_config.py
 config/local_config.py
 config/production_config.py
 config/staging_config.py

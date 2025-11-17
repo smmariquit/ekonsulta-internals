@@ -2,21 +2,26 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
 import asyncio
+import os
+import json
 from typing import Dict, Any, Optional, List
 from models.task import Task
 from config.default_config import DEFAULT_CONFIG
 from utils.logging_util import get_logger
 import datetime
 from models.dsm_session import DSMSession
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 logger = get_logger("firebase_service")
 
 class FirebaseService:
     """Service for handling Firebase operations."""
     
-    def __init__(self, credentials_path: str):
+    def __init__(self):
         """Initialize Firebase service."""
-        self.credentials_path = credentials_path
         self.db = None
         self.initialize()
         logger.info("Firebase service initialized")
@@ -24,10 +29,106 @@ class FirebaseService:
     def initialize(self):
         """Initialize Firebase connection."""
         try:
-            cred = credentials.Certificate(self.credentials_path)
+<<<<<<< HEAD
+            # Try to get Firebase credentials from individual environment variables first
+            firebase_type = os.getenv('FIREBASE_TYPE')
+            firebase_project_id = os.getenv('FIREBASE_PROJECT_ID')
+            firebase_private_key_id = os.getenv('FIREBASE_PRIVATE_KEY_ID')
+            firebase_private_key = os.getenv('FIREBASE_PRIVATE_KEY')
+            firebase_client_email = os.getenv('FIREBASE_CLIENT_EMAIL')
+            firebase_client_id = os.getenv('FIREBASE_CLIENT_ID')
+            firebase_auth_uri = os.getenv('FIREBASE_AUTH_URI')
+            firebase_token_uri = os.getenv('FIREBASE_TOKEN_URI')
+            firebase_auth_provider_x509_cert_url = os.getenv('FIREBASE_AUTH_PROVIDER_X509_CERT_URL')
+            firebase_client_x509_cert_url = os.getenv('FIREBASE_CLIENT_X509_CERT_URL')
+            firebase_universe_domain = os.getenv('FIREBASE_UNIVERSE_DOMAIN')
+
+            if all([firebase_type, firebase_project_id, firebase_private_key_id, firebase_private_key, firebase_client_email]):
+                # Use individual environment variables
+                logger.info("Using individual Firebase environment variables")
+                
+                # Clean up the private key (replace \\n with actual newlines)
+                if firebase_private_key:
+                    firebase_private_key = firebase_private_key.replace('\\n', '\n')
+                
+                firebase_credentials = {
+                    "type": firebase_type,
+                    "project_id": firebase_project_id,
+                    "private_key_id": firebase_private_key_id,
+                    "private_key": firebase_private_key,
+                    "client_email": firebase_client_email,
+                    "client_id": firebase_client_id,
+                    "auth_uri": firebase_auth_uri,
+                    "token_uri": firebase_token_uri,
+                    "auth_provider_x509_cert_url": firebase_auth_provider_x509_cert_url,
+                    "client_x509_cert_url": firebase_client_x509_cert_url,
+                    "universe_domain": firebase_universe_domain
+                }
+                
+                cred = credentials.Certificate(firebase_credentials)
+                firebase_admin.initialize_app(cred)
+                self.db = firestore.client()
+                logger.info("Firebase connection established using environment variables")
+            else:
+                # Fallback to credentials file if environment variables are not available
+                logger.info("Individual Firebase environment variables not found, trying credentials file fallback")
+                credentials_path = os.getenv('FIRESTORE_CREDENTIALS', 'firebase-credentials.json')
+                
+                if os.path.exists(credentials_path):
+                    cred = credentials.Certificate(credentials_path)
+                    firebase_admin.initialize_app(cred)
+                    self.db = firestore.client()
+                    logger.info(f"Firebase connection established using credentials file: {credentials_path}")
+                else:
+                    raise ValueError(f"Neither individual Firebase environment variables nor credentials file ({credentials_path}) found")
+                
+=======
+            # Priority 1: Try individual environment variables first (Railway)
+            firebase_type = os.getenv('FIREBASE_TYPE')
+            firebase_project_id = os.getenv('FIREBASE_PROJECT_ID')
+            firebase_private_key = os.getenv('FIREBASE_PRIVATE_KEY')
+            firebase_client_email = os.getenv('FIREBASE_CLIENT_EMAIL')
+            
+            if all([firebase_type, firebase_project_id, firebase_private_key, firebase_client_email]):
+                # Build credentials dictionary from environment variables
+                cred_dict = {
+                    "type": firebase_type,
+                    "project_id": firebase_project_id,
+                    "private_key_id": os.getenv('FIREBASE_PRIVATE_KEY_ID'),
+                    "private_key": firebase_private_key,
+                    "client_email": firebase_client_email,
+                    "client_id": os.getenv('FIREBASE_CLIENT_ID'),
+                    "auth_uri": os.getenv('FIREBASE_AUTH_URI'),
+                    "token_uri": os.getenv('FIREBASE_TOKEN_URI'),
+                    "auth_provider_x509_cert_url": os.getenv('FIREBASE_AUTH_PROVIDER_X509_CERT_URL'),
+                    "client_x509_cert_url": os.getenv('FIREBASE_CLIENT_X509_CERT_URL'),
+                    "universe_domain": os.getenv('FIREBASE_UNIVERSE_DOMAIN')
+                }
+                cred = credentials.Certificate(cred_dict)
+                logger.info("Using Firebase credentials from individual environment variables")
+            else:
+                # Priority 2: Check for JSON file path in environment variable (local development)
+                service_account_key = os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY')
+                if service_account_key and os.path.exists(service_account_key):
+                    cred = credentials.Certificate(service_account_key)
+                    logger.info(f"Using Firebase credentials from environment file path: {service_account_key}")
+                elif os.path.exists(self.credentials_path):
+                    # Priority 3: Fall back to constructor path if file exists
+                    cred = credentials.Certificate(self.credentials_path)
+                    logger.info(f"Using Firebase credentials from constructor path: {self.credentials_path}")
+                else:
+                    # No credentials found anywhere
+                    raise FileNotFoundError(
+                        "Firebase credentials not found. Please set either:\n"
+                        "1. Individual environment variables (FIREBASE_TYPE, FIREBASE_PROJECT_ID, etc.), OR\n"
+                        "2. FIREBASE_SERVICE_ACCOUNT_KEY environment variable pointing to JSON file, OR\n"
+                        "3. Ensure the JSON file exists at the specified path"
+                    )
+            
             firebase_admin.initialize_app(cred)
             self.db = firestore.client()
             logger.info("Firebase connection established")
+>>>>>>> recovered-commit-1
         except Exception as e:
             logger.error(f"Error initializing Firebase: {str(e)}")
             raise
