@@ -7,17 +7,12 @@ load_dotenv()
 # Discord bot token
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
-<<<<<<< HEAD
 # Firebase configuration - now using individual environment variables
 # These are loaded from .env file:
 # FIREBASE_TYPE, FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY_ID, 
 # FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL, FIREBASE_CLIENT_ID,
 # FIREBASE_AUTH_URI, FIREBASE_TOKEN_URI, FIREBASE_AUTH_PROVIDER_X509_CERT_URL,
 # FIREBASE_CLIENT_X509_CERT_URL, FIREBASE_UNIVERSE_DOMAIN
-=======
-# Firestore credentials file
-FIRESTORE_CREDENTIALS = "internals-bot-firebase-adminsdk-fbsvc-279fc01645.json"
->>>>>>> recovered-commit-1
 
 # Logging configuration
 LOG_FILE = "discord.log"

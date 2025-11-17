@@ -19,7 +19,15 @@ logging.getLogger(__name__).info('dsm.py module imported')
 def admin_required():
     """Decorator to check if user is an admin."""
     async def predicate(interaction: discord.Interaction) -> bool:
-        cog = interaction.client.get_cog('DSM')
+        if not interaction.guild_id:
+            return False
+        # Get the bot from the client - Discord.py bots always have get_cog
+        try:
+            # Type assertion: interaction.client is actually a Bot instance
+            cog = interaction.client.get_cog('DSM')  # type: ignore
+        except AttributeError:
+            # Fallback in case of unusual client setup
+            return False
         if not cog:
             return False
         return await cog.is_admin(interaction.user.id, interaction.guild_id)
@@ -60,6 +68,12 @@ class DSM(commands.Cog):
     def is_valid_dsm_participation(self, content: str) -> bool:
         """Check if message is valid DSM participation (any non-empty message)."""
         return len(content.strip()) > 0
+
+    def extract_tasks_from_message(self, content: str) -> List[str]:
+        """Extract tasks from message content. For simplified DSM, just return the whole message as a task."""
+        if content.strip():
+            return [content.strip()]
+        return []
 
     async def get_user_tasks(self, channel: discord.TextChannel, user: discord.Member) -> List[str]:
         """Get tasks for a user from their messages."""
@@ -448,6 +462,41 @@ class DSM(commands.Cog):
                             await self.send_dsm_reminder(channel, config)
                     except (ValueError, TypeError):
                         logger.error(f"Invalid channel ID format: {channel_id}")
+                        continueconfig = await self.firebase_service.get_config(guild.id)
+            if not config:
+                continue
+                
+            timezone = await self.get_guild_timezone(guild.id)
+            now = datetime.datetime.now(timezone)
+            
+            # Get configured DSM time (default 09:00)
+            dsm_time_str = config.get('dsm_time', '09:00')
+            try:
+                dsm_hour, dsm_minute = map(int, dsm_time_str.split(':'))
+            except ValueError:
+                logger.error(f"Invalid DSM time format: {dsm_time_str}")
+                continue
+                
+            # Calculate reminder time (15 minutes before DSM)
+            reminder_hour = dsm_hour
+            reminder_minute = dsm_minute - 15
+            if reminder_minute < 0:
+                reminder_hour -= 1
+                reminder_minute += 60
+            if reminder_hour < 0:
+                reminder_hour += 24
+                
+            # Check if it's reminder time (8:45AM for default 9:00AM DSM)
+            if now.hour == reminder_hour and now.minute == reminder_minute:
+                channel_id = config.get('dsm_channel_id')
+                if channel_id:
+                    try:
+                        channel_id = int(channel_id)
+                        channel = guild.get_channel(channel_id)
+                        if channel:
+                            await self.send_dsm_reminder(channel, config)
+                    except (ValueError, TypeError):
+                        logger.error(f"Invalid channel ID format: {channel_id}")
                         continue
             
             # Check if DSM was created today and if it's past deadline (15 minutes after DSM time)
@@ -617,6 +666,9 @@ class DSM(commands.Cog):
 
     @app_commands.command(name="remind", description="Manually send a DSM reminder to everyone")
     async def remind(self, interaction: discord.Interaction):
+        if not interaction.guild_id:
+            await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
+            return
         config = await self.firebase_service.get_config(interaction.guild_id)
         current_dsm_channel_id = config.get('current_dsm_channel_id')
         if not current_dsm_channel_id:
@@ -640,6 +692,9 @@ class DSM(commands.Cog):
     async def add_admin(self, interaction: discord.Interaction, user: discord.Member):
         """Add an admin user to the bot."""
         try:
+            if not interaction.guild_id:
+                await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
+                return
             config = await self.firebase_service.get_config(interaction.guild_id)
             if not config:
                 config = {}
@@ -667,6 +722,9 @@ class DSM(commands.Cog):
     async def remove_admin(self, interaction: discord.Interaction, user: discord.Member):
         """Remove an admin user from the bot."""
         try:
+            if not interaction.guild_id:
+                await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
+                return
             config = await self.firebase_service.get_config(interaction.guild_id)
             if not config:
                 config = {}
@@ -699,6 +757,9 @@ class DSM(commands.Cog):
     async def list_admins(self, interaction: discord.Interaction):
         """List all admin users."""
         try:
+            if not interaction.guild_id or not interaction.guild:
+                await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
+                return
             config = await self.firebase_service.get_config(interaction.guild_id)
             admin_users = config.get('admin_users', [])
             
@@ -878,7 +939,8 @@ class DSM(commands.Cog):
                     if self.should_skip_dsm_today(current_time.date(), config):
                         continue
 
-                    await self.create_dsm(channel, config)
+                    if isinstance(channel, discord.TextChannel):
+                        await self.create_dsm(channel, config)
                     logger.info(f"Created automatic DSM in {guild.name}")
 
         except Exception as e:
@@ -922,7 +984,7 @@ class DSM(commands.Cog):
             logger.error(f"Error in simulate_dsm: {str(e)}")
             await interaction.followup.send("Failed to create DSM. Please try again.", ephemeral=True)
 
-    async def get_guild_timezone(self, guild_id: int) -> pytz.timezone:
+    async def get_guild_timezone(self, guild_id: int) -> pytz.BaseTzInfo:
         """Get the timezone for a guild, defaulting to UTC if not set."""
         try:
             config = await self.firebase_service.get_config(guild_id)
@@ -934,10 +996,10 @@ class DSM(commands.Cog):
 
     @app_commands.command(name="configure", description="Configure DSM settings")
     async def configure(self, interaction: discord.Interaction,
-                       timezone: str = None,
-                       dsm_time: str = None,
-                       dsm_channel: discord.TextChannel = None,
-                       dsm_lookback_hours: int = None):
+                       timezone: Optional[str] = None,
+                       dsm_time: Optional[str] = None,
+                       dsm_channel: Optional[discord.TextChannel] = None,
+                       dsm_lookback_hours: Optional[int] = None):
         """Configure standup settings"""
         try:
             # Defer the response immediately to prevent timeout
@@ -1325,7 +1387,7 @@ class DSM(commands.Cog):
             )
 
     @app_commands.command(name="debug_todo", description="Debug TODO message processing")
-    async def debug_todo(self, interaction: discord.Interaction, test_message: str = None):
+    async def debug_todo(self, interaction: discord.Interaction, test_message: Optional[str] = None):
         """Debug TODO message processing to help identify issues."""
         try:
             # Defer the response to prevent timeout
@@ -1433,16 +1495,7 @@ Regular message content"""
 async def setup(bot: commands.Bot):
     """Setup function for the DSM cog."""
     from services.firebase_service import FirebaseService
-<<<<<<< HEAD
-    firebase_service = FirebaseService()
-=======
-    import os
     
-    # The Firebase service now handles multiple credential sources automatically:
-    # 1. Individual environment variables (Railway)
-    # 2. JSON file path from environment variable (local dev)
-    # 3. JSON file from constructor path (fallback)
-    credentials_path = os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY', 'internals-bot-firebase-adminsdk-fbsvc-279fc01645.json')
-    firebase_service = FirebaseService(credentials_path)
->>>>>>> recovered-commit-1
+    # Firebase service now uses environment variables exclusively
+    firebase_service = FirebaseService()
     await bot.add_cog(DSM(bot, firebase_service))
