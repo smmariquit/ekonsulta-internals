@@ -27,10 +27,9 @@ class FirebaseService:
         logger.info("Firebase service initialized")
 
     def initialize(self):
-        """Initialize Firebase connection."""
+        """Initialize Firebase connection using environment variables only."""
         try:
-<<<<<<< HEAD
-            # Try to get Firebase credentials from individual environment variables first
+            # Get Firebase credentials from individual environment variables
             firebase_type = os.getenv('FIREBASE_TYPE')
             firebase_project_id = os.getenv('FIREBASE_PROJECT_ID')
             firebase_private_key_id = os.getenv('FIREBASE_PRIVATE_KEY_ID')
@@ -43,98 +42,50 @@ class FirebaseService:
             firebase_client_x509_cert_url = os.getenv('FIREBASE_CLIENT_X509_CERT_URL')
             firebase_universe_domain = os.getenv('FIREBASE_UNIVERSE_DOMAIN')
 
-            if all([firebase_type, firebase_project_id, firebase_private_key_id, firebase_private_key, firebase_client_email]):
-                # Use individual environment variables
-                logger.info("Using individual Firebase environment variables")
+            # Validate that all required environment variables are present
+            if not all([firebase_type, firebase_project_id, firebase_private_key_id, firebase_private_key, firebase_client_email]):
+                missing_vars = []
+                if not firebase_type: missing_vars.append('FIREBASE_TYPE')
+                if not firebase_project_id: missing_vars.append('FIREBASE_PROJECT_ID')
+                if not firebase_private_key_id: missing_vars.append('FIREBASE_PRIVATE_KEY_ID')
+                if not firebase_private_key: missing_vars.append('FIREBASE_PRIVATE_KEY')
+                if not firebase_client_email: missing_vars.append('FIREBASE_CLIENT_EMAIL')
                 
-                # Clean up the private key (replace \\n with actual newlines)
-                if firebase_private_key:
-                    firebase_private_key = firebase_private_key.replace('\\n', '\n')
-                
-                firebase_credentials = {
-                    "type": firebase_type,
-                    "project_id": firebase_project_id,
-                    "private_key_id": firebase_private_key_id,
-                    "private_key": firebase_private_key,
-                    "client_email": firebase_client_email,
-                    "client_id": firebase_client_id,
-                    "auth_uri": firebase_auth_uri,
-                    "token_uri": firebase_token_uri,
-                    "auth_provider_x509_cert_url": firebase_auth_provider_x509_cert_url,
-                    "client_x509_cert_url": firebase_client_x509_cert_url,
-                    "universe_domain": firebase_universe_domain
-                }
-                
-                cred = credentials.Certificate(firebase_credentials)
-                firebase_admin.initialize_app(cred)
-                self.db = firestore.client()
-                logger.info("Firebase connection established using environment variables")
-            else:
-                # Fallback to credentials file if environment variables are not available
-                logger.info("Individual Firebase environment variables not found, trying credentials file fallback")
-                credentials_path = os.getenv('FIRESTORE_CREDENTIALS', 'firebase-credentials.json')
-                
-                if os.path.exists(credentials_path):
-                    cred = credentials.Certificate(credentials_path)
-                    firebase_admin.initialize_app(cred)
-                    self.db = firestore.client()
-                    logger.info(f"Firebase connection established using credentials file: {credentials_path}")
-                else:
-                    raise ValueError(f"Neither individual Firebase environment variables nor credentials file ({credentials_path}) found")
-                
-=======
-            # Priority 1: Try individual environment variables first (Railway)
-            firebase_type = os.getenv('FIREBASE_TYPE')
-            firebase_project_id = os.getenv('FIREBASE_PROJECT_ID')
-            firebase_private_key = os.getenv('FIREBASE_PRIVATE_KEY')
-            firebase_client_email = os.getenv('FIREBASE_CLIENT_EMAIL')
+                raise ValueError(f"Missing required Firebase environment variables: {', '.join(missing_vars)}")
+
+            # Clean up the private key (replace \\n with actual newlines)
+            if firebase_private_key:
+                firebase_private_key = firebase_private_key.replace('\\n', '\n')
             
-            if all([firebase_type, firebase_project_id, firebase_private_key, firebase_client_email]):
-                # Build credentials dictionary from environment variables
-                cred_dict = {
-                    "type": firebase_type,
-                    "project_id": firebase_project_id,
-                    "private_key_id": os.getenv('FIREBASE_PRIVATE_KEY_ID'),
-                    "private_key": firebase_private_key,
-                    "client_email": firebase_client_email,
-                    "client_id": os.getenv('FIREBASE_CLIENT_ID'),
-                    "auth_uri": os.getenv('FIREBASE_AUTH_URI'),
-                    "token_uri": os.getenv('FIREBASE_TOKEN_URI'),
-                    "auth_provider_x509_cert_url": os.getenv('FIREBASE_AUTH_PROVIDER_X509_CERT_URL'),
-                    "client_x509_cert_url": os.getenv('FIREBASE_CLIENT_X509_CERT_URL'),
-                    "universe_domain": os.getenv('FIREBASE_UNIVERSE_DOMAIN')
-                }
-                cred = credentials.Certificate(cred_dict)
-                logger.info("Using Firebase credentials from individual environment variables")
-            else:
-                # Priority 2: Check for JSON file path in environment variable (local development)
-                service_account_key = os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY')
-                if service_account_key and os.path.exists(service_account_key):
-                    cred = credentials.Certificate(service_account_key)
-                    logger.info(f"Using Firebase credentials from environment file path: {service_account_key}")
-                elif os.path.exists(self.credentials_path):
-                    # Priority 3: Fall back to constructor path if file exists
-                    cred = credentials.Certificate(self.credentials_path)
-                    logger.info(f"Using Firebase credentials from constructor path: {self.credentials_path}")
-                else:
-                    # No credentials found anywhere
-                    raise FileNotFoundError(
-                        "Firebase credentials not found. Please set either:\n"
-                        "1. Individual environment variables (FIREBASE_TYPE, FIREBASE_PROJECT_ID, etc.), OR\n"
-                        "2. FIREBASE_SERVICE_ACCOUNT_KEY environment variable pointing to JSON file, OR\n"
-                        "3. Ensure the JSON file exists at the specified path"
-                    )
+            # Build Firebase credentials dictionary
+            firebase_credentials = {
+                "type": firebase_type,
+                "project_id": firebase_project_id,
+                "private_key_id": firebase_private_key_id,
+                "private_key": firebase_private_key,
+                "client_email": firebase_client_email,
+                "client_id": firebase_client_id,
+                "auth_uri": firebase_auth_uri,
+                "token_uri": firebase_token_uri,
+                "auth_provider_x509_cert_url": firebase_auth_provider_x509_cert_url,
+                "client_x509_cert_url": firebase_client_x509_cert_url,
+                "universe_domain": firebase_universe_domain
+            }
             
+            # Initialize Firebase
+            cred = credentials.Certificate(firebase_credentials)
             firebase_admin.initialize_app(cred)
             self.db = firestore.client()
-            logger.info("Firebase connection established")
->>>>>>> recovered-commit-1
+            logger.info("Firebase connection established using environment variables only")
         except Exception as e:
             logger.error(f"Error initializing Firebase: {str(e)}")
             raise
 
     async def get_config(self, guild_id: int) -> Dict[str, Any]:
         """Get guild configuration from the guild's config subcollection."""
+        if not self.db:
+            raise RuntimeError("Firebase database not initialized")
+            
         guild_ref = self.db.collection('guilds').document(str(guild_id))
         config_ref = guild_ref.collection('config').document('settings')
         config_doc = await asyncio.to_thread(config_ref.get)
@@ -159,6 +110,9 @@ class FirebaseService:
 
     async def save_user(self, user_data: Dict[str, Any]) -> None:
         """Save user information."""
+        if not self.db:
+            raise RuntimeError("Firebase database not initialized")
+            
         user_ref = self.db.collection('users').document(str(user_data['id']))
         await asyncio.to_thread(user_ref.set, {
             'username': user_data['name'],
@@ -173,6 +127,9 @@ class FirebaseService:
 
     async def update_user_activity(self, user_id: int) -> None:
         """Update user's last active timestamp."""
+        if not self.db:
+            raise RuntimeError("Firebase database not initialized")
+            
         user_ref = self.db.collection('users').document(str(user_id))
         await asyncio.to_thread(user_ref.update, {
             'last_active': datetime.datetime.now().isoformat()
@@ -181,6 +138,9 @@ class FirebaseService:
 
     async def save_tasks(self, user_tasks: Dict[int, Dict]) -> None:
         """Save tasks to Firebase."""
+        if not self.db:
+            raise RuntimeError("Firebase database not initialized")
+            
         batch = self.db.batch()
         
         for user_id, user_data in user_tasks.items():
@@ -209,6 +169,9 @@ class FirebaseService:
 
     async def load_tasks(self) -> Dict[int, Dict]:
         """Load tasks from Firebase."""
+        if not self.db:
+            raise RuntimeError("Firebase database not initialized")
+            
         users_ref = self.db.collection('users')
         users = await asyncio.to_thread(users_ref.get)
         
@@ -231,6 +194,9 @@ class FirebaseService:
 
     async def update_config(self, guild_id: int, updates: Dict[str, Any]) -> Dict[str, Any]:
         """Update guild configuration in the guild's config subcollection."""
+        if not self.db:
+            raise RuntimeError("Firebase database not initialized")
+            
         guild_ref = self.db.collection('guilds').document(str(guild_id))
         config_ref = guild_ref.collection('config').document('settings')
         
@@ -250,12 +216,18 @@ class FirebaseService:
 
     async def save_dsm_session(self, session: DSMSession) -> None:
         """Save a DSM session to Firebase."""
+        if not self.db:
+            raise RuntimeError("Firebase database not initialized")
+            
         session_ref = self.db.collection('dsm_sessions').document()
         await asyncio.to_thread(session_ref.set, session.to_dict())
         logger.info(f"Saved DSM session for guild {session.guild_id}")
 
     async def get_last_dsm_session(self, guild_id: int) -> Optional[DSMSession]:
         """Get the last DSM session for a guild."""
+        if not self.db:
+            raise RuntimeError("Firebase database not initialized")
+            
         sessions_ref = self.db.collection('dsm_sessions')
         query = sessions_ref.where('guild_id', '==', guild_id).order_by('created_at', direction=firestore.Query.DESCENDING).limit(1)
         sessions = await asyncio.to_thread(query.get)
@@ -267,6 +239,9 @@ class FirebaseService:
 
     async def get_dsm_sessions(self, guild_id: int, limit: int = 10) -> List[DSMSession]:
         """Get recent DSM sessions for a guild."""
+        if not self.db:
+            raise RuntimeError("Firebase database not initialized")
+            
         sessions_ref = self.db.collection('dsm_sessions')
         query = sessions_ref.where('guild_id', '==', guild_id).order_by('created_at', direction=firestore.Query.DESCENDING).limit(limit)
         sessions = await asyncio.to_thread(query.get)
@@ -275,6 +250,9 @@ class FirebaseService:
 
     async def update_dsm_session(self, thread_id: int, updates: Dict[str, Any]) -> None:
         """Update a DSM session."""
+        if not self.db:
+            raise RuntimeError("Firebase database not initialized")
+            
         sessions_ref = self.db.collection('dsm_sessions')
         query = sessions_ref.where('thread_id', '==', thread_id).limit(1)
         sessions = await asyncio.to_thread(query.get)
@@ -310,7 +288,7 @@ class FirebaseService:
             logger.error(f"[DEBUG] Error saving DSM message IDs to Firebase: {str(e)}")
             raise
 
-    async def get_latest_dsm_message(self, guild_id: int, user_id: str) -> dict:
+    async def get_latest_dsm_message(self, guild_id: int, user_id: str) -> Optional[Dict[str, Any]]:
         """Get the latest DSM message IDs for a user from guild's config."""
         try:
             # Get the config
@@ -334,6 +312,9 @@ class FirebaseService:
     async def load_dsm_messages(self) -> Dict[int, Dict[int, int]]:
         """Load DSM message IDs from guild configs."""
         try:
+            if not self.db:
+                raise RuntimeError("Firebase database not initialized")
+                
             # Get all guild documents
             guilds = await asyncio.to_thread(self.db.collection('guilds').get)
             
