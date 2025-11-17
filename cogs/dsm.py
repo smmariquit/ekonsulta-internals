@@ -894,9 +894,8 @@ class DSM(commands.Cog):
 
         reminder_msg = (
             f"Good morning, team!\n\n"
-            f"DSM starts in 15 minutes at {dsm_start_str}**"
+            f"DSM starts in 15 minutes at {dsm_start_str}.\n"
             f"Deadline is at {deadline_str}!\n\n"
-            f"{' '.join(all_mentions)}"
         )
         await channel.send(reminder_msg)
 
