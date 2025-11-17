@@ -39,9 +39,7 @@ class DSM(commands.Cog):
     def __init__(self, bot: commands.Bot, firebase_service: FirebaseService):
         self.bot = bot
         self.firebase_service = firebase_service
-        self.last_reminder_sent = {}  # Track when reminders were sent per guild
         self.auto_dsm_task.start()
-        self.dsm_reminder_task.start()
         self.log_config_task.start()
         logger.info("DSM cog initialized")
 
@@ -362,8 +360,7 @@ class DSM(commands.Cog):
             )
             embed.add_field(
                 name="Timeline",
-                value=f"🕒 End: {end_time_str}\n"
-                      f"⚠️ Deadline: {deadline_time_str}",
+                value=f"⚠️ Deadline: {deadline_time_str}",
                 inline=False
             )
             
@@ -377,23 +374,7 @@ class DSM(commands.Cog):
             updated_users = []
             pending_users = all_members.copy()
             
-            # Add participants section
-            participants_line = f"👥 Total: {len(all_members)}  ✅ Participated: 0  ⏳ Pending: {len(all_members)}"
-            embed.add_field(
-                name="Participants",
-                value=participants_line,
-                inline=False
-            )
-            embed.add_field(
-                name="✅ Participated",
-                value="None",
-                inline=False
-            )
-            embed.add_field(
-                name="⏳ Pending",
-                value="\n".join([user.mention for user in pending_users]) if pending_users else "None",
-                inline=False
-            )
+
             
             # Add weekly attendance section
             weekly_attendance_text = self.get_weekly_attendance_display(config, all_members, current_time.date(), current_time)
@@ -424,77 +405,7 @@ class DSM(commands.Cog):
         except Exception as e:
             logger.error(f"Error creating DSM: {str(e)}")
 
-    @tasks.loop(minutes=1)
-    async def dsm_reminder_task(self):
-        # Check every minute if it's time to send a reminder (at 8:45AM) and update DSM embed (after deadline at 9:15AM)
-        for guild in self.bot.guilds:
-            try:
-                config = await self.firebase_service.get_config(guild.id)
-                if not config:
-                    continue
-                    
-                timezone = await self.get_guild_timezone(guild.id)
-                now = datetime.datetime.now(timezone)
-                
-                # Get configured DSM time (default 09:00)
-                dsm_time_str = config.get('dsm_time', '09:00')
-                try:
-                    dsm_hour, dsm_minute = map(int, dsm_time_str.split(':'))
-                except ValueError:
-                    logger.error(f"Invalid DSM time format: {dsm_time_str}")
-                    continue
-                    
-                # Calculate reminder time (15 minutes before DSM)
-                reminder_hour = dsm_hour
-                reminder_minute = dsm_minute - 15
-                if reminder_minute < 0:
-                    reminder_hour -= 1
-                    reminder_minute += 60
-                if reminder_hour < 0:
-                    reminder_hour += 24
-                    
-                # Check if it's reminder time (8:45AM for default 9:00AM DSM)
-                if now.hour == reminder_hour and now.minute == reminder_minute:
-                    # Check if we've already sent a reminder today
-                    today_key = f"{guild.id}_{now.date()}"
-                    if today_key in self.last_reminder_sent:
-                        continue  # Already sent reminder today
-                    
-                    channel_id = config.get('dsm_channel_id')
-                    if channel_id:
-                        try:
-                            channel_id = int(channel_id)
-                            channel = guild.get_channel(channel_id)
-                            if channel and isinstance(channel, discord.TextChannel):
-                                logger.info(f"Sending DSM reminder for guild {guild.name} at {now.strftime('%H:%M')}")
-                                await self.send_dsm_reminder(channel, config)
-                                # Mark that we've sent the reminder today
-                                self.last_reminder_sent[today_key] = now
-                        except (ValueError, TypeError):
-                            logger.error(f"Invalid channel ID format: {channel_id}")
-                            continue
-                            
-            except Exception as e:
-                logger.error(f"Error in dsm_reminder_task for guild {guild.name}: {str(e)}")
-            
-            # Check if DSM was created today and if it's past deadline (15 minutes after DSM time)
-            current_dsm_channel_id = config.get('current_dsm_channel_id')
-            if current_dsm_channel_id:
-                try:
-                    current_dsm_channel_id = int(current_dsm_channel_id)
-                    channel = guild.get_channel(current_dsm_channel_id)
-                    if channel:
-                        last_dsm_time = config.get('last_dsm_time')
-                        if last_dsm_time:
-                            dsm_time = datetime.datetime.fromisoformat(last_dsm_time).astimezone(timezone)
-                            dsm_deadline = dsm_time + datetime.timedelta(hours=14, minutes=15)
-                            
-                            # Update DSM embed 1 minute after deadline
-                            if (dsm_deadline + datetime.timedelta(minutes=1)) <= now < (dsm_deadline + datetime.timedelta(minutes=2)):
-                                await self.update_dsm_embed(guild, channel, config)
-                except (ValueError, TypeError):
-                    logger.error(f"Invalid current DSM channel ID format: {current_dsm_channel_id}")
-                    continue
+    # Pre-reminder functionality removed - DSM messages are sent directly at configured time
 
     def should_skip_dsm_today(self, date, config):
         """Check if DSM should be skipped for the given date."""
@@ -532,11 +443,11 @@ class DSM(commands.Cog):
             header_dates.append(f"{date_str:>5}")
             header_days.append(f"{day_abbrev:>5}")
         
-        # Create table
+        # Create table with better alignment for long names
         table_lines = []
-        table_lines.append(f"{'Name':<12} {' '.join(header_days)}")
-        table_lines.append(f"{'':>12} {' '.join(header_dates)}")
-        table_lines.append(f"{'-' * 12} {'-' * 29}")
+        table_lines.append(f"{'Name':<16} {' '.join(header_days)}")
+        table_lines.append(f"{'':>16} {' '.join(header_dates)}")
+        table_lines.append(f"{'-' * 16} {'-' * 29}")
         
         for member in members[:10]:  # Limit to first 10 members to avoid embed length issues
             user_weekly_key = f"{member.id}_{week_key}"
@@ -562,7 +473,9 @@ class DSM(commands.Cog):
             
             # Format status symbols with proper spacing
             formatted_symbols = [f"{symbol:>5}" for symbol in status_symbols]
-            table_lines.append(f"{member.display_name[:12]:<12} {' '.join(formatted_symbols)}")
+            # Truncate long display names more gracefully
+            display_name = member.display_name[:16] if len(member.display_name) <= 16 else member.display_name[:13] + "..."
+            table_lines.append(f"{display_name:<16} {' '.join(formatted_symbols)}")
         
         if len(members) > 10:
             table_lines.append(f"... and {len(members) - 10} more")
