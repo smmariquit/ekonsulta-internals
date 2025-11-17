@@ -39,6 +39,7 @@ class DSM(commands.Cog):
     def __init__(self, bot: commands.Bot, firebase_service: FirebaseService):
         self.bot = bot
         self.firebase_service = firebase_service
+        self.last_reminder_sent = {}  # Track when reminders were sent per guild
         self.auto_dsm_task.start()
         self.dsm_reminder_task.start()
         self.log_config_task.start()
@@ -427,77 +428,54 @@ class DSM(commands.Cog):
     async def dsm_reminder_task(self):
         # Check every minute if it's time to send a reminder (at 8:45AM) and update DSM embed (after deadline at 9:15AM)
         for guild in self.bot.guilds:
-            config = await self.firebase_service.get_config(guild.id)
-            if not config:
-                continue
-                
-            timezone = await self.get_guild_timezone(guild.id)
-            now = datetime.datetime.now(timezone)
-            
-            # Get configured DSM time (default 09:00)
-            dsm_time_str = config.get('dsm_time', '09:00')
             try:
-                dsm_hour, dsm_minute = map(int, dsm_time_str.split(':'))
-            except ValueError:
-                logger.error(f"Invalid DSM time format: {dsm_time_str}")
-                continue
+                config = await self.firebase_service.get_config(guild.id)
+                if not config:
+                    continue
+                    
+                timezone = await self.get_guild_timezone(guild.id)
+                now = datetime.datetime.now(timezone)
                 
-            # Calculate reminder time (15 minutes before DSM)
-            reminder_hour = dsm_hour
-            reminder_minute = dsm_minute - 15
-            if reminder_minute < 0:
-                reminder_hour -= 1
-                reminder_minute += 60
-            if reminder_hour < 0:
-                reminder_hour += 24
-                
-            # Check if it's reminder time (8:45AM for default 9:00AM DSM)
-            if now.hour == reminder_hour and now.minute == reminder_minute:
-                channel_id = config.get('dsm_channel_id')
-                if channel_id:
-                    try:
-                        channel_id = int(channel_id)
-                        channel = guild.get_channel(channel_id)
-                        if channel:
-                            await self.send_dsm_reminder(channel, config)
-                    except (ValueError, TypeError):
-                        logger.error(f"Invalid channel ID format: {channel_id}")
-                        continueconfig = await self.firebase_service.get_config(guild.id)
-            if not config:
-                continue
-                
-            timezone = await self.get_guild_timezone(guild.id)
-            now = datetime.datetime.now(timezone)
-            
-            # Get configured DSM time (default 09:00)
-            dsm_time_str = config.get('dsm_time', '09:00')
-            try:
-                dsm_hour, dsm_minute = map(int, dsm_time_str.split(':'))
-            except ValueError:
-                logger.error(f"Invalid DSM time format: {dsm_time_str}")
-                continue
-                
-            # Calculate reminder time (15 minutes before DSM)
-            reminder_hour = dsm_hour
-            reminder_minute = dsm_minute - 15
-            if reminder_minute < 0:
-                reminder_hour -= 1
-                reminder_minute += 60
-            if reminder_hour < 0:
-                reminder_hour += 24
-                
-            # Check if it's reminder time (8:45AM for default 9:00AM DSM)
-            if now.hour == reminder_hour and now.minute == reminder_minute:
-                channel_id = config.get('dsm_channel_id')
-                if channel_id:
-                    try:
-                        channel_id = int(channel_id)
-                        channel = guild.get_channel(channel_id)
-                        if channel:
-                            await self.send_dsm_reminder(channel, config)
-                    except (ValueError, TypeError):
-                        logger.error(f"Invalid channel ID format: {channel_id}")
-                        continue
+                # Get configured DSM time (default 09:00)
+                dsm_time_str = config.get('dsm_time', '09:00')
+                try:
+                    dsm_hour, dsm_minute = map(int, dsm_time_str.split(':'))
+                except ValueError:
+                    logger.error(f"Invalid DSM time format: {dsm_time_str}")
+                    continue
+                    
+                # Calculate reminder time (15 minutes before DSM)
+                reminder_hour = dsm_hour
+                reminder_minute = dsm_minute - 15
+                if reminder_minute < 0:
+                    reminder_hour -= 1
+                    reminder_minute += 60
+                if reminder_hour < 0:
+                    reminder_hour += 24
+                    
+                # Check if it's reminder time (8:45AM for default 9:00AM DSM)
+                if now.hour == reminder_hour and now.minute == reminder_minute:
+                    # Check if we've already sent a reminder today
+                    today_key = f"{guild.id}_{now.date()}"
+                    if today_key in self.last_reminder_sent:
+                        continue  # Already sent reminder today
+                    
+                    channel_id = config.get('dsm_channel_id')
+                    if channel_id:
+                        try:
+                            channel_id = int(channel_id)
+                            channel = guild.get_channel(channel_id)
+                            if channel and isinstance(channel, discord.TextChannel):
+                                logger.info(f"Sending DSM reminder for guild {guild.name} at {now.strftime('%H:%M')}")
+                                await self.send_dsm_reminder(channel, config)
+                                # Mark that we've sent the reminder today
+                                self.last_reminder_sent[today_key] = now
+                        except (ValueError, TypeError):
+                            logger.error(f"Invalid channel ID format: {channel_id}")
+                            continue
+                            
+            except Exception as e:
+                logger.error(f"Error in dsm_reminder_task for guild {guild.name}: {str(e)}")
             
             # Check if DSM was created today and if it's past deadline (15 minutes after DSM time)
             current_dsm_channel_id = config.get('current_dsm_channel_id')
@@ -620,12 +598,29 @@ class DSM(commands.Cog):
             
             # Separate participated and pending users
             participated_users = []
-            for user_id in dsm_participants:
-                member = guild.get_member(int(user_id))
-                if member and member in all_members:
-                    participated_users.append(member)
+            participated_user_ids = set()
             
-            pending_users = [member for member in all_members if member not in participated_users]
+            logger.info(f"[DEBUG] Processing {len(dsm_participants)} participants from config")
+            
+            for user_id in dsm_participants:
+                try:
+                    # Handle both string and int user IDs
+                    member_id = int(user_id)
+                    member = guild.get_member(member_id)
+                    if member and member in all_members:
+                        participated_users.append(member)
+                        participated_user_ids.add(member_id)
+                        logger.info(f"[DEBUG] Added participant: {member.display_name} (ID: {member_id})")
+                    else:
+                        logger.warning(f"[DEBUG] Member not found or excluded: {member_id}")
+                except (ValueError, TypeError):
+                    logger.warning(f"Invalid user ID in dsm_participants: {user_id}")
+                    continue
+            
+            # Remove participated users from all_members to get pending users
+            pending_users = [member for member in all_members if member.id not in participated_user_ids]
+            
+            logger.info(f"[DEBUG] Final counts - Participated: {len(participated_users)}, Pending: {len(pending_users)}, Total: {len(all_members)}")
 
             # Update the embed
             embed = dsm_message.embeds[0]
@@ -796,7 +791,7 @@ class DSM(commands.Cog):
             )
 
     @app_commands.command(name="show_lookback", description="Show current DSM lookback configuration")
-    async def show_lookback(self, interaction: discord.Interaction):
+    async def show_lookback(self, interaction: discord.Interaction):  # type: ignore
         """Show the current DSM lookback configuration."""
         try:
             # Defer the response to prevent timeout
@@ -898,10 +893,9 @@ class DSM(commands.Cog):
                 all_mentions.append(member.mention)
 
         reminder_msg = (
-            f"🌅 **Good Morning, E-Konsulta Team!**\n\n"
-            f"⏰ **DSM starts in 15 minutes at {dsm_start_str}!**\n"
-            f"⚠️ **Deadline: {deadline_str} (You have all day to update your tasks)**\n\n"
-            f"Get ready to share your tasks and updates for today!\n\n"
+            f"Good morning, team!\n\n"
+            f"DSM starts in 15 minutes at {dsm_start_str}**"
+            f"Deadline is at {deadline_str}!\n\n"
             f"{' '.join(all_mentions)}"
         )
         await channel.send(reminder_msg)
@@ -947,7 +941,7 @@ class DSM(commands.Cog):
             logger.error(f"Error in auto_dsm_task: {str(e)}")
 
     @app_commands.command(name="simulate_dsm", description="Manually trigger a DSM")
-    async def simulate_dsm(self, interaction: discord.Interaction):
+    async def simulate_dsm(self, interaction: discord.Interaction):  # type: ignore
         """Manually trigger a DSM."""
         try:
             # Defer the response immediately to prevent timeout
@@ -994,7 +988,7 @@ class DSM(commands.Cog):
             logger.error(f"Error getting timezone for guild {guild_id}: {str(e)}")
             return pytz.UTC
 
-    @app_commands.command(name="configure", description="Configure DSM settings")
+    @app_commands.command(name="configure", description="Configure DSM settings")  # type: ignore
     async def configure(self, interaction: discord.Interaction,
                        timezone: Optional[str] = None,
                        dsm_time: Optional[str] = None,
