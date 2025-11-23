@@ -331,9 +331,10 @@ class DSM(commands.Cog):
                 last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
             else:
                 return False
-            dsm_deadline = last_dsm_time + datetime.timedelta(hours=14, minutes=15)
+            # Extend command-based participation window to full 24h after DSM start
+            extended_deadline = last_dsm_time + datetime.timedelta(hours=24)
             now_utc = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
-            if not (last_dsm_time <= now_utc <= dsm_deadline):
+            if not (last_dsm_time <= now_utc <= extended_deadline):
                 return False
             weekly_attendance = config.get('weekly_attendance', {})
             dsm_participants = config.get('dsm_participants', {})
