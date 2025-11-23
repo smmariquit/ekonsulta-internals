@@ -412,16 +412,23 @@ class DSM(commands.Cog):
                 value=f"⚠️ Deadline: {deadline_time_str}",
                 inline=False
             )
+            # Add initial participation fields (needed for later updates)
+            all_members = [member for member in channel.guild.members 
+                          if not member.bot and member.id not in excluded_users]
+            participated_users = []
+            pending_users = all_members.copy()
+            participants_line = f"👥 Total: {len(all_members)}  ✅ Participated: 0  ⏳ Pending: {len(pending_users)}"
+            embed.add_field(name="Participants", value=participants_line, inline=False)
+            embed.add_field(name="✅ Participated", value="None", inline=False)
+            embed.add_field(name="⏳ Pending", value="\n".join([m.mention for m in pending_users]) if pending_users else "None", inline=False)
             
             # Send DSM embed and update last_dsm_time in config immediately
             dsm_message = await channel.send(embed=embed)
             config['last_dsm_time'] = dsm_message.created_at.isoformat()
             
-            # Initialize participation tracking
-            all_members = [member for member in channel.guild.members 
-                          if not member.bot and member.id not in excluded_users]
+            # Initialize participation tracking (already collected all_members above)
             updated_users = []
-            pending_users = all_members.copy()
+            pending_users = [m for m in all_members]
             
 
             
@@ -578,28 +585,47 @@ class DSM(commands.Cog):
             embed = dsm_message.embeds[0]
             participants_line = f"👥 Total: {len(all_members)}  ✅ Participated: {len(participated_users)}  ⏳ Pending: {len(pending_users)}"
             
-            # Update the Participants field
+            # Update or add Participants field
+            found_participants = False
             for i, field in enumerate(embed.fields):
                 if field.name == "Participants":
                     embed.set_field_at(i, name="Participants", value=participants_line, inline=False)
+                    found_participants = True
                     break
+            if not found_participants:
+                embed.add_field(name="Participants", value=participants_line, inline=False)
 
             # Update the Participated and Pending fields
             participated_list = "\n".join([user.mention for user in participated_users]) if participated_users else "None"
             pending_list = "\n".join([user.mention for user in pending_users]) if pending_users else "None"
 
+            found_participated = False
+            found_pending = False
+            found_weekly = False
             for i, field in enumerate(embed.fields):
                 if field.name == "✅ Participated":
                     embed.set_field_at(i, name="✅ Participated", value=participated_list, inline=False)
+                    found_participated = True
                 elif field.name == "⏳ Pending":
                     embed.set_field_at(i, name="⏳ Pending", value=pending_list, inline=False)
+                    found_pending = True
                 elif field.name == "📅 Weekly Attendance":
-                    # Update weekly attendance display with proper timezone
                     timezone = await self.get_guild_timezone(guild.id)
                     timezone_aware_dsm_time = last_dsm_time.astimezone(timezone)
                     weekly_attendance_text = self.get_weekly_attendance_display(config, all_members, timezone_aware_dsm_time.date(), timezone_aware_dsm_time)
                     if weekly_attendance_text:
                         embed.set_field_at(i, name="📅 Weekly Attendance", value=weekly_attendance_text, inline=False)
+                    found_weekly = True
+            if not found_participated:
+                embed.add_field(name="✅ Participated", value=participated_list, inline=False)
+            if not found_pending:
+                embed.add_field(name="⏳ Pending", value=pending_list, inline=False)
+            if not found_weekly:
+                timezone = await self.get_guild_timezone(guild.id)
+                timezone_aware_dsm_time = last_dsm_time.astimezone(timezone)
+                weekly_attendance_text = self.get_weekly_attendance_display(config, all_members, timezone_aware_dsm_time.date(), timezone_aware_dsm_time)
+                if weekly_attendance_text:
+                    embed.add_field(name="📅 Weekly Attendance", value=weekly_attendance_text, inline=False)
 
             await dsm_message.edit(embed=embed)
             logger.info(f"[DEBUG] Updated DSM embed with {len(participated_users)} participated users and {len(pending_users)} pending users")
