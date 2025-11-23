@@ -315,6 +315,55 @@ class DSM(commands.Cog):
         await self.firebase_service.update_config(guild.id, config)
         await self.update_dsm_embed(guild, channel, config)
 
+    async def mark_command_participation(self, interaction: discord.Interaction, config: dict) -> bool:
+        """Mark participation when a user runs a slash/prefix command in the DSM channel."""
+        try:
+            if not interaction.guild_id or not interaction.guild:
+                return False
+            dsm_channel_id = config.get('dsm_channel_id')
+            if not dsm_channel_id:
+                return False
+            # Normalize types for comparison
+            if str(interaction.channel_id) != str(dsm_channel_id):
+                return False
+            last_dsm_time = config.get('last_dsm_time')
+            if last_dsm_time:
+                last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
+            else:
+                return False
+            dsm_deadline = last_dsm_time + datetime.timedelta(hours=14, minutes=15)
+            now_utc = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+            if not (last_dsm_time <= now_utc <= dsm_deadline):
+                return False
+            weekly_attendance = config.get('weekly_attendance', {})
+            dsm_participants = config.get('dsm_participants', {})
+            user_id = str(interaction.user.id)
+            timezone = await self.get_guild_timezone(interaction.guild_id)
+            participation_datetime = now_utc.astimezone(timezone)
+            participation_date = participation_datetime.date()
+            week_key = participation_date.strftime('%Y-%W')
+            user_weekly_key = f"{user_id}_{week_key}"
+            dsm_participants[user_id] = {
+                'command': True,
+                'participated_at': now_utc.isoformat()
+            }
+            if user_weekly_key not in weekly_attendance:
+                weekly_attendance[user_weekly_key] = {'M': False, 'T': False, 'W': False, 'Th': False, 'F': False}
+            day_abbrev = ['M', 'T', 'W', 'Th', 'F'][participation_date.weekday()] if participation_date.weekday() < 5 else None
+            if day_abbrev:
+                weekly_attendance[user_weekly_key][day_abbrev] = True
+            config['dsm_participants'] = dsm_participants
+            config['weekly_attendance'] = weekly_attendance
+            await self.firebase_service.update_config(interaction.guild_id, config)
+            channel = interaction.channel
+            if isinstance(channel, discord.TextChannel):
+                await self.update_dsm_embed(interaction.guild, channel, config)
+            logger.info(f"[mark_command_participation] Counted command participation for user {interaction.user.id}")
+            return True
+        except Exception as e:
+            logger.error(f"Error marking command participation: {e}")
+            return False
+
     # Removed update_todo_tasks_embed function as it's no longer needed with simplified DSM
 
     async def create_dsm(self, channel: discord.TextChannel, config: dict, is_automatic: bool = True):
@@ -568,6 +617,8 @@ class DSM(commands.Cog):
             await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
             return
         config = await self.firebase_service.get_config(interaction.guild_id)
+        # Mark participation if run in DSM channel during active window
+        await self.mark_command_participation(interaction, config)
         current_dsm_channel_id = config.get('current_dsm_channel_id')
         if not current_dsm_channel_id:
             await interaction.response.send_message("No DSM channel is set.", ephemeral=True)
@@ -594,6 +645,7 @@ class DSM(commands.Cog):
                 await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
                 return
             config = await self.firebase_service.get_config(interaction.guild_id)
+            await self.mark_command_participation(interaction, config)
             if not config:
                 config = {}
 
@@ -624,6 +676,7 @@ class DSM(commands.Cog):
                 await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
                 return
             config = await self.firebase_service.get_config(interaction.guild_id)
+            await self.mark_command_participation(interaction, config)
             if not config:
                 config = {}
 
@@ -659,6 +712,7 @@ class DSM(commands.Cog):
                 await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
                 return
             config = await self.firebase_service.get_config(interaction.guild_id)
+            await self.mark_command_participation(interaction, config)
             admin_users = config.get('admin_users', [])
             
             if admin_users:
@@ -700,6 +754,7 @@ class DSM(commands.Cog):
             # Defer the response to prevent timeout
             await interaction.response.defer(ephemeral=True)
             config = await self.firebase_service.get_config(interaction.guild_id)
+            await self.mark_command_participation(interaction, config)
             if not config:
                 config = {}
             
@@ -850,6 +905,7 @@ class DSM(commands.Cog):
             await interaction.response.defer(ephemeral=True)
             
             config = await self.firebase_service.get_config(interaction.guild_id)
+            await self.mark_command_participation(interaction, config)
             if not config:
                 await interaction.followup.send("Please configure DSM settings first using `/configure`.", ephemeral=True)
                 return
@@ -903,6 +959,7 @@ class DSM(commands.Cog):
             
             # Get current config
             config = await self.firebase_service.get_config(interaction.guild_id)
+            await self.mark_command_participation(interaction, config)
             if not config:
                 config = {}
 
@@ -1015,6 +1072,8 @@ class DSM(commands.Cog):
         try:
             # Update the config with the new channel ID
             await self.firebase_service.update_config(interaction.guild_id, {'dsm_channel_id': str(channel.id)})
+            config = await self.firebase_service.get_config(interaction.guild_id)
+            await self.mark_command_participation(interaction, config)
             
             # Create confirmation embed
             embed = discord.Embed(
@@ -1045,6 +1104,7 @@ class DSM(commands.Cog):
             
             # Get current config
             config = await self.firebase_service.get_config(interaction.guild_id)
+            await self.mark_command_participation(interaction, config)
             
             # Add date to skipped dates if not already present
             if date not in config.get('skipped_dates', []):
@@ -1079,6 +1139,7 @@ class DSM(commands.Cog):
             
             # Get current config
             config = await self.firebase_service.get_config(interaction.guild_id)
+            await self.mark_command_participation(interaction, config)
             
             # Remove date from skipped dates if present
             skipped_dates = config.get('skipped_dates', [])
@@ -1111,6 +1172,7 @@ class DSM(commands.Cog):
             
             # Get current config
             config = await self.firebase_service.get_config(interaction.guild_id)
+            await self.mark_command_participation(interaction, config)
             skipped_dates = config.get('skipped_dates', [])
             
             if skipped_dates:
@@ -1172,6 +1234,7 @@ class DSM(commands.Cog):
         """Exclude a user from DSM."""
         try:
             config = await self.firebase_service.get_config(interaction.guild_id)
+            await self.mark_command_participation(interaction, config)
             logger.info(f"[DEBUG] Current config for guild {interaction.guild_id}: {config}")
             
             if not config:
@@ -1205,6 +1268,7 @@ class DSM(commands.Cog):
         """Include a user in DSM."""
         try:
             config = await self.firebase_service.get_config(interaction.guild_id)
+            await self.mark_command_participation(interaction, config)
             if not config:
                 config = {}
 
@@ -1237,6 +1301,7 @@ class DSM(commands.Cog):
         """List all excluded users."""
         try:
             config = await self.firebase_service.get_config(interaction.guild_id)
+            await self.mark_command_participation(interaction, config)
             logger.info(f"[DEBUG] Config for list_excluded: {config}")
             
             excluded_users = config.get('excluded_users', [])
@@ -1289,6 +1354,7 @@ class DSM(commands.Cog):
             # Defer the response to prevent timeout
             await interaction.response.defer(ephemeral=True)
             config = await self.firebase_service.get_config(interaction.guild_id)
+            await self.mark_command_participation(interaction, config)
             
             # Test the extract_tasks_from_message function
             if test_message:
