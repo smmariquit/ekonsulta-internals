@@ -380,7 +380,7 @@ class DSM(commands.Cog):
             weekly_attendance_text = self.get_weekly_attendance_display(config, all_members, current_time.date(), current_time)
             if weekly_attendance_text:
                 embed.add_field(
-                    name="📅 Weekly Attendance (M T W Th F)",
+                    name="📅 Weekly Attendance",
                     value=weekly_attendance_text,
                     inline=False
                 )
@@ -426,7 +426,7 @@ class DSM(commands.Cog):
         return False
     
     def get_weekly_attendance_display(self, config, members, today, current_datetime=None):
-        """Generate weekly attendance display string with proper date alignment."""
+        """Generate minimal weekly attendance display string."""
         weekly_attendance = config.get('weekly_attendance', {})
         week_key = today.strftime('%Y-%W')
         
@@ -434,20 +434,10 @@ class DSM(commands.Cog):
         days_since_monday = today.weekday()
         monday_of_week = today - datetime.timedelta(days=days_since_monday)
         
-        # Create header with dates
-        header_dates = []
-        header_days = []
-        for i, day_abbrev in enumerate(['M', 'T', 'W', 'Th', 'F']):
-            current_day_date = monday_of_week + datetime.timedelta(days=i)
-            date_str = current_day_date.strftime('%m/%d')
-            header_dates.append(f"{date_str:>5}")
-            header_days.append(f"{day_abbrev:>5}")
-        
-        # Create table with better alignment for long names
+        # Create minimal table
         table_lines = []
-        table_lines.append(f"{'Name':<16} {' '.join(header_days)}")
-        table_lines.append(f"{'':>16} {' '.join(header_dates)}")
-        table_lines.append(f"{'-' * 16} {'-' * 29}")
+        table_lines.append(f"{'Name':<16} M T W Th F")
+        table_lines.append(f"{'-' * 16} {'-' * 9}")
         
         for member in members[:10]:  # Limit to first 10 members to avoid embed length issues
             user_weekly_key = f"{member.id}_{week_key}"
@@ -459,23 +449,23 @@ class DSM(commands.Cog):
                 
                 # Check if this day should have had a DSM (not weekend/holiday and has passed)
                 if self.should_skip_dsm_today(current_day_date, config):
-                    # Day was skipped (weekend/holiday) - show as pending
-                    status_symbols.append('⭕')
+                    # Day was skipped (weekend/holiday) - leave blank
+                    status_symbols.append(' ')
                 elif attendance.get(day, False):
                     # User participated on this day
                     status_symbols.append('✅')
                 elif current_day_date > today:
-                    # Future workday - show as pending
-                    status_symbols.append('⭕')
+                    # Future workday - leave blank
+                    status_symbols.append(' ')
                 else:
                     # Past or current workday without participation
                     status_symbols.append('❌')
             
-            # Format status symbols with proper spacing
-            formatted_symbols = [f"{symbol:>5}" for symbol in status_symbols]
+            # Format status symbols with single character spacing
+            formatted_symbols = ' '.join(status_symbols)
             # Truncate long display names more gracefully
             display_name = member.display_name[:16] if len(member.display_name) <= 16 else member.display_name[:13] + "..."
-            table_lines.append(f"{display_name:<16} {' '.join(formatted_symbols)}")
+            table_lines.append(f"{display_name:<16} {formatted_symbols}")
         
         if len(members) > 10:
             table_lines.append(f"... and {len(members) - 10} more")
@@ -554,13 +544,13 @@ class DSM(commands.Cog):
                     embed.set_field_at(i, name="✅ Participated", value=participated_list, inline=False)
                 elif field.name == "⏳ Pending":
                     embed.set_field_at(i, name="⏳ Pending", value=pending_list, inline=False)
-                elif field.name == "📅 Weekly Attendance (M T W Th F)":
+                elif field.name == "📅 Weekly Attendance":
                     # Update weekly attendance display with proper timezone
                     timezone = await self.get_guild_timezone(guild.id)
                     timezone_aware_dsm_time = last_dsm_time.astimezone(timezone)
                     weekly_attendance_text = self.get_weekly_attendance_display(config, all_members, timezone_aware_dsm_time.date(), timezone_aware_dsm_time)
                     if weekly_attendance_text:
-                        embed.set_field_at(i, name="📅 Weekly Attendance (M T W Th F)", value=weekly_attendance_text, inline=False)
+                        embed.set_field_at(i, name="📅 Weekly Attendance", value=weekly_attendance_text, inline=False)
 
             await dsm_message.edit(embed=embed)
             logger.info(f"[DEBUG] Updated DSM embed with {len(participated_users)} participated users and {len(pending_users)} pending users")
