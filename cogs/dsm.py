@@ -5,6 +5,7 @@ from discord import app_commands
 import datetime
 import asyncio
 import re
+import time
 from typing import Dict, Any, Optional, List
 from services.firebase_service import FirebaseService
 from utils.logging_util import get_logger
@@ -920,6 +921,8 @@ class DSM(commands.Cog):
     async def simulate_dsm(self, interaction: discord.Interaction):  # type: ignore
         """Manually trigger a DSM."""
         try:
+            start_ts = time.monotonic()
+
             async def _safe_reply(content: str) -> None:
                 try:
                     if interaction.response.is_done():
@@ -927,20 +930,30 @@ class DSM(commands.Cog):
                     else:
                         await interaction.response.send_message(content, ephemeral=True)
                 except discord.HTTPException as http_err:
-                    if getattr(http_err, 'code', None) == 40060:
+                    error_code = getattr(http_err, 'code', None)
+                    if error_code == 40060:
                         await interaction.followup.send(content, ephemeral=True)
+                    elif error_code == 10062:
+                        logger.warning("simulate_dsm reply skipped: interaction expired (10062)")
                     else:
                         raise
 
             # Defer early, but handle race where Discord already acknowledged.
             if not interaction.response.is_done():
                 try:
+                    logger.info("simulate_dsm stage=defer_start")
                     await interaction.response.defer(ephemeral=True)
                 except discord.HTTPException as http_err:
-                    if getattr(http_err, 'code', None) != 40060:
+                    error_code = getattr(http_err, 'code', None)
+                    if error_code == 10062:
+                        logger.warning("simulate_dsm stage=defer_expired code=10062 elapsed=%.3fs", time.monotonic() - start_ts)
+                        return
+                    if error_code != 40060:
                         raise
+            logger.info("simulate_dsm stage=defer_done elapsed=%.3fs", time.monotonic() - start_ts)
             
             config = await self.firebase_service.get_config(interaction.guild_id)
+            logger.info("simulate_dsm stage=config_loaded elapsed=%.3fs", time.monotonic() - start_ts)
             await self.mark_command_participation(interaction, config)
             if not config:
                 await _safe_reply("Please configure DSM settings first using `/configure`.")
@@ -967,9 +980,10 @@ class DSM(commands.Cog):
             
             # Send success message
             await _safe_reply("DSM created successfully!")
+            logger.info("simulate_dsm stage=completed elapsed=%.3fs", time.monotonic() - start_ts)
                 
         except Exception as e:
-            logger.error(f"Error in simulate_dsm: {str(e)}")
+            logger.error(f"Error in simulate_dsm: {str(e)}", exc_info=True)
             try:
                 if interaction.response.is_done():
                     await interaction.followup.send(f"Failed to create DSM: {str(e)}", ephemeral=True)
