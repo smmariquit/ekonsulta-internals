@@ -972,18 +972,34 @@ class DSM(commands.Cog):
                        dsm_lookback_hours: Optional[int] = None):
         """Configure standup settings"""
         try:
+            async def _safe_reply(*, content: Optional[str] = None, embed: Optional[discord.Embed] = None) -> None:
+                """Send an interaction reply safely, even if Discord already acknowledged the interaction."""
+                try:
+                    if interaction.response.is_done():
+                        await interaction.followup.send(content=content, embed=embed, ephemeral=True)
+                    else:
+                        await interaction.response.send_message(content=content, embed=embed, ephemeral=True)
+                except discord.HTTPException as http_err:
+                    # 40060 means Discord already acknowledged this interaction in the meantime.
+                    if getattr(http_err, 'code', None) == 40060:
+                        await interaction.followup.send(content=content, embed=embed, ephemeral=True)
+                    else:
+                        raise
+
             # Slash command config should only be used in a server context.
             if interaction.guild_id is None or interaction.guild is None:
-                await interaction.response.send_message(
-                    "This command can only be used inside a server.",
-                    ephemeral=True
-                )
+                await _safe_reply(content="This command can only be used inside a server.")
                 return
 
             # Defer the response immediately to prevent timeout.
             # If the interaction token is already invalid, Discord returns 404.
             if not interaction.response.is_done():
-                await interaction.response.defer(ephemeral=True)
+                try:
+                    await interaction.response.defer(ephemeral=True)
+                except discord.HTTPException as http_err:
+                    # 40060 means already acknowledged; continue using followups.
+                    if getattr(http_err, 'code', None) != 40060:
+                        raise
             
             # Get current config with a bounded wait so command responses don't expire.
             try:
@@ -992,10 +1008,7 @@ class DSM(commands.Cog):
                     timeout=12.0
                 )
             except asyncio.TimeoutError:
-                await interaction.followup.send(
-                    "Firebase is taking too long to respond. Please verify FIREBASE_* credentials and try again.",
-                    ephemeral=True
-                )
+                await _safe_reply(content="Firebase is taking too long to respond. Please verify FIREBASE_* credentials and try again.")
                 return
 
             await self.mark_command_participation(interaction, config)
@@ -1017,10 +1030,7 @@ class DSM(commands.Cog):
                     config['timezone'] = normalized_timezone
                     changes.append(f"Timezone: {normalized_timezone}")
                 except pytz.exceptions.UnknownTimeZoneError:
-                    await interaction.followup.send(
-                        f"Invalid timezone: {timezone}. Please use a valid timezone name (e.g., 'Asia/Manila', 'UTC').",
-                        ephemeral=True
-                    )
+                    await _safe_reply(content=f"Invalid timezone: {timezone}. Please use a valid timezone name (e.g., 'Asia/Manila', 'UTC').")
                     return
 
             # Handle DSM time
@@ -1036,10 +1046,7 @@ class DSM(commands.Cog):
                     config['dsm_time'] = f"{hour:02d}:{minute:02d}"
                     changes.append(f"DSM Time: {hour:02d}:{minute:02d}")
                 except ValueError:
-                    await interaction.followup.send(
-                        "Invalid time format. Please use HH:MM format (e.g., '09:00').",
-                        ephemeral=True
-                    )
+                    await _safe_reply(content="Invalid time format. Please use HH:MM format (e.g., '09:00').")
                     return
 
             # Handle DSM channel
@@ -1050,10 +1057,7 @@ class DSM(commands.Cog):
             # Handle DSM lookback hours
             if dsm_lookback_hours is not None:
                 if not (0 <= dsm_lookback_hours <= 24):
-                    await interaction.followup.send(
-                        "Invalid lookback hours. Please use a value between 0 and 24 hours.",
-                        ephemeral=True
-                    )
+                    await _safe_reply(content="Invalid lookback hours. Please use a value between 0 and 24 hours.")
                     return
                 config['dsm_lookback_hours'] = dsm_lookback_hours
                 changes.append(f"DSM Lookback Hours: {dsm_lookback_hours}")
@@ -1105,10 +1109,7 @@ class DSM(commands.Cog):
                     inline=False
                 )
 
-            if interaction.response.is_done():
-                await interaction.followup.send(embed=embed, ephemeral=True)
-            else:
-                await interaction.response.send_message(embed=embed, ephemeral=True)
+            await _safe_reply(embed=embed)
             logger.info(f"Configuration updated for guild {interaction.guild_id}: {', '.join(changes)}")
 
         except discord.NotFound:
@@ -1127,6 +1128,17 @@ class DSM(commands.Cog):
                         f"An error occurred while updating the configuration: {str(e)}",
                         ephemeral=True
                     )
+            except discord.HTTPException as http_err:
+                if getattr(http_err, 'code', None) == 40060:
+                    try:
+                        await interaction.followup.send(
+                            f"An error occurred while updating the configuration: {str(e)}",
+                            ephemeral=True
+                        )
+                    except discord.NotFound:
+                        logger.error("Unable to send configure error response: interaction expired.")
+                else:
+                    raise
             except discord.NotFound:
                 logger.error("Unable to send configure error response: interaction expired.")
 
