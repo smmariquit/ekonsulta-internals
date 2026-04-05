@@ -454,6 +454,7 @@ class DSM(commands.Cog):
             logger.info(f"Created DSM in channel {channel.name}")
         except Exception as e:
             logger.error(f"Error creating DSM: {str(e)}")
+            raise
 
     # Pre-reminder functionality removed - DSM messages are sent directly at configured time
 
@@ -919,40 +920,63 @@ class DSM(commands.Cog):
     async def simulate_dsm(self, interaction: discord.Interaction):  # type: ignore
         """Manually trigger a DSM."""
         try:
-            # Defer the response immediately to prevent timeout
-            await interaction.response.defer(ephemeral=True)
+            async def _safe_reply(content: str) -> None:
+                try:
+                    if interaction.response.is_done():
+                        await interaction.followup.send(content, ephemeral=True)
+                    else:
+                        await interaction.response.send_message(content, ephemeral=True)
+                except discord.HTTPException as http_err:
+                    if getattr(http_err, 'code', None) == 40060:
+                        await interaction.followup.send(content, ephemeral=True)
+                    else:
+                        raise
+
+            # Defer early, but handle race where Discord already acknowledged.
+            if not interaction.response.is_done():
+                try:
+                    await interaction.response.defer(ephemeral=True)
+                except discord.HTTPException as http_err:
+                    if getattr(http_err, 'code', None) != 40060:
+                        raise
             
             config = await self.firebase_service.get_config(interaction.guild_id)
             await self.mark_command_participation(interaction, config)
             if not config:
-                await interaction.followup.send("Please configure DSM settings first using `/configure`.", ephemeral=True)
+                await _safe_reply("Please configure DSM settings first using `/configure`.")
                 return
 
             channel_id = config.get('dsm_channel_id')
             if not channel_id:
-                await interaction.followup.send("Please set a DSM channel first using `/set_channel`.", ephemeral=True)
+                await _safe_reply("Please set a DSM channel first using `/set_channel`.")
                 return
 
             try:
                 channel_id = int(channel_id)
             except (ValueError, TypeError):
-                await interaction.followup.send("Invalid DSM channel ID format.", ephemeral=True)
+                await _safe_reply("Invalid DSM channel ID format.")
                 return
 
             channel = interaction.guild.get_channel(channel_id)
             if not channel:
-                await interaction.followup.send("The configured DSM channel no longer exists.", ephemeral=True)
+                await _safe_reply("The configured DSM channel no longer exists.")
                 return
             
-            await interaction.followup.send("Creating DSM...", ephemeral=True)
+            await _safe_reply("Creating DSM...")
             await self.create_dsm(channel, config, is_automatic=False)
             
             # Send success message
-            await interaction.followup.send("DSM created successfully!", ephemeral=True)
+            await _safe_reply("DSM created successfully!")
                 
         except Exception as e:
             logger.error(f"Error in simulate_dsm: {str(e)}")
-            await interaction.followup.send("Failed to create DSM. Please try again.", ephemeral=True)
+            try:
+                if interaction.response.is_done():
+                    await interaction.followup.send(f"Failed to create DSM: {str(e)}", ephemeral=True)
+                else:
+                    await interaction.response.send_message(f"Failed to create DSM: {str(e)}", ephemeral=True)
+            except (discord.NotFound, discord.HTTPException):
+                logger.error("Unable to send simulate_dsm error response before interaction expiry.")
 
     async def get_guild_timezone(self, guild_id: int) -> pytz.BaseTzInfo:
         """Get the timezone for a guild, defaulting to UTC if not set."""
