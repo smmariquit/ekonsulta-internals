@@ -81,6 +81,57 @@ class FirebaseService:
             logger.error(f"Error initializing Firebase: {str(e)}")
             raise
 
+    def get_diagnostics(self) -> Dict[str, Any]:
+        """Return non-sensitive Firebase diagnostics for troubleshooting deployment issues."""
+        env_map = {
+            'FIREBASE_TYPE': os.getenv('FIREBASE_TYPE'),
+            'FIREBASE_PROJECT_ID': os.getenv('FIREBASE_PROJECT_ID'),
+            'FIREBASE_PRIVATE_KEY_ID': os.getenv('FIREBASE_PRIVATE_KEY_ID'),
+            'FIREBASE_PRIVATE_KEY': os.getenv('FIREBASE_PRIVATE_KEY'),
+            'FIREBASE_CLIENT_EMAIL': os.getenv('FIREBASE_CLIENT_EMAIL'),
+            'FIREBASE_CLIENT_ID': os.getenv('FIREBASE_CLIENT_ID'),
+            'FIREBASE_AUTH_URI': os.getenv('FIREBASE_AUTH_URI'),
+            'FIREBASE_TOKEN_URI': os.getenv('FIREBASE_TOKEN_URI'),
+            'FIREBASE_AUTH_PROVIDER_X509_CERT_URL': os.getenv('FIREBASE_AUTH_PROVIDER_X509_CERT_URL'),
+            'FIREBASE_CLIENT_X509_CERT_URL': os.getenv('FIREBASE_CLIENT_X509_CERT_URL'),
+            'FIREBASE_UNIVERSE_DOMAIN': os.getenv('FIREBASE_UNIVERSE_DOMAIN')
+        }
+
+        required = [
+            'FIREBASE_TYPE',
+            'FIREBASE_PROJECT_ID',
+            'FIREBASE_PRIVATE_KEY_ID',
+            'FIREBASE_PRIVATE_KEY',
+            'FIREBASE_CLIENT_EMAIL'
+        ]
+        missing_required = [key for key in required if not env_map.get(key)]
+
+        project_id = env_map.get('FIREBASE_PROJECT_ID') or ''
+        client_email = env_map.get('FIREBASE_CLIENT_EMAIL') or ''
+        private_key_id = env_map.get('FIREBASE_PRIVATE_KEY_ID') or ''
+        private_key = env_map.get('FIREBASE_PRIVATE_KEY') or ''
+
+        key_line_count = private_key.count('\\n') + 1 if private_key else 0
+        begins_with_header = private_key.startswith('-----BEGIN PRIVATE KEY-----')
+        ends_with_footer = private_key.rstrip().endswith('-----END PRIVATE KEY-----')
+
+        # Basic consistency check: service account email should include project id namespace.
+        project_consistency = (project_id in client_email) if project_id and client_email else False
+
+        return {
+            'missing_required': missing_required,
+            'project_id': project_id or None,
+            'client_email': client_email or None,
+            'client_email_has_project_id': project_consistency,
+            'private_key_id_suffix': private_key_id[-8:] if private_key_id else None,
+            'private_key_escaped_line_count': key_line_count,
+            'private_key_has_header': begins_with_header,
+            'private_key_has_footer': ends_with_footer,
+            'token_uri': env_map.get('FIREBASE_TOKEN_URI'),
+            'universe_domain': env_map.get('FIREBASE_UNIVERSE_DOMAIN'),
+            'firebase_initialized': self.db is not None
+        }
+
     async def get_config(self, guild_id: int) -> Dict[str, Any]:
         """Get guild configuration from the guild's config subcollection."""
         if not self.db:
@@ -88,7 +139,15 @@ class FirebaseService:
             
         guild_ref = self.db.collection('guilds').document(str(guild_id))
         config_ref = guild_ref.collection('config').document('settings')
-        config_doc = await asyncio.to_thread(config_ref.get)
+        try:
+            # Use a bounded timeout so command interactions can fail fast with useful errors.
+            config_doc = await asyncio.to_thread(config_ref.get, timeout=20)
+        except Exception as e:
+            error_msg = str(e)
+            if 'invalid_grant' in error_msg or 'account not found' in error_msg:
+                diagnostics = self.get_diagnostics()
+                logger.error(f"Firebase auth appears invalid. Diagnostics: {json.dumps(diagnostics)}")
+            raise
         
         logger.info(f"[DEBUG] Getting config for guild {guild_id}")
         logger.info(f"[DEBUG] Config document exists: {config_doc.exists}")

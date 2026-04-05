@@ -712,6 +712,11 @@ class DSM(commands.Cog):
             if not interaction.guild_id or not interaction.guild:
                 await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
                 return
+
+            # Acknowledge immediately because Firebase calls can be slow when retries happen.
+            if not interaction.response.is_done():
+                await interaction.response.defer(ephemeral=True)
+
             config = await self.firebase_service.get_config(interaction.guild_id)
             await self.mark_command_participation(interaction, config)
             admin_users = config.get('admin_users', [])
@@ -734,19 +739,31 @@ class DSM(commands.Cog):
                     inline=False
                 )
                 
-                await interaction.response.send_message(embed=embed, ephemeral=True)
+                await interaction.followup.send(embed=embed, ephemeral=True)
             else:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "No users are currently set as admins.",
                     ephemeral=True
                 )
+
+        except discord.NotFound:
+            logger.error("/list_admins interaction expired (Discord 404 Unknown interaction).")
             
         except Exception as e:
             logger.error(f"Error listing admin users: {str(e)}")
-            await interaction.response.send_message(
-                "Failed to list admin users. Please try again.",
-                ephemeral=True
-            )
+            try:
+                if interaction.response.is_done():
+                    await interaction.followup.send(
+                        "Failed to list admin users. Please try again.",
+                        ephemeral=True
+                    )
+                else:
+                    await interaction.response.send_message(
+                        "Failed to list admin users. Please try again.",
+                        ephemeral=True
+                    )
+            except discord.NotFound:
+                logger.error("Unable to send list_admins error response: interaction expired.")
 
     @app_commands.command(name="show_lookback", description="Show current DSM lookback configuration")
     async def show_lookback(self, interaction: discord.Interaction):  # type: ignore
@@ -955,11 +972,32 @@ class DSM(commands.Cog):
                        dsm_lookback_hours: Optional[int] = None):
         """Configure standup settings"""
         try:
-            # Defer the response immediately to prevent timeout
-            await interaction.response.defer(ephemeral=True)
+            # Slash command config should only be used in a server context.
+            if interaction.guild_id is None or interaction.guild is None:
+                await interaction.response.send_message(
+                    "This command can only be used inside a server.",
+                    ephemeral=True
+                )
+                return
+
+            # Defer the response immediately to prevent timeout.
+            # If the interaction token is already invalid, Discord returns 404.
+            if not interaction.response.is_done():
+                await interaction.response.defer(ephemeral=True)
             
-            # Get current config
-            config = await self.firebase_service.get_config(interaction.guild_id)
+            # Get current config with a bounded wait so command responses don't expire.
+            try:
+                config = await asyncio.wait_for(
+                    self.firebase_service.get_config(interaction.guild_id),
+                    timeout=12.0
+                )
+            except asyncio.TimeoutError:
+                await interaction.followup.send(
+                    "Firebase is taking too long to respond. Please verify FIREBASE_* credentials and try again.",
+                    ephemeral=True
+                )
+                return
+
             await self.mark_command_participation(interaction, config)
             if not config:
                 config = {}
@@ -969,9 +1007,15 @@ class DSM(commands.Cog):
             # Handle timezone
             if timezone:
                 try:
-                    tz = pytz.timezone(timezone)
-                    config['timezone'] = timezone
-                    changes.append(f"Timezone: {timezone}")
+                    normalized_timezone = timezone.strip().replace(' ', '_')
+                    if '/' in normalized_timezone:
+                        parts = normalized_timezone.split('/')
+                        normalized_timezone = '/'.join(
+                            part.capitalize() if part else part for part in parts
+                        )
+                    pytz.timezone(normalized_timezone)
+                    config['timezone'] = normalized_timezone
+                    changes.append(f"Timezone: {normalized_timezone}")
                 except pytz.exceptions.UnknownTimeZoneError:
                     await interaction.followup.send(
                         f"Invalid timezone: {timezone}. Please use a valid timezone name (e.g., 'Asia/Manila', 'UTC').",
@@ -982,11 +1026,15 @@ class DSM(commands.Cog):
             # Handle DSM time
             if dsm_time:
                 try:
-                    hour, minute = map(int, dsm_time.split(':'))
+                    normalized_time = dsm_time.strip()
+                    if ':' not in normalized_time and len(normalized_time) == 4 and normalized_time.isdigit():
+                        normalized_time = f"{normalized_time[:2]}:{normalized_time[2:]}"
+
+                    hour, minute = map(int, normalized_time.split(':'))
                     if not (0 <= hour <= 23 and 0 <= minute <= 59):
                         raise ValueError
-                    config['dsm_time'] = dsm_time
-                    changes.append(f"DSM Time: {dsm_time}")
+                    config['dsm_time'] = f"{hour:02d}:{minute:02d}"
+                    changes.append(f"DSM Time: {hour:02d}:{minute:02d}")
                 except ValueError:
                     await interaction.followup.send(
                         "Invalid time format. Please use HH:MM format (e.g., '09:00').",
@@ -1057,15 +1105,30 @@ class DSM(commands.Cog):
                     inline=False
                 )
 
-            await interaction.followup.send(embed=embed, ephemeral=True)
+            if interaction.response.is_done():
+                await interaction.followup.send(embed=embed, ephemeral=True)
+            else:
+                await interaction.response.send_message(embed=embed, ephemeral=True)
             logger.info(f"Configuration updated for guild {interaction.guild_id}: {', '.join(changes)}")
+
+        except discord.NotFound:
+            logger.error("/configure interaction expired (Discord 404 Unknown interaction).")
 
         except Exception as e:
             logger.error(f"Error in configure: {str(e)}")
-            await interaction.followup.send(
-                f"An error occurred while updating the configuration: {str(e)}",
-                ephemeral=True
-            )
+            try:
+                if interaction.response.is_done():
+                    await interaction.followup.send(
+                        f"An error occurred while updating the configuration: {str(e)}",
+                        ephemeral=True
+                    )
+                else:
+                    await interaction.response.send_message(
+                        f"An error occurred while updating the configuration: {str(e)}",
+                        ephemeral=True
+                    )
+            except discord.NotFound:
+                logger.error("Unable to send configure error response: interaction expired.")
 
     @app_commands.command(name="set_channel", description="Set the channel where DSMs will be posted")
     async def set_channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
@@ -1453,6 +1516,81 @@ Regular message content"""
         except Exception as e:
             logger.error(f"Error in debug_todo: {e}")
             await interaction.response.send_message(f"Error during debug: {e}", ephemeral=True)
+
+    @app_commands.command(name="debug_firebase", description="Show Firebase env diagnostics (safe summary)")
+    @admin_required()
+    async def debug_firebase(self, interaction: discord.Interaction):
+        """Show non-sensitive Firebase diagnostics to help resolve host configuration issues."""
+        try:
+            if not interaction.response.is_done():
+                await interaction.response.defer(ephemeral=True)
+
+            diagnostics = self.firebase_service.get_diagnostics()
+
+            embed = discord.Embed(
+                title="Firebase Diagnostics",
+                description="Non-sensitive environment consistency checks",
+                color=discord.Color.orange()
+            )
+
+            missing_required = diagnostics.get('missing_required') or []
+            embed.add_field(
+                name="Missing Required",
+                value=", ".join(missing_required) if missing_required else "None",
+                inline=False
+            )
+            embed.add_field(
+                name="Project",
+                value=str(diagnostics.get('project_id') or "None"),
+                inline=True
+            )
+            embed.add_field(
+                name="Client Email",
+                value=str(diagnostics.get('client_email') or "None"),
+                inline=False
+            )
+            embed.add_field(
+                name="Email Matches Project",
+                value="Yes" if diagnostics.get('client_email_has_project_id') else "No",
+                inline=True
+            )
+            embed.add_field(
+                name="Private Key ID Suffix",
+                value=str(diagnostics.get('private_key_id_suffix') or "None"),
+                inline=True
+            )
+            embed.add_field(
+                name="Private Key Format",
+                value=(
+                    f"Escaped lines: {diagnostics.get('private_key_escaped_line_count')}\n"
+                    f"Header: {diagnostics.get('private_key_has_header')}\n"
+                    f"Footer: {diagnostics.get('private_key_has_footer')}"
+                ),
+                inline=False
+            )
+            embed.add_field(
+                name="Runtime",
+                value=(
+                    f"Initialized: {diagnostics.get('firebase_initialized')}\n"
+                    f"Token URI: {diagnostics.get('token_uri')}\n"
+                    f"Universe Domain: {diagnostics.get('universe_domain')}"
+                ),
+                inline=False
+            )
+
+            await interaction.followup.send(embed=embed, ephemeral=True)
+
+        except discord.NotFound:
+            logger.error("/debug_firebase interaction expired (Discord 404 Unknown interaction).")
+        except Exception as e:
+            logger.error(f"Error in debug_firebase: {e}")
+            try:
+                if interaction.response.is_done():
+                    await interaction.followup.send(f"Error during Firebase debug: {e}", ephemeral=True)
+                else:
+                    await interaction.response.send_message(f"Error during Firebase debug: {e}", ephemeral=True)
+            except discord.NotFound:
+                logger.error("Unable to send debug_firebase error response: interaction expired.")
 
 # Move setup function outside of the class, at module level
 async def setup(bot: commands.Bot):
