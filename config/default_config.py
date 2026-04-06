@@ -5,6 +5,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     'timezone': 'UTC',
     'dsm_time': '09:00',
     'dsm_channel_id': None,
+    'dsm_channel_ids': [],
+    'dsm_status_channel_id': None,
     'google_ai_api_key': None,  # Google AI Studio API key
     'skipped_dates': [],
     'admins': [],
