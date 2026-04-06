@@ -174,14 +174,6 @@ class DSM(commands.Cog):
         if dsm_channel_ids and after.channel.id not in dsm_channel_ids:
             logger.info(f"[on_message_edit] Ignored message not in DSM channels (expected one of {dsm_channel_ids}).")
             return
-        last_dsm_time = config.get('last_dsm_time')
-        if last_dsm_time:
-            last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
-        else:
-            last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
-        if after.created_at < last_dsm_time:
-            logger.info(f"[on_message_edit] Ignored edit for message before current DSM window.")
-            return
         # Only update the TODO TASKS for Today embed
         await self.update_dsm_participation(after.guild, after.channel, after)
 
@@ -201,22 +193,10 @@ class DSM(commands.Cog):
     async def update_dsm_participation(self, guild, channel, message, deleted=False):
         """Track DSM participation and weekly attendance."""
         config = await self.firebase_service.get_config(guild.id)
-        last_dsm_time = config.get('last_dsm_time')
-        if last_dsm_time:
-            last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
-        else:
-            last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
-        
-        # Calculate the DSM deadline
-        dsm_deadline = last_dsm_time + datetime.timedelta(hours=14, minutes=15)
-        
+
         user_id = str(message.author.id)
         message_time = message.created_at
-        
-        # Only track participation within DSM period
-        if not (last_dsm_time <= message_time <= dsm_deadline):
-            return
-            
+
         # Get or initialize participation tracking
         dsm_participants = config.get('dsm_participants', {})
         weekly_attendance = config.get('weekly_attendance', {})
@@ -232,8 +212,9 @@ class DSM(commands.Cog):
             dsm_participants.pop(user_id, None)
             # Also remove from weekly attendance if needed
             if user_weekly_key in weekly_attendance:
-                day_abbrev = ['M', 'T', 'W', 'Th', 'F'][participation_date.weekday()]
-                weekly_attendance[user_weekly_key][day_abbrev] = False
+                day_abbrev = ['M', 'T', 'W', 'Th', 'F'][participation_date.weekday()] if participation_date.weekday() < 5 else None
+                if day_abbrev:
+                    weekly_attendance[user_weekly_key][day_abbrev] = False
         else:
             # Mark as participated if valid message
             if self.is_valid_dsm_participation(message.content):
@@ -247,8 +228,9 @@ class DSM(commands.Cog):
                     weekly_attendance[user_weekly_key] = {'M': False, 'T': False, 'W': False, 'Th': False, 'F': False}
                 
                 # Mark the actual participation day's attendance
-                day_abbrev = ['M', 'T', 'W', 'Th', 'F'][participation_date.weekday()]
-                weekly_attendance[user_weekly_key][day_abbrev] = True
+                day_abbrev = ['M', 'T', 'W', 'Th', 'F'][participation_date.weekday()] if participation_date.weekday() < 5 else None
+                if day_abbrev:
+                    weekly_attendance[user_weekly_key][day_abbrev] = True
         
         config['dsm_participants'] = dsm_participants
         config['weekly_attendance'] = weekly_attendance
@@ -266,16 +248,8 @@ class DSM(commands.Cog):
             # Normalize types for comparison
             if int(interaction.channel_id) not in dsm_channel_ids:
                 return False
-            last_dsm_time = config.get('last_dsm_time')
-            if last_dsm_time:
-                last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
-            else:
-                return False
-            # Extend command-based participation window to full 24h after DSM start
-            extended_deadline = last_dsm_time + datetime.timedelta(hours=24)
+
             now_utc = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
-            if not (last_dsm_time <= now_utc <= extended_deadline):
-                return False
             weekly_attendance = config.get('weekly_attendance', {})
             dsm_participants = config.get('dsm_participants', {})
             user_id = str(interaction.user.id)
@@ -362,7 +336,7 @@ class DSM(commands.Cog):
             embed = discord.Embed(
                 title=f"🍰 Daily Standup Meeting – {dsm_date_str}",
                 description=(
-                    "**Good morning, E-Konsulta team!**\n\n"
+                    "**Good morning, CMSC 128 team!**\n\n"
                     "Please share:\n"
                     "• **Tasks to do for today**\n"
                     "• **Tasks you got done from yesterday**\n"
@@ -373,7 +347,7 @@ class DSM(commands.Cog):
             )
             embed.add_field(
                 name="Timeline",
-                value=f"⚠️ Deadline: {deadline_time_str}",
+                value=f"🟢 Accepting updates 24/7 (recommended check-in by {deadline_time_str})",
                 inline=False
             )
             
