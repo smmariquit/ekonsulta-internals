@@ -75,6 +75,32 @@ class DSM(commands.Cog):
             return [content.strip()]
         return []
 
+    def get_dsm_channel_ids(self, config: Dict[str, Any]) -> List[int]:
+        """Return configured DSM channel IDs with backward compatibility for legacy single channel config."""
+        raw_ids = config.get('dsm_channel_ids') or []
+        normalized: List[int] = []
+
+        for channel_id in raw_ids:
+            try:
+                normalized.append(int(channel_id))
+            except (TypeError, ValueError):
+                continue
+
+        legacy_id = config.get('dsm_channel_id')
+        if legacy_id is not None:
+            try:
+                legacy_int = int(legacy_id)
+                if legacy_int not in normalized:
+                    normalized.append(legacy_int)
+            except (TypeError, ValueError):
+                pass
+
+        return normalized
+
+    def is_dsm_channel(self, config: Dict[str, Any], channel_id: int) -> bool:
+        """Check whether a channel is one of the configured DSM channels."""
+        return channel_id in self.get_dsm_channel_ids(config)
+
     async def get_user_tasks(self, channel: discord.TextChannel, user: discord.Member) -> List[str]:
         """Get tasks for a user from their messages."""
         tasks = []
@@ -121,16 +147,10 @@ class DSM(commands.Cog):
             logger.info("[on_message] Ignored bot or non-guild message.")
             return
         config = await self.firebase_service.get_config(message.guild.id)
-        dsm_channel_id = config.get('dsm_channel_id')
-        if dsm_channel_id:
-            try:
-                dsm_channel_id = int(dsm_channel_id)
-            except (ValueError, TypeError):
-                logger.error(f"Invalid DSM channel ID format: {dsm_channel_id}")
-                return
-                
-        if dsm_channel_id and message.channel.id != dsm_channel_id:
-            logger.info(f"[on_message] Ignored message not in DSM channel (expected {dsm_channel_id}).")
+        dsm_channel_ids = self.get_dsm_channel_ids(config)
+
+        if dsm_channel_ids and message.channel.id not in dsm_channel_ids:
+            logger.info(f"[on_message] Ignored message not in DSM channels (expected one of {dsm_channel_ids}).")
             return
 
         # Update DSM participation tracking
@@ -140,75 +160,6 @@ class DSM(commands.Cog):
         # Update participation tracking
         await self.update_dsm_participation(message.guild, message.channel, message)
         
-        # Get the latest config after update_todo_tasks_for_today
-        config = await self.firebase_service.get_config(message.guild.id)
-        todo_message_map = config.get('todo_message_map', {})
-
-        # Update DSM embed if there's an active DSM
-        current_dsm_message_id = config.get('current_dsm_message_id')
-        if current_dsm_message_id:
-            try:
-                # Convert string message ID to int
-                current_dsm_message_id = int(current_dsm_message_id)
-                dsm_message = await message.channel.fetch_message(current_dsm_message_id)
-                print(f"[on_message] Found current DSM message: {current_dsm_message_id}")
-                logger.info(f"[on_message] Found current DSM message: {current_dsm_message_id}")
-
-                # Get the last DSM time
-                last_dsm_time = config.get('last_dsm_time')
-                if last_dsm_time:
-                    last_dsm_time = datetime.datetime.fromisoformat(last_dsm_time)
-                else:
-                    last_dsm_time = datetime.datetime.now() - datetime.timedelta(days=1)
-                print(f"[on_message] Last DSM time: {last_dsm_time}")
-                logger.info(f"[on_message] Last DSM time: {last_dsm_time}")
-
-                # Process the todo_message_map directly
-                updated_users = set()
-                for user_id, messages in todo_message_map.items():
-                    member = message.guild.get_member(int(user_id))
-                    if member and not member.bot and member.id not in config.get('excluded_users', []):
-                        # If user has any messages in the map, they've updated
-                        updated_users.add(member)
-                        print(f"[on_message] Added {member.display_name} to updated users (has messages in todo_message_map)")
-                        logger.info(f"[on_message] Added {member.display_name} to updated users (has messages in todo_message_map)")
-
-                # Update the DSM embed
-                embed = dsm_message.embeds[0]
-                updated_users_list = list(updated_users)
-                pending_users = [member for member in message.guild.members 
-                               if not member.bot 
-                               and member.id not in config.get('excluded_users', [])
-                               and member not in updated_users_list]
-
-                # Update the participants field
-                participants_line = f"👥 Total: {len(updated_users_list) + len(pending_users)}  ✅ Updated: {len(updated_users_list)}  ⏳ Pending: {len(pending_users)}"
-                for i, field in enumerate(embed.fields):
-                    if field.name == "Participants":
-                        embed.set_field_at(i, name="Participants", value=participants_line, inline=False)
-                        break
-
-                # Update the Updated and Pending fields
-                updated_list = "\n".join([user.mention for user in updated_users_list]) if updated_users_list else "None"
-                pending_list = "\n".join([user.mention for user in pending_users]) if pending_users else "None"
-
-                for i, field in enumerate(embed.fields):
-                    if field.name == "✅ Updated":
-                        embed.set_field_at(i, name="✅ Updated", value=updated_list, inline=False)
-                    elif field.name == "⏳ Pending":
-                        embed.set_field_at(i, name="⏳ Pending", value=pending_list, inline=False)
-
-                print(f"[on_message] Updating DSM embed with {len(updated_users_list)} updated users and {len(pending_users)} pending users")
-                logger.info(f"[on_message] Updating DSM embed with {len(updated_users_list)} updated users and {len(pending_users)} pending users")
-                await dsm_message.edit(embed=embed)
-
-            except (ValueError, TypeError) as e:
-                print(f"[on_message] Invalid DSM message ID format: {current_dsm_message_id}")
-                logger.error(f"[on_message] Invalid DSM message ID format: {current_dsm_message_id}")
-            except Exception as e:
-                print(f"[on_message] Error updating DSM embed: {e}")
-                logger.error(f"[on_message] Error updating DSM embed: {e}")
-
         await self.bot.process_commands(message)
 
     @commands.Cog.listener()
@@ -218,16 +169,10 @@ class DSM(commands.Cog):
             logger.info("[on_message_edit] Ignored bot or non-guild message.")
             return
         config = await self.firebase_service.get_config(after.guild.id)
-        dsm_channel_id = config.get('dsm_channel_id')
-        if dsm_channel_id:
-            try:
-                dsm_channel_id = int(dsm_channel_id)
-            except (ValueError, TypeError):
-                logger.error(f"Invalid DSM channel ID format: {dsm_channel_id}")
-                return
-                
-        if dsm_channel_id and after.channel.id != dsm_channel_id:
-            logger.info(f"[on_message_edit] Ignored message not in DSM channel (expected {dsm_channel_id}).")
+        dsm_channel_ids = self.get_dsm_channel_ids(config)
+
+        if dsm_channel_ids and after.channel.id not in dsm_channel_ids:
+            logger.info(f"[on_message_edit] Ignored message not in DSM channels (expected one of {dsm_channel_ids}).")
             return
         last_dsm_time = config.get('last_dsm_time')
         if last_dsm_time:
@@ -246,15 +191,9 @@ class DSM(commands.Cog):
         if not message.guild or message.author is None or message.author.bot:
             return
         config = await self.firebase_service.get_config(message.guild.id)
-        dsm_channel_id = config.get('dsm_channel_id')
-        if dsm_channel_id:
-            try:
-                dsm_channel_id = int(dsm_channel_id)
-            except (ValueError, TypeError):
-                logger.error(f"Invalid DSM channel ID format: {dsm_channel_id}")
-                return
-                
-        if dsm_channel_id and message.channel.id != dsm_channel_id:
+        dsm_channel_ids = self.get_dsm_channel_ids(config)
+
+        if dsm_channel_ids and message.channel.id not in dsm_channel_ids:
             return
         # Only update the TODO TASKS for Today embed
         await self.update_dsm_participation(message.guild, message.channel, message, deleted=True)
@@ -321,11 +260,11 @@ class DSM(commands.Cog):
         try:
             if not interaction.guild_id or not interaction.guild:
                 return False
-            dsm_channel_id = config.get('dsm_channel_id')
-            if not dsm_channel_id:
+            dsm_channel_ids = self.get_dsm_channel_ids(config)
+            if not dsm_channel_ids:
                 return False
             # Normalize types for comparison
-            if str(interaction.channel_id) != str(dsm_channel_id):
+            if int(interaction.channel_id) not in dsm_channel_ids:
                 return False
             last_dsm_time = config.get('last_dsm_time')
             if last_dsm_time:
@@ -371,6 +310,29 @@ class DSM(commands.Cog):
     async def create_dsm(self, channel: discord.TextChannel, config: dict, is_automatic: bool = True):
         """Create a new DSM in the specified channel."""
         try:
+            dsm_channel_ids = self.get_dsm_channel_ids(config)
+            if not dsm_channel_ids:
+                raise ValueError("No DSM channels configured. Use /set_channel or /add_dsm_channel first.")
+
+            dsm_channels: List[discord.TextChannel] = []
+            for channel_id in dsm_channel_ids:
+                guild_channel = channel.guild.get_channel(channel_id)
+                if isinstance(guild_channel, discord.TextChannel):
+                    dsm_channels.append(guild_channel)
+
+            if not dsm_channels:
+                raise ValueError("Configured DSM channels were not found in this guild.")
+
+            status_channel = channel
+            status_channel_id = config.get('dsm_status_channel_id')
+            if status_channel_id is not None:
+                try:
+                    resolved_status_channel = channel.guild.get_channel(int(status_channel_id))
+                    if isinstance(resolved_status_channel, discord.TextChannel):
+                        status_channel = resolved_status_channel
+                except (TypeError, ValueError):
+                    logger.warning(f"Invalid status channel ID format: {status_channel_id}. Falling back to provided channel.")
+
             timezone = await self.get_guild_timezone(channel.guild.id)
             current_time = datetime.datetime.now(timezone)
             end_time = current_time + datetime.timedelta(hours=8)
@@ -415,16 +377,35 @@ class DSM(commands.Cog):
                 inline=False
             )
             
-            # Send DSM embed and update last_dsm_time in config immediately
-            dsm_message = await channel.send(embed=embed)
+            # Send DSM prompt to each configured DSM channel.
+            for dsm_channel in dsm_channels:
+                await dsm_channel.send(embed=embed)
+
+            # Post the status embed in the dedicated status channel.
+            dsm_message = await status_channel.send(embed=embed)
             config['last_dsm_time'] = dsm_message.created_at.isoformat()
             
             # Initialize participation tracking
             all_members = [member for member in channel.guild.members 
                           if not member.bot and member.id not in excluded_users]
-            updated_users = []
             pending_users = all_members.copy()
-            
+            participants_line = f"👥 Total: {len(all_members)}  ✅ Participated: 0  ⏳ Pending: {len(pending_users)}"
+
+            embed.add_field(
+                name="Participants",
+                value=participants_line,
+                inline=False
+            )
+            embed.add_field(
+                name="✅ Participated",
+                value="None",
+                inline=False
+            )
+            embed.add_field(
+                name="⏳ Pending",
+                value="\n".join([member.mention for member in pending_users]) if pending_users else "None",
+                inline=False
+            )
 
             
             # Add weekly attendance section
@@ -440,7 +421,7 @@ class DSM(commands.Cog):
             await dsm_message.edit(embed=embed)
 
             config['current_dsm_message_id'] = str(dsm_message.id)
-            config['current_dsm_channel_id'] = str(channel.id)
+            config['current_dsm_channel_id'] = str(status_channel.id)
             config['dsm_participants'] = {}  # Reset for new DSM
             
             # Initialize weekly attendance for today
@@ -452,7 +433,7 @@ class DSM(commands.Cog):
                 if user_weekly_key not in config['weekly_attendance']:
                     config['weekly_attendance'][user_weekly_key] = {'M': False, 'T': False, 'W': False, 'Th': False, 'F': False}
             await self.firebase_service.update_config(channel.guild.id, config)
-            logger.info(f"Created DSM in channel {channel.name}")
+            logger.info(f"Created DSM prompts in {[ch.name for ch in dsm_channels]} with status in {status_channel.name}")
         except Exception as e:
             logger.error(f"Error creating DSM: {str(e)}")
             raise
@@ -491,7 +472,7 @@ class DSM(commands.Cog):
         table_lines.append(f"{'Name':<16} M T W Th F")
         table_lines.append(f"{'-' * 16} {'-' * 9}")
         
-        for member in members[:10]:  # Limit to first 10 members to avoid embed length issues
+        for member in members:
             user_weekly_key = f"{member.id}_{week_key}"
             attendance = weekly_attendance.get(user_weekly_key, {'M': False, 'T': False, 'W': False, 'Th': False, 'F': False})
             
@@ -518,9 +499,6 @@ class DSM(commands.Cog):
             # Truncate long display names more gracefully
             display_name = member.display_name[:16] if len(member.display_name) <= 16 else member.display_name[:13] + "..."
             table_lines.append(f"{display_name:<16} {formatted_symbols}")
-        
-        if len(members) > 10:
-            table_lines.append(f"... and {len(members) - 10} more")
         
         return "```\n" + "\n".join(table_lines) + "\n```" if table_lines else ""
 
@@ -622,23 +600,28 @@ class DSM(commands.Cog):
         config = await self.firebase_service.get_config(interaction.guild_id)
         # Mark participation if run in DSM channel during active window
         await self.mark_command_participation(interaction, config)
-        current_dsm_channel_id = config.get('current_dsm_channel_id')
-        if not current_dsm_channel_id:
+        dsm_channel_ids = self.get_dsm_channel_ids(config)
+        if not dsm_channel_ids:
             await interaction.response.send_message("No DSM channel is set.", ephemeral=True)
             return
-            
-        try:
-            current_dsm_channel_id = int(current_dsm_channel_id)
-        except (ValueError, TypeError):
-            await interaction.response.send_message("Invalid DSM channel ID format.", ephemeral=True)
+
+        channels: List[discord.TextChannel] = []
+        for channel_id in dsm_channel_ids:
+            channel = interaction.guild.get_channel(channel_id)
+            if isinstance(channel, discord.TextChannel):
+                channels.append(channel)
+
+        if not channels:
+            await interaction.response.send_message("Configured DSM channels were not found.", ephemeral=True)
             return
-            
-        channel = interaction.guild.get_channel(current_dsm_channel_id)
-        if not channel:
-            await interaction.response.send_message("DSM channel not found.", ephemeral=True)
-            return
-        await self.send_dsm_reminder(channel, config)
-        await interaction.response.send_message("Reminder sent!", ephemeral=True)
+
+        for channel in channels:
+            await self.send_dsm_reminder(channel, config)
+
+        await interaction.response.send_message(
+            f"Reminder sent to {len(channels)} DSM channel(s).",
+            ephemeral=True
+        )
 
     @app_commands.command(name="add_admin", description="Add an admin user to the bot")
     async def add_admin(self, interaction: discord.Interaction, user: discord.Member):
@@ -892,18 +875,18 @@ class DSM(commands.Cog):
                 # Check if it's DSM time
                 dsm_time = datetime.datetime.strptime(config.get('dsm_time', '09:00'), '%H:%M').time()
                 if current_time.hour == dsm_time.hour and current_time.minute == dsm_time.minute:
-                    channel_id = config.get('dsm_channel_id')
-                    if not channel_id:
+                    dsm_channel_ids = self.get_dsm_channel_ids(config)
+                    if not dsm_channel_ids:
                         continue
-                    
-                    try:
-                        channel_id = int(channel_id)
-                    except (ValueError, TypeError):
-                        logger.error(f"Invalid channel ID format: {channel_id}")
-                        continue
-                    
-                    channel = guild.get_channel(channel_id)
-                    if not channel:
+
+                    channel = None
+                    for channel_id in dsm_channel_ids:
+                        guild_channel = guild.get_channel(channel_id)
+                        if isinstance(guild_channel, discord.TextChannel):
+                            channel = guild_channel
+                            break
+
+                    if channel is None:
                         continue
 
                     # Check if DSM should be skipped for today (weekends, holidays, or manual skip)
@@ -959,20 +942,19 @@ class DSM(commands.Cog):
                 await _safe_reply("Please configure DSM settings first using `/configure`.")
                 return
 
-            channel_id = config.get('dsm_channel_id')
-            if not channel_id:
+            dsm_channel_ids = self.get_dsm_channel_ids(config)
+            if not dsm_channel_ids:
                 await _safe_reply("Please set a DSM channel first using `/set_channel`.")
                 return
 
-            try:
-                channel_id = int(channel_id)
-            except (ValueError, TypeError):
-                await _safe_reply("Invalid DSM channel ID format.")
-                return
-
-            channel = interaction.guild.get_channel(channel_id)
+            channel = None
+            for channel_id in dsm_channel_ids:
+                guild_channel = interaction.guild.get_channel(channel_id)
+                if isinstance(guild_channel, discord.TextChannel):
+                    channel = guild_channel
+                    break
             if not channel:
-                await _safe_reply("The configured DSM channel no longer exists.")
+                await _safe_reply("Configured DSM channels were not found. Please update channels with `/set_channel` or `/add_dsm_channel`.")
                 return
             
             await _safe_reply("Creating DSM...")
@@ -1090,6 +1072,7 @@ class DSM(commands.Cog):
             # Handle DSM channel
             if dsm_channel is not None:
                 config['dsm_channel_id'] = str(dsm_channel.id)
+                config['dsm_channel_ids'] = [str(dsm_channel.id)]
                 changes.append(f"DSM Channel: {dsm_channel.mention}")
 
             # Handle DSM lookback hours
@@ -1137,6 +1120,23 @@ class DSM(commands.Cog):
                         current_config.append(f"DSM Channel: {channel.mention}")
                 except (ValueError, TypeError):
                     current_config.append(f"DSM Channel: Invalid ID format")
+            dsm_channel_ids = self.get_dsm_channel_ids(config)
+            if dsm_channel_ids:
+                channel_mentions = []
+                for channel_id in dsm_channel_ids:
+                    resolved_channel = interaction.guild.get_channel(channel_id)
+                    if isinstance(resolved_channel, discord.TextChannel):
+                        channel_mentions.append(resolved_channel.mention)
+                if channel_mentions:
+                    current_config.append(f"DSM Channels: {', '.join(channel_mentions)}")
+            if config.get('dsm_status_channel_id'):
+                try:
+                    status_id = int(config['dsm_status_channel_id'])
+                    status_channel = interaction.guild.get_channel(status_id)
+                    if status_channel:
+                        current_config.append(f"DSM Status Channel: {status_channel.mention}")
+                except (ValueError, TypeError):
+                    current_config.append("DSM Status Channel: Invalid ID format")
             if config.get('dsm_lookback_hours'):
                 current_config.append(f"DSM Lookback Hours: {config['dsm_lookback_hours']}")
 
@@ -1184,8 +1184,11 @@ class DSM(commands.Cog):
     async def set_channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
         """Set the channel where DSMs will be posted."""
         try:
-            # Update the config with the new channel ID
-            await self.firebase_service.update_config(interaction.guild_id, {'dsm_channel_id': str(channel.id)})
+            # Backward compatible set: this resets DSM channels to just the selected channel.
+            await self.firebase_service.update_config(interaction.guild_id, {
+                'dsm_channel_id': str(channel.id),
+                'dsm_channel_ids': [str(channel.id)]
+            })
             config = await self.firebase_service.get_config(interaction.guild_id)
             await self.mark_command_participation(interaction, config)
             
@@ -1205,6 +1208,87 @@ class DSM(commands.Cog):
                 f"Failed to set DSM channel: {str(e)}",
                 ephemeral=True
             )
+
+    @app_commands.command(name="add_dsm_channel", description="Add a channel to receive DSM prompts")
+    async def add_dsm_channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
+        """Add a DSM prompt channel without removing existing ones."""
+        try:
+            config = await self.firebase_service.get_config(interaction.guild_id)
+            dsm_channel_ids = {str(channel_id) for channel_id in self.get_dsm_channel_ids(config)}
+            dsm_channel_ids.add(str(channel.id))
+
+            updates = {'dsm_channel_ids': list(dsm_channel_ids)}
+            if not config.get('dsm_channel_id'):
+                updates['dsm_channel_id'] = str(channel.id)
+
+            await self.firebase_service.update_config(interaction.guild_id, updates)
+            await interaction.response.send_message(f"Added {channel.mention} to DSM prompt channels.", ephemeral=True)
+        except Exception as e:
+            logger.error(f"Error adding DSM channel: {str(e)}")
+            await interaction.response.send_message(f"Failed to add DSM channel: {str(e)}", ephemeral=True)
+
+    @app_commands.command(name="remove_dsm_channel", description="Remove a channel from DSM prompts")
+    async def remove_dsm_channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
+        """Remove a DSM prompt channel."""
+        try:
+            config = await self.firebase_service.get_config(interaction.guild_id)
+            dsm_channel_ids = [str(channel_id) for channel_id in self.get_dsm_channel_ids(config) if int(channel_id) != channel.id]
+
+            updates: Dict[str, Any] = {'dsm_channel_ids': dsm_channel_ids}
+            if str(config.get('dsm_channel_id')) == str(channel.id):
+                updates['dsm_channel_id'] = dsm_channel_ids[0] if dsm_channel_ids else None
+
+            await self.firebase_service.update_config(interaction.guild_id, updates)
+            await interaction.response.send_message(f"Removed {channel.mention} from DSM prompt channels.", ephemeral=True)
+        except Exception as e:
+            logger.error(f"Error removing DSM channel: {str(e)}")
+            await interaction.response.send_message(f"Failed to remove DSM channel: {str(e)}", ephemeral=True)
+
+    @app_commands.command(name="set_dsm_status_channel", description="Set the separate channel where DSM status is posted")
+    async def set_dsm_status_channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
+        """Set dedicated status channel for DSM participant tracking updates."""
+        try:
+            await self.firebase_service.update_config(interaction.guild_id, {'dsm_status_channel_id': str(channel.id)})
+            await interaction.response.send_message(
+                f"DSM status updates will be posted in {channel.mention}.",
+                ephemeral=True
+            )
+        except Exception as e:
+            logger.error(f"Error setting DSM status channel: {str(e)}")
+            await interaction.response.send_message(f"Failed to set DSM status channel: {str(e)}", ephemeral=True)
+
+    @app_commands.command(name="list_dsm_channels", description="List DSM prompt channels and status channel")
+    async def list_dsm_channels(self, interaction: discord.Interaction):
+        """List configured DSM prompt channels and the dedicated status channel."""
+        try:
+            config = await self.firebase_service.get_config(interaction.guild_id)
+            dsm_channels: List[str] = []
+            for channel_id in self.get_dsm_channel_ids(config):
+                channel = interaction.guild.get_channel(channel_id)
+                if isinstance(channel, discord.TextChannel):
+                    dsm_channels.append(channel.mention)
+
+            status_channel_value = "Not set"
+            status_channel_id = config.get('dsm_status_channel_id')
+            if status_channel_id is not None:
+                try:
+                    status_channel = interaction.guild.get_channel(int(status_channel_id))
+                    if isinstance(status_channel, discord.TextChannel):
+                        status_channel_value = status_channel.mention
+                except (TypeError, ValueError):
+                    status_channel_value = "Invalid ID"
+
+            embed = discord.Embed(title="DSM Channel Configuration", color=discord.Color.blue())
+            embed.add_field(
+                name="Prompt Channels",
+                value="\n".join(dsm_channels) if dsm_channels else "None",
+                inline=False
+            )
+            embed.add_field(name="Status Channel", value=status_channel_value, inline=False)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        except Exception as e:
+            logger.error(f"Error listing DSM channels: {str(e)}")
+            await interaction.response.send_message(f"Failed to list DSM channels: {str(e)}", ephemeral=True)
 
     @app_commands.command(name="skip_dsm", description="Skip DSM on a specific date")
     async def skip_dsm(self, interaction: discord.Interaction, date: str):
