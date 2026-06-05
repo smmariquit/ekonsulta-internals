@@ -70,3 +70,12 @@ The bot supports per-server configuration via slash commands:
 - **9:00 AM**: Daily standup meeting starts automatically  
 - **9:15 PM**: Deadline for task submissions (12 hours 15 minutes later)
 - **9:16 PM**: Final status update with completion summary
+
+## 📊 Current State of the Code
+- **Tech Stack:** Python
+- **Repository Size:** 191 tracked files
+- **Latest Update:** `4c3f08a chore: add stale issue and PR validators`
+
+
+---
+*☕ If you found this project useful, you can support my work at [kape.stimmie.dev](https://kape.stimmie.dev)!*
