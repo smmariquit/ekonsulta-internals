@@ -21,11 +21,11 @@
 
 ### Message Storage
 - Each user has two messages in the DSM thread:
-  1. Completed Tasks message
-  2. Pending Tasks message
+ 1. Completed Tasks message
+ 2. Pending Tasks message
 - Message IDs are stored in Firebase for each user
 - Message IDs are stored in a dictionary format:
-  ```json
+ ```json
   {
     "completed_msg_id": "message_id_here",
     "pending_msg_id": "message_id_here"
@@ -38,9 +38,9 @@
 - **Configuration**: Set via `dsm_lookback_hours` in bot configuration
 - **Range**: 0-24 hours
 - **Usage**: 
-  - Messages sent within the lookback period are included in the current DSM's task collection
-  - This allows for early task planning and updates before the official DSM time
-  - Useful for teams that start planning their day before the scheduled DSM
+ - Messages sent within the lookback period are included in the current DSM's task collection
+ - This allows for early task planning and updates before the official DSM time
+ - Useful for teams that start planning their day before the scheduled DSM
 
 #### Commands for Lookback Configuration
 - `/configure dsm_lookback_hours:<hours>` - Set the lookback period (0-24 hours)
