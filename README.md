@@ -5,7 +5,7 @@ Discord bot for managing daily standup meetings and team coordination.
 ## Features
 
 - **Daily Standup Meetings (DSM)**: Automated daily standup creation at 9:00 AM
-- **Task Tracking**: TODO task extraction and tracking from team messages  
+- **Task Tracking**: TODO task extraction and tracking from team messages 
 - **Reminders**: Pre-DSM reminders at 8:45 AM
 - **Deadline Management**: 9:15 PM deadline for daily task submissions
 - **Admin Commands**: Configuration, user management, and debugging tools
@@ -25,10 +25,10 @@ This will output a JSON string that you need to add to Railway as an environment
 
 #### Add to Railway:
 1. Go to your Railway project dashboard
-2. Navigate to **Variables** tab  
+2. Navigate to **Variables** tab 
 3. Add environment variable:
-   - **Name**: `FIREBASE_CREDENTIALS`
-   - **Value**: (paste the JSON output from the script above)
+ - **Name**: `FIREBASE_CREDENTIALS`
+ - **Value**: (paste the JSON output from the script above)
 
 ### 2. Other Required Environment Variables
 
@@ -43,15 +43,15 @@ Railway will automatically deploy when you push to the connected branch.
 
 1. Create `firebase-credentials.json` in the project root
 2. Create `.env` file with:
-   ```
+ ```
    DISCORD_BOT_TOKEN=your_discord_bot_token_here
    ```
 3. Install dependencies:
-   ```bash
+ ```bash
    pip install -r requirements.txt
    ```
 4. Run the bot:
-   ```bash
+ ```bash
    python3 bot.py
    ```
 
@@ -67,7 +67,7 @@ The bot supports per-server configuration via slash commands:
 ## Schedule
 
 - **8:45 AM**: Pre-DSM reminder sent to all team members
-- **9:00 AM**: Daily standup meeting starts automatically  
+- **9:00 AM**: Daily standup meeting starts automatically 
 - **9:15 PM**: Deadline for task submissions (12 hours 15 minutes later)
 - **9:16 PM**: Final status update with completion summary
 
@@ -75,7 +75,6 @@ The bot supports per-server configuration via slash commands:
 - **Tech Stack:** Python
 - **Repository Size:** 191 tracked files
 - **Latest Update:** `4c3f08a chore: add stale issue and PR validators`
-
 
 ---
 *☕ If you found this project useful, you can support my work at [kape.stimmie.dev](https://kape.stimmie.dev)!*
