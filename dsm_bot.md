@@ -6,21 +6,21 @@
 ```
 internal-automations/
 ├── cogs/
-│   ├── __init__.py
-│   └── dsm.py           # Main DSM cog implementation
+│ ├── __init__.py
+│ └── dsm.py # Main DSM cog implementation
 ├── models/
-│   ├── __init__.py
-│   ├── task.py          # Task model definition
-│   └── dsm_session.py   # DSM session model
+│ ├── __init__.py
+│ ├── task.py # Task model definition
+│ └── dsm_session.py # DSM session model
 ├── services/
-│   ├── __init__.py
-│   └── firebase_service.py  # Firebase integration
+│ ├── __init__.py
+│ └── firebase_service.py # Firebase integration
 ├── utils/
-│   └── logger.py        # Logging utilities
+│ └── logger.py # Logging utilities
 ├── config/
-│   └── default_config.py    # Default configuration
-├── bot.py               # Main bot file
-└── requirements.txt     # Dependencies
+│ └── default_config.py # Default configuration
+├── bot.py # Main bot file
+└── requirements.txt # Dependencies
 ```
 
 ## 🔄 Core Workflows
@@ -85,16 +85,16 @@ internal-automations/
 - `config`: Guild-specific settings
 - `dsm_messages`: Message IDs stored as arrays for split embeds
  ```json
-  {
-    "guild_id": {
-      "user_id": {
-        "completed_messages": [message_id1, message_id2, ...],
-        "pending_messages": [message_id1, message_id2, ...],
-        "last_updated": "timestamp"
-      }
-    }
-  }
-  ```
+ {
+ "guild_id": {
+ "user_id": {
+ "completed_messages": [message_id1, message_id2, ...],
+ "pending_messages": [message_id1, message_id2, ...],
+ "last_updated": "timestamp"
+ }
+ }
+ }
+ ```
 
 ### 2. In-Memory State
 - `user_tasks`: Current task state
@@ -107,7 +107,7 @@ internal-automations/
 ```python
 @app_commands.command()
 async def command_name(self, interaction: discord.Interaction, ...):
-    # Command implementation
+ # Command implementation
 ```
 
 ### 2. Admin Commands
@@ -115,7 +115,7 @@ async def command_name(self, interaction: discord.Interaction, ...):
 @app_commands.command()
 @app_commands.default_permissions(administrator=True)
 async def admin_command(self, interaction: discord.Interaction, ...):
-    # Admin command implementation
+ # Admin command implementation
 ```
 
 ## 🔄 Event Handlers
@@ -124,14 +124,14 @@ async def admin_command(self, interaction: discord.Interaction, ...):
 ```python
 @tasks.loop(hours=24)
 async def daily_standup(self):
-    # DSM creation logic
+ # DSM creation logic
 ```
 
 ### 2. Discord Events
 ```python
 @commands.Cog.listener()
 async def on_ready(self):
-    # Bot startup logic
+ # Bot startup logic
 ```
 
 ## 📊 Data Models
@@ -139,22 +139,22 @@ async def on_ready(self):
 ### 1. Task Model
 ```python
 class Task:
-    def __init__(self, description, status="todo", remarks=None, task_id=None):
-        self.description = description
-        self.status = status
-        self.remarks = remarks
-        self.task_id = task_id
-        self.created_at = datetime.now().isoformat()
+ def __init__(self, description, status="todo", remarks=None, task_id=None):
+ self.description = description
+ self.status = status
+ self.remarks = remarks
+ self.task_id = task_id
+ self.created_at = datetime.now().isoformat()
 ```
 
 ### 2. DSM Session Model
 ```python
 class DSMSession:
-    def __init__(self, guild_id, thread_id, is_manual, ...):
-        self.guild_id = guild_id
-        self.thread_id = thread_id
-        self.is_manual = is_manual
-        # ... other properties
+ def __init__(self, guild_id, thread_id, is_manual, ...):
+ self.guild_id = guild_id
+ self.thread_id = thread_id
+ self.is_manual = is_manual
+ # ... other properties
 ```
 
 ## 🔒 Security Rules

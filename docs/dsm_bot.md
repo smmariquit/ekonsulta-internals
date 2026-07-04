@@ -26,11 +26,11 @@
 - Message IDs are stored in Firebase for each user
 - Message IDs are stored in a dictionary format:
  ```json
-  {
-    "completed_msg_id": "message_id_here",
-    "pending_msg_id": "message_id_here"
-  }
-  ```
+ {
+ "completed_msg_id": "message_id_here",
+ "pending_msg_id": "message_id_here"
+ }
+ ```
 
 ### DSM Lookback Feature
 - **Purpose**: Include messages from a configurable time period before DSM in task collection

@@ -44,16 +44,16 @@ Railway will automatically deploy when you push to the connected branch.
 1. Create `firebase-credentials.json` in the project root
 2. Create `.env` file with:
  ```
-   DISCORD_BOT_TOKEN=your_discord_bot_token_here
-   ```
+ DISCORD_BOT_TOKEN=your_discord_bot_token_here
+ ```
 3. Install dependencies:
  ```bash
-   pip install -r requirements.txt
-   ```
+ pip install -r requirements.txt
+ ```
 4. Run the bot:
  ```bash
-   python3 bot.py
-   ```
+ python3 bot.py
+ ```
 
 ## Configuration
 
