@@ -1,6 +1,6 @@
 # 🤖 DSM Bot Rules & Structure
 
-> **Note for Cursor**: This document serves as a comprehensive guide to help you understand the DSM (Daily Standup Meeting) bot's codebase. It outlines the project structure, workflows, and implementation details to assist you in providing better code suggestions and modifications. Use this as a reference when working with the codebase.
+> **Note for Cursor**: This document serves as a full guide to help you understand the DSM (Daily Standup Meeting) bot's codebase. It outlines the project structure, workflows, and implementation details to assist you in providing better code suggestions and modifications. Use this as a reference when working with the codebase.
 
 ## �� Project Structure
 ```
@@ -31,31 +31,31 @@ internal-automations/
 - Tasks are associated with users
 - Tasks can be marked as done with completion timestamps
 - Long task lists are split into multiple embeds to handle Discord's 1024 character limit
-  - Completed tasks are split into multiple embeds if needed
-  - Pending tasks are split into multiple embeds if needed
-  - Message IDs are stored in arrays in Firebase
-  - Latest tasks always appear in the first embed of each type
+ - Completed tasks are split into multiple embeds if needed
+ - Pending tasks are split into multiple embeds if needed
+ - Message IDs are stored in arrays in Firebase
+ - Latest tasks always appear in the first embed of each type
 
 ### 2. DSM Sessions
 - Sessions are created automatically or manually
 - Each session has:
-  - Guild ID
-  - Thread ID
-  - Manual/Automatic flag
-  - Task completion metrics
-  - Participant tracking
+ - Guild ID
+ - Thread ID
+ - Manual/Automatic flag
+ - Task completion metrics
+ - Participant tracking
 
 ### 3. User Interaction
 - Users can:
-  - Add tasks
-  - Mark tasks as done
-  - Add remarks
-  - View their tasks
+ - Add tasks
+ - Mark tasks as done
+ - Add remarks
+ - View their tasks
 - Admins can:
-  - Configure settings
-  - Trigger manual DSMs
-  - Manage other admins
-  - Generate reports
+ - Configure settings
+ - Trigger manual DSMs
+ - Manage other admins
+ - Generate reports
 
 ## ⚙️ Configuration Rules
 
@@ -84,7 +84,7 @@ internal-automations/
 - `dsm_sessions`: DSM meeting records
 - `config`: Guild-specific settings
 - `dsm_messages`: Message IDs stored as arrays for split embeds
-  ```json
+ ```json
   {
     "guild_id": {
       "user_id": {
@@ -173,15 +173,15 @@ class DSMSession:
 
 ### 1. Embeds
 - Task lists (split into multiple embeds if needed)
-  - Each embed has a maximum of 1024 characters
-  - Tasks are split chronologically
-  - Latest tasks appear in the first embed
-  - Each embed shows which part of the list it contains (e.g., "Part 1/3")
+ - Each embed has a maximum of 1024 characters
+ - Tasks are split chronologically
+ - Latest tasks appear in the first embed
+ - Each embed shows which part of the list it contains (e.g., "Part 1/3")
 - DSM session information
-  - Full date format (e.g., "Daily Standup Meeting for March 21, 2024")
-  - Task statistics without emojis
-  - Participant tracking (updated and pending)
-  - Timeline with full date format
+ - Full date format (e.g., "Daily Standup Meeting for March 21, 2024")
+ - Task statistics without emojis
+ - Participant tracking (updated and pending)
+ - Timeline with full date format
 - User profiles
 - Reports
 
@@ -197,11 +197,11 @@ class DSMSession:
 - WARNING: Non-critical issues
 - ERROR: Critical issues
 - DEBUG: Detailed debugging
-  - Message splitting operations
-  - Embed character counts
-  - Message ID array updates
-  - Participant tracking updates
-  - Statistics message updates
+ - Message splitting operations
+ - Embed character counts
+ - Message ID array updates
+ - Participant tracking updates
+ - Statistics message updates
 
 ### 2. Log Categories
 - Task operations
@@ -233,7 +233,7 @@ class DSMSession:
 - Modular design
 - Clear separation of concerns
 - Consistent naming conventions
-- Comprehensive documentation
+- full documentation
 
 ### 2. Performance
 - Efficient database queries
